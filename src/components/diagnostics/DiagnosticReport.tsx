@@ -1,0 +1,230 @@
+import { useState } from 'react';
+import { Download, FileText } from 'lucide-react';
+import { Card } from '../common/Card';
+import type { DiagnosticHistoryItem } from '../../types/rpc';
+import type { Finding } from '../../types/diagnostic';
+import { buildDiagnosticReport, sanitizeEndpointOrigin } from '../../utils/reportBuilder';
+import { evaluateHistoryFindings } from '../../services/diagnosticRules';
+
+interface DiagnosticReportProps {
+  history: DiagnosticHistoryItem[];
+  latencyThresholdMs?: number;
+}
+
+export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticReportProps) {
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const exportAsJson = () => {
+    try {
+      setExporting(true);
+      setExportError(null);
+
+      const exportRuleConfig = latencyThresholdMs !== undefined ? { latencyThresholdMs } : {};
+      const exportFindings: Finding[] = evaluateHistoryFindings(history, exportRuleConfig);
+      const report = buildDiagnosticReport(history, exportFindings);
+      const blob = new Blob([JSON.stringify(report, null, 2)], {
+        type: 'application/json',
+      });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `nodescope-diagnostic-report-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to generate report:', error);
+      setExportError('Failed to generate report. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const recordCount = history.length;
+  const successCount = history.filter((r) => r.success).length;
+  const unsupportedCount = history.filter(
+    (r) => !r.success && r.response?.error?.code === -32601
+  ).length;
+  const networkErrorCount = history.filter(
+    (r) => !r.success && (r.error?.toLowerCase().includes('network') || r.error?.toLowerCase().includes('cors') || r.error?.includes('HTTP Error') || r.error?.includes('timeout'))
+  ).length;
+  const ruleConfig = latencyThresholdMs !== undefined ? { latencyThresholdMs } : {};
+  // Findings are derived solely from history. The EVM connection check results are already
+  // persisted into history by the connection flow, so evaluating them again here would
+  // reintroduce a second block-height finding for the same endpoint.
+  const findings = evaluateHistoryFindings(history, ruleConfig);
+  const totalFindings = findings.length;
+  const errorFindings = findings.filter((f) => f.severity === 'error').length;
+  const warningFindings = findings.filter((f) => f.severity === 'warning').length;
+  const infoFindings = findings.filter((f) => f.severity === 'info').length;
+
+  return (
+    <Card>
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <FileText className="w-5 h-5 text-cyan-400" />
+              Diagnostic Report
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">
+              Summarize user-triggered diagnostics for export. No background requests or fabricated data.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={exportAsJson}
+            disabled={exporting || recordCount === 0}
+            className="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white font-medium rounded-lg text-sm flex items-center gap-2 transition-colors"
+          >
+            {exporting ? <span className="w-4 h-4 animate-spin border-2 border-white border-t-transparent rounded-full" /> : <Download className="w-4 h-4" />}
+            {exporting ? 'Generating...' : 'Export as JSON'}
+          </button>
+        </div>
+
+        {exportError && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-xs text-red-400">
+            {exportError}
+          </div>
+        )}
+
+        {recordCount > 0 && (
+          <div className="space-y-4">
+            <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-slate-300 mb-3">Summary</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <div className="text-xs text-slate-500">Total Records</div>
+                  <div className="text-lg font-semibold text-white">{recordCount}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Success</div>
+                  <div className="text-lg font-semibold text-emerald-400">{successCount}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Unsupported Methods</div>
+                  <div className="text-lg font-semibold text-amber-400">{unsupportedCount}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Network/HTTP Errors</div>
+                  <div className="text-lg font-semibold text-red-400">{networkErrorCount}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-slate-300 mb-2">Record Details Preview</h4>
+              <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                {history.slice(0, 3).map((item) => (
+                  <div key={item.id} className="bg-slate-900 border border-slate-800 rounded p-2.5 text-xs">
+                    <div className="flex justify-between mb-1">
+                      <code className="text-cyan-400">{item.request.method}</code>
+                      <span className="text-slate-500">{new Date(item.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-400 truncate max-w-[150px]">{sanitizeEndpointOrigin(item.endpoint)}</span>
+                      <span className={`font-medium ${getOutcomeColor(item)}`}>
+                        {getOutcomeLabel(item)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {history.length > 3 && (
+                  <div className="text-xs text-slate-500 text-center py-1">
+                    ... and {history.length - 3} more records (export includes all)
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {totalFindings > 0 && (
+              <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-slate-300 mb-2">Diagnostic Findings</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div>
+                    <div className="text-xs text-slate-500">Total Findings</div>
+                    <div className="text-lg font-semibold text-white">{totalFindings}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500">Errors</div>
+                    <div className="text-lg font-semibold text-red-400">{errorFindings}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500">Warnings</div>
+                    <div className="text-lg font-semibold text-amber-400">{warningFindings}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500">Info</div>
+                    <div className="text-lg font-semibold text-cyan-400">{infoFindings}</div>
+                  </div>
+                </div>
+                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                  {findings.map((finding, index) => (
+                    <div key={index} className="bg-slate-900 border border-slate-800 rounded p-3 text-xs">
+                      <div className="flex items-start gap-2 mb-1">
+                        <span className={`font-medium text-xs ${getSeverityColor(finding.severity)}`}>
+                          {finding.severity.toUpperCase()}
+                        </span>
+                        <span className="text-slate-400 font-mono">{finding.ruleId}</span>
+                        <span className="text-white font-medium">{finding.title}</span>
+                      </div>
+                      <div className="text-slate-300 mb-1">{finding.evidence}</div>
+                      <div className="text-slate-500 mb-1">{finding.explanation}</div>
+                      <div className="text-cyan-400 font-medium">{finding.recommendation}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {recordCount === 0 && (
+          <div className="text-center py-8 text-slate-500">
+            <FileText className="w-8 h-8 mx-auto mb-2 text-slate-600" />
+            <p className="text-sm">No diagnostic history in this session yet.</p>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+function getSeverityColor(severity: Finding['severity']): string {
+  if (severity === 'error') return 'text-red-400';
+  if (severity === 'warning') return 'text-amber-400';
+  return 'text-cyan-400';
+}
+
+function getOutcomeLabel(item: DiagnosticHistoryItem): string {
+  if (item.success) return 'Success';
+  if (item.response?.error) return 'Unsupported Method';
+  const err = item.error || '';
+  if (
+    err.includes('HTTP Error') ||
+    err.includes('Network') ||
+    err.includes('CORS') ||
+    err.includes('Failed to fetch') ||
+    err.includes('timeout')
+  )
+    return 'Network Error';
+  return 'Invalid Response';
+}
+
+function getOutcomeColor(item: DiagnosticHistoryItem): string {
+  if (item.success) return 'text-emerald-400';
+  if (item.response?.error) return 'text-amber-400';
+  const err = item.error || '';
+  if (
+    err.includes('HTTP Error') ||
+    err.includes('Network') ||
+    err.includes('CORS') ||
+    err.includes('Failed to fetch') ||
+    err.includes('timeout')
+  )
+    return 'text-red-400';
+  return 'text-rose-400';
+}
