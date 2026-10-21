@@ -2,6 +2,7 @@ import { Activity, Zap, Database, Server } from 'lucide-react';
 import { MetricCard } from './MetricCard';
 import { NodeMetricsInspector } from './NodeMetricsInspector';
 import { HealthCheckPanel } from './HealthCheckPanel';
+import { SnapshotComparison } from './SnapshotComparison';
 import { CapabilityDiscoveryPanel } from '../diagnostics/CapabilityDiscoveryPanel';
 import type { NodeMetricsDetailed } from '../../types/node';
 import type { RpcDiagnosticResult } from '../../types/rpc';
@@ -20,6 +21,7 @@ interface OverviewProps {
   capabilitySnapshot: CapabilitySnapshot | null;
   history: DiagnosticHistoryItem[];
   onCapabilitySnapshotChange: (snapshot: CapabilitySnapshot | null) => void;
+  healthSnapshots?: HealthCheckSnapshot[];
   latestHealthSnapshot?: HealthCheckSnapshot | null;
   onRunHealthCheck?: () => Promise<void>;
   isHealthChecking?: boolean;
@@ -35,6 +37,7 @@ export function Overview({
   capabilitySnapshot,
   history,
   onCapabilitySnapshotChange,
+  healthSnapshots = [],
   latestHealthSnapshot = null,
   onRunHealthCheck,
   isHealthChecking = false,
@@ -101,6 +104,8 @@ export function Overview({
         onRunHealthCheck={onRunHealthCheck || (async () => {})}
         isLoading={isHealthChecking}
       />
+
+      <SnapshotComparison snapshots={healthSnapshots} />
 
       <CapabilityDiscoveryPanel
         endpoint={endpoint}

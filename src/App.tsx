@@ -132,6 +132,7 @@ function App() {
                   history={history} // Pass down history
                   onCapabilitySnapshotChange={setCapabilitySnapshot}
                   latestHealthSnapshot={healthSnapshots.length > 0 ? healthSnapshots[healthSnapshots.length - 1] : null}
+                  healthSnapshots={healthSnapshots}
                   onRunHealthCheck={handleRunHealthCheck}
                   isHealthChecking={isHealthChecking}
                 />
