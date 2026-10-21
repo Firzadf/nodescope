@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { Overview } from './components/dashboard/Overview';
@@ -101,6 +101,14 @@ function App() {
     return result;
   };
 
+  const latestHealthSnapshot = useMemo(() => {
+    if (healthSnapshots.length === 0) return null;
+    return healthSnapshots.reduce(
+      (newest, s) => (s.timestamp > newest.timestamp ? s : newest),
+      healthSnapshots[0]
+    );
+  }, [healthSnapshots]);
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200">
       <Header connectionStatus={connectionStatus} />
@@ -131,7 +139,7 @@ function App() {
                   capabilitySnapshot={capabilitySnapshot} // Pass down snapshot
                   history={history} // Pass down history
                   onCapabilitySnapshotChange={setCapabilitySnapshot}
-                  latestHealthSnapshot={healthSnapshots.length > 0 ? healthSnapshots[healthSnapshots.length - 1] : null}
+                  latestHealthSnapshot={latestHealthSnapshot}
                   healthSnapshots={healthSnapshots}
                   onRunHealthCheck={handleRunHealthCheck}
                   isHealthChecking={isHealthChecking}

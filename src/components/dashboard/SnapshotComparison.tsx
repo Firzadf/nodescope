@@ -87,19 +87,31 @@ function describeBlockHeightStatus(status: BlockHeightDeltaStatus): string {
 }
 
 export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
-  // Safe initial indices: older as A, newer as B
-  const [selectedIdA, setSelectedIdA] = useState<string>(() => {
-    if (snapshots.length >= 2) return snapshots[1].id;
-    return snapshots[0]?.id || '';
-  });
+  // Sort snapshots descending by timestamp: [0] = newest (most recent), [1] = second most recent
+  const sortedByTimestampDesc = useMemo(() => {
+    return [...snapshots].sort((a, b) => b.timestamp - a.timestamp);
+  }, [snapshots]);
 
-  const [selectedIdB, setSelectedIdB] = useState<string>(() => {
-    if (snapshots.length >= 2) return snapshots[0].id;
-    return snapshots[1]?.id || snapshots[0]?.id || '';
-  });
+  // Track explicit manual user selections; manual selections are never overridden
+  const [userSelectedIdA, setUserSelectedIdA] = useState<string | null>(null);
+  const [userSelectedIdB, setUserSelectedIdB] = useState<string | null>(null);
 
-  const snapshotA = snapshots.find((s) => s.id === selectedIdA) || null;
-  const snapshotB = snapshots.find((s) => s.id === selectedIdB) || null;
+  // Derive active IDs: manual user selection takes precedence if still present in snapshots;
+  // otherwise default to A = second most recent, B = most recent based on timestamps.
+  const activeIdA =
+    userSelectedIdA && snapshots.some((s) => s.id === userSelectedIdA)
+      ? userSelectedIdA
+      : sortedByTimestampDesc.length >= 2
+      ? sortedByTimestampDesc[1].id
+      : sortedByTimestampDesc[0]?.id || '';
+
+  const activeIdB =
+    userSelectedIdB && snapshots.some((s) => s.id === userSelectedIdB)
+      ? userSelectedIdB
+      : sortedByTimestampDesc[0]?.id || '';
+
+  const snapshotA = snapshots.find((s) => s.id === activeIdA) || null;
+  const snapshotB = snapshots.find((s) => s.id === activeIdB) || null;
 
   const comparison = useMemo(() => {
     if (!snapshotA || !snapshotB) return null;
@@ -118,7 +130,7 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
             <GitCompare className="w-8 h-8 mx-auto mb-2 text-slate-600" />
             <p className="text-sm font-medium text-slate-400">At least 2 health snapshots required to compare</p>
             <p className="text-xs text-slate-500 mt-1">
-              Currently {snapshots.length} available. Trigger &quot;Run Health Check&quot; to produce new snapshots for state comparison.
+              {`Currently ${snapshots.length} available. Trigger "Run Health Check" to produce new snapshots for state comparison.`}
             </p>
           </div>
         </div>
@@ -170,8 +182,8 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
             <select
               id="snapshot-a-select"
               aria-label="Snapshot A (Baseline)"
-              value={selectedIdA}
-              onChange={(e) => setSelectedIdA(e.target.value)}
+              value={snapshotA?.id ?? ''}
+              onChange={(e) => setUserSelectedIdA(e.target.value)}
               className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-xs text-slate-200 font-mono focus:border-cyan-500 focus:outline-none"
             >
               {snapshots.map((s) => (
@@ -205,8 +217,8 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
             <select
               id="snapshot-b-select"
               aria-label="Snapshot B (Current)"
-              value={selectedIdB}
-              onChange={(e) => setSelectedIdB(e.target.value)}
+              value={snapshotB?.id ?? ''}
+              onChange={(e) => setUserSelectedIdB(e.target.value)}
               className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-xs text-slate-200 font-mono focus:border-cyan-500 focus:outline-none"
             >
               {snapshots.map((s) => (
@@ -312,8 +324,10 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
                         </td>
                         <td className="p-2.5">
                           {check.a && check.b ? (
-                            <span className={outcomeChanged ? 'text-amber-400' : 'text-slate-300'}>
-                              {check.a.outcome} <ArrowRight className="inline w-3 h-3 mx-1 text-slate-500" /> {check.b.outcome}
+                            <span className={`inline-flex items-center gap-1.5 ${outcomeChanged ? 'text-amber-400' : 'text-slate-300'}`}>
+                              <span>{check.a.outcome}</span>
+                              <ArrowRight className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" aria-label="to" />
+                              <span>{check.b.outcome}</span>
                             </span>
                           ) : check.a ? (
                             <span className="text-rose-400">{check.a.outcome} (A only)</span>
@@ -325,8 +339,10 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
                         </td>
                         <td className="p-2.5">
                           {check.a && check.b ? (
-                            <span className={valChanged ? 'text-amber-400' : 'text-slate-300'}>
-                              {formatValue(check.a.observedValue)} <ArrowRight className="inline w-3 h-3 mx-1 text-slate-500" /> {formatValue(check.b.observedValue)}
+                            <span className={`inline-flex items-center gap-1.5 ${valChanged ? 'text-amber-400' : 'text-slate-300'}`}>
+                              <span>{formatValue(check.a.observedValue)}</span>
+                              <ArrowRight className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" aria-label="to" />
+                              <span>{formatValue(check.b.observedValue)}</span>
                             </span>
                           ) : check.a ? (
                             <span>{formatValue(check.a.observedValue)}</span>

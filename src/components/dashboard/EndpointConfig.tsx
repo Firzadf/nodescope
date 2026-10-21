@@ -29,7 +29,14 @@ export function EndpointConfig({
   evmConnectionDetails,
 }: EndpointConfigProps) {
   const [inputUrl, setInputUrl] = useState(endpoint);
-  const [validationError, setValidationError] = useState<string | null>(null);
+  // Validate the prefilled endpoint on mount so a valid URL enables "Connect & Test"
+  // immediately and a genuinely invalid prefilled URL is rejected before any interaction.
+  const [validationError, setValidationError] = useState<string | null>(() => {
+    const trimmed = endpoint.trim();
+    if (!trimmed) return null;
+    const result = validateRpcUrl(trimmed);
+    return result.isValid ? null : result.error || 'Invalid URL';
+  });
 
   const handleUrlChange = (val: string) => {
     setInputUrl(val);
@@ -156,7 +163,7 @@ export function EndpointConfig({
                 <div className={evmConnectionDetails.validation.isPortaldotV3Testnet ? 'text-emerald-400 font-medium' : evmConnectionDetails.validation.chainId !== null ? 'text-amber-400 font-medium' : 'text-red-400 font-medium'}>
                   {evmConnectionDetails.validation.isPortaldotV3Testnet
                     ? `Pass — ${evmConnectionDetails.validation.chainIdHex} (${evmConnectionDetails.validation.chainId})`
-                    : evmConnectionDetails.validation.error || `Fail — ${evmConnectionDetails.chainIdResult.error || 'Unknown error'}`}
+                    : 'Fail'}
                 </div>
                 {evmConnectionDetails.validation.chainId !== null && !evmConnectionDetails.validation.isPortaldotV3Testnet && (
                   <div className="text-amber-300 mt-1">Wrong Chain ID: expected 420420777 (0x190f1ca9).</div>

@@ -171,15 +171,57 @@ describe('compareSnapshots', () => {
   it('includes latency change in check comparison and keeps missing latency unavailable', () => {
     const a = createSnapshot({ checks: [createCheck({ latencyMs: 10 })] });
     const b = createSnapshot({ checks: [createCheck({ latencyMs: 25 })] });
-    const changed = compareSnapshots(a, b).checks[0];
+    const checkResult = compareSnapshots(a, b).checks[0];
 
-    expect(changed.latencyDelta).toEqual({ status: 'available', value: 15 });
+    // Status rule: latency-only difference remains unchanged while latencyDelta is reported
+    expect(checkResult.status).toBe('unchanged');
+    expect(checkResult.latencyDelta).toEqual({ status: 'available', value: 15 });
 
     const missing = compareSnapshots(
       createSnapshot({ checks: [createCheck({ latencyMs: null })] }),
       createSnapshot({ checks: [createCheck({ latencyMs: 25 })] })
     ).checks[0];
     expect(missing.latencyDelta).toEqual({ status: 'missing_in_a', value: null });
+  });
+
+  it('keeps status unchanged on latency-only change but marks changed when functional fields differ', () => {
+    const base = createCheck({ outcome: 'success', success: true, observedValue: '0x1', error: null, latencyMs: 10 });
+
+    // Latency only difference
+    const latOnly = compareSnapshots(
+      createSnapshot({ checks: [base] }),
+      createSnapshot({ checks: [{ ...base, latencyMs: 99 }] })
+    ).checks[0];
+    expect(latOnly.status).toBe('unchanged');
+    expect(latOnly.latencyDelta).toEqual({ status: 'available', value: 89 });
+
+    // Outcome difference
+    const outcomeDiff = compareSnapshots(
+      createSnapshot({ checks: [base] }),
+      createSnapshot({ checks: [{ ...base, outcome: 'rpc_error' }] })
+    ).checks[0];
+    expect(outcomeDiff.status).toBe('changed');
+
+    // Success flag difference
+    const successDiff = compareSnapshots(
+      createSnapshot({ checks: [base] }),
+      createSnapshot({ checks: [{ ...base, success: false }] })
+    ).checks[0];
+    expect(successDiff.status).toBe('changed');
+
+    // Observed value difference
+    const valDiff = compareSnapshots(
+      createSnapshot({ checks: [base] }),
+      createSnapshot({ checks: [{ ...base, observedValue: '0x2' }] })
+    ).checks[0];
+    expect(valDiff.status).toBe('changed');
+
+    // Error message difference
+    const errorDiff = compareSnapshots(
+      createSnapshot({ checks: [base] }),
+      createSnapshot({ checks: [{ ...base, error: 'RPC failed' }] })
+    ).checks[0];
+    expect(errorDiff.status).toBe('changed');
   });
 
   it('keeps unsupported methods distinct from actual failures', () => {

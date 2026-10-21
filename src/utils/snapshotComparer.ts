@@ -210,9 +210,15 @@ function compareChecks(
     pushIfChanged('latencyMs', left.latencyMs, right.latencyMs);
     pushIfChanged('error', left.error, right.error);
 
+    const isFunctionallyChanged =
+      left.outcome !== right.outcome ||
+      left.success !== right.success ||
+      left.observedValue !== right.observedValue ||
+      left.error !== right.error;
+
     return {
       method,
-      status: fieldChanges.length > 0 ? 'changed' : 'unchanged',
+      status: isFunctionallyChanged ? 'changed' : 'unchanged',
       a: left,
       b: right,
       fieldChanges,

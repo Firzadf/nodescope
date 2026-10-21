@@ -35,7 +35,7 @@ const BLOCK_METHOD_OPTIONS = [
   { label: 'chain_getHeader (Substrate standard)', method: 'chain_getHeader', params: [] },
   { label: 'chain_getBlock (Substrate standard)', method: 'chain_getBlock', params: [] },
   {
-    label: 'eth_blockNumber (EVM — live verified only against https://test-evm-rpc-v3.portaldot.dev on 2026-10-19; not implied for every Portaldot node)',
+    label: 'eth_blockNumber (EVM — verified 2026-10-19 on Portaldot V3 EVM)',
     method: 'eth_blockNumber',
     params: [] as unknown[],
   },
