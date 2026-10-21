@@ -10,6 +10,7 @@ import { DiagnosticReport } from './components/diagnostics/DiagnosticReport';
 import type { ConnectionStatus, NodeMetricsDetailed } from './types/node';
 import type { RpcDiagnosticResult, DiagnosticHistoryItem } from './types/rpc';
 import type { EvmConnectionDetails, EndpointProfile } from './types/endpoint';
+import { DEFAULT_PORTALDOT_V3_EVM_RPC } from './types/endpoint';
 import type { CapabilitySnapshot } from './types/capability'; // Import new type
 import type { HealthCheckSnapshot } from './types/healthCheck';
 import { sendJsonRpcRequest } from './services/rpcClient';
@@ -27,7 +28,7 @@ const initialMetricsDetailed: NodeMetricsDetailed = {
 
 function App() {
   const [activeSection, setActiveSection] = useState('overview');
-  const [endpoint, setEndpoint] = useState('');
+  const [endpoint, setEndpoint] = useState(DEFAULT_PORTALDOT_V3_EVM_RPC);
   const [endpointProfile, setEndpointProfile] = useState<EndpointProfile>('portaldot_v3_evm');
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
   const [isLoading, setIsLoading] = useState(false);
