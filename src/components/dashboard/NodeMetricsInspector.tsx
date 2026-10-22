@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Zap, Server, Users, Database, Play, RefreshCw, AlertCircle, HelpCircle } from 'lucide-react';
 import { Card } from '../common/Card';
+import { PanelLabel } from '../common/PanelLabel';
 import type { NodeMetricsDetailed, MetricStatus } from '../../types/node';
 import type { RpcDiagnosticResult, DiagnosticHistoryItem } from '../../types/rpc';
 import type { EndpointProfile } from '../../types/endpoint';
@@ -179,9 +180,10 @@ export function NodeMetricsInspector({
   return (
     <Card>
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-2 border-b border-slate-800 pb-4">
           <div>
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            <PanelLabel index="02" label="NODE METRICS" />
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2 mt-2">
               <Zap className="w-5 h-5 text-cyan-400" />
               Node Metrics Inspector
             </h3>
@@ -190,7 +192,7 @@ export function NodeMetricsInspector({
             </p>
           </div>
           <div className="text-xs text-slate-400">
-            Target Endpoint: <code className="text-slate-200">{endpoint || 'None'}</code>
+            Target Endpoint: <code className="text-slate-200 font-data">{endpoint || 'None'}</code>
           </div>
         </div>
 
@@ -213,7 +215,7 @@ export function NodeMetricsInspector({
               </div>
               <StatusBadge status={metricsDetailed.latency.status} />
             </div>
-            <div className="text-2xl font-semibold text-white">
+            <div className="text-2xl font-semibold text-white font-data">
               {metricsDetailed.latency.value !== null ? `${metricsDetailed.latency.value}ms` : '—'}
             </div>
             {(() => {
@@ -275,7 +277,7 @@ export function NodeMetricsInspector({
               </div>
               <StatusBadge status={metricsDetailed.peerCount.status} />
             </div>
-            <div className="text-2xl font-semibold text-white">
+            <div className="text-2xl font-semibold text-white font-data">
               {metricsDetailed.peerCount.value !== null ? metricsDetailed.peerCount.value : '—'}
             </div>
             {(() => {

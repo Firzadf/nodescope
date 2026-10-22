@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Download, FileText } from 'lucide-react';
 import { Card } from '../common/Card';
+import { PanelLabel } from '../common/PanelLabel';
 import type { DiagnosticHistoryItem } from '../../types/rpc';
 import type { Finding } from '../../types/diagnostic';
 import { buildDiagnosticReport, sanitizeEndpointOrigin } from '../../utils/reportBuilder';
@@ -64,9 +65,10 @@ export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticRepo
   return (
     <Card>
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-2 border-b border-slate-800 pb-4">
           <div>
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            <PanelLabel index="01" label="REPORT" />
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2 mt-2">
               <FileText className="w-5 h-5 text-cyan-400" />
               Diagnostic Report
             </h3>
@@ -98,19 +100,19 @@ export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticRepo
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                   <div className="text-xs text-slate-500">Total Records</div>
-                  <div className="text-lg font-semibold text-white">{recordCount}</div>
+                  <div className="text-lg font-semibold text-white font-data">{recordCount}</div>
                 </div>
                 <div>
                   <div className="text-xs text-slate-500">Success</div>
-                  <div className="text-lg font-semibold text-emerald-400">{successCount}</div>
+                  <div className="text-lg font-semibold text-emerald-400 font-data">{successCount}</div>
                 </div>
                 <div>
                   <div className="text-xs text-slate-500">Unsupported Methods</div>
-                  <div className="text-lg font-semibold text-amber-400">{unsupportedCount}</div>
+                  <div className="text-lg font-semibold text-amber-400 font-data">{unsupportedCount}</div>
                 </div>
                 <div>
                   <div className="text-xs text-slate-500">Network/HTTP Errors</div>
-                  <div className="text-lg font-semibold text-red-400">{networkErrorCount}</div>
+                  <div className="text-lg font-semibold text-red-400 font-data">{networkErrorCount}</div>
                 </div>
               </div>
             </div>
@@ -146,19 +148,19 @@ export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticRepo
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div>
                     <div className="text-xs text-slate-500">Total Findings</div>
-                    <div className="text-lg font-semibold text-white">{totalFindings}</div>
+                    <div className="text-lg font-semibold text-white font-data">{totalFindings}</div>
                   </div>
                   <div>
                     <div className="text-xs text-slate-500">Errors</div>
-                    <div className="text-lg font-semibold text-red-400">{errorFindings}</div>
+                    <div className="text-lg font-semibold text-red-400 font-data">{errorFindings}</div>
                   </div>
                   <div>
                     <div className="text-xs text-slate-500">Warnings</div>
-                    <div className="text-lg font-semibold text-amber-400">{warningFindings}</div>
+                    <div className="text-lg font-semibold text-amber-400 font-data">{warningFindings}</div>
                   </div>
                   <div>
                     <div className="text-xs text-slate-500">Info</div>
-                    <div className="text-lg font-semibold text-cyan-400">{infoFindings}</div>
+                    <div className="text-lg font-semibold text-cyan-400 font-data">{infoFindings}</div>
                   </div>
                 </div>
                 <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">

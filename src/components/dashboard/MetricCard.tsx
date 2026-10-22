@@ -15,7 +15,7 @@ export function MetricCard({ title, value, icon: Icon, subtitle, unavailable }: 
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-slate-400">{title}</p>
-          <p className="mt-2 text-3xl font-semibold text-white">
+          <p className="mt-2 text-3xl font-semibold text-white font-data">
             {unavailable || value === null ? (
               <span className="text-slate-500 text-xl">—</span>
             ) : (

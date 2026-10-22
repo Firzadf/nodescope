@@ -1,5 +1,6 @@
 import type { DiagnosticHistoryItem } from '../../types/rpc';
 import { Card } from '../common/Card';
+import { PanelLabel } from '../common/PanelLabel';
 import { Clock, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
 
 interface HistoryListProps {
@@ -14,6 +15,7 @@ export function HistoryList({ history, onSelect, onClear }: HistoryListProps) {
       <Card>
         <div className="text-center py-8 text-slate-500">
           <p className="text-sm">No diagnostic history in this session yet.</p>
+          <p className="text-xs text-slate-600 mt-1">Run a diagnostic from the RPC Diagnostics tab and results will appear here.</p>
         </div>
       </Card>
     );
@@ -22,10 +24,13 @@ export function HistoryList({ history, onSelect, onClear }: HistoryListProps) {
   return (
     <Card>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-cyan-400" />
-            <h3 className="text-lg font-semibold text-white">Diagnostic History</h3>
+        <div className="flex items-start justify-between">
+          <div>
+            <PanelLabel index="02" label="HISTORY" />
+            <div className="flex items-center gap-2 mt-2">
+              <Clock className="w-5 h-5 text-cyan-400" />
+              <h3 className="text-lg font-semibold text-white">Diagnostic History</h3>
+            </div>
           </div>
           <button
             onClick={onClear}

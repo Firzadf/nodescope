@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { RpcDiagnosticResult } from '../../types/rpc';
 import { Card } from '../common/Card';
+import { PanelLabel } from '../common/PanelLabel';
 import { CheckCircle2, AlertTriangle, Clock, Zap, Copy, Check } from 'lucide-react';
 
 interface ResponseViewerProps {
@@ -32,14 +33,17 @@ export function ResponseViewer({ result }: ResponseViewerProps) {
   return (
     <Card>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {result.success ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-            ) : (
-              <AlertTriangle className="w-5 h-5 text-red-400" />
-            )}
-            <h3 className="text-lg font-semibold text-white">Diagnostic Result</h3>
+        <div className="flex items-start justify-between">
+          <div>
+            <PanelLabel index="02" label="RESULT" />
+            <div className="flex items-center gap-2 mt-2">
+              {result.success ? (
+                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              ) : (
+                <AlertTriangle className="w-5 h-5 text-red-400" />
+              )}
+              <h3 className="text-lg font-semibold text-white">Diagnostic Result</h3>
+            </div>
           </div>
           <button
             onClick={handleCopy}

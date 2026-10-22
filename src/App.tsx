@@ -161,7 +161,7 @@ function App() {
                 {evmConnectionDetails && endpointProfile === 'portaldot_v3_evm' && (
                   <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-4 space-y-2">
                     <h4 className="text-sm font-medium text-slate-300">EVM Connection Check Details</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-data">
                       <div className="bg-slate-950 border border-slate-800 rounded p-3">
                         <div className="text-slate-400">eth_chainId</div>
                         <div className={evmConnectionDetails.validation.isPortaldotV3Testnet ? 'text-emerald-400 font-medium' : evmConnectionDetails.validation.chainId !== null ? 'text-amber-400 font-medium' : 'text-red-400 font-medium'}>
@@ -210,6 +210,24 @@ function App() {
           </div>
         </main>
       </div>
+      <footer className="border-t border-slate-800">
+        <div className="px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-2">
+          <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">
+            NodeScope — Built for Portaldot Hacker House 2026
+          </p>
+          <div className="flex items-center gap-5 font-data text-[11px] uppercase tracking-[0.18em]">
+            <a href="https://github.com/Firzadf/nodescope" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors">
+              GitHub
+            </a>
+            <a href="https://dorahacks.io/build/50146" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors">
+              DoraHacks BUIDL
+            </a>
+            <a href="https://www.youtube.com/watch?v=qne3_eZdcKA" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors">
+              Demo Video
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

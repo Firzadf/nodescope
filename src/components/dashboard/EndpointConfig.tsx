@@ -4,7 +4,7 @@ import type { ConnectionStatus } from '../../types/node';
 import type { EvmConnectionDetails, EndpointProfile } from '../../types/endpoint';
 import { Card } from '../common/Card';
 import { PanelLabel } from '../common/PanelLabel';
-import { Globe, AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 interface EndpointConfigProps {
   endpoint: string;
@@ -122,7 +122,7 @@ export function EndpointConfig({
                 onChange={(e) => handleUrlChange(e.target.value)}
                 placeholder="https://test-evm-rpc-v3.portaldot.dev"
                 disabled={isConnected || isConnecting}
-                className={`w-full bg-slate-950 border rounded-lg px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 ${
+                className={`w-full bg-slate-950 border rounded-lg px-4 py-2.5 text-sm text-white font-data placeholder-slate-500 focus:outline-none focus:ring-2 ${
                   validationError
                     ? 'border-red-500 focus:ring-red-500'
                     : 'border-slate-700 focus:ring-cyan-500'

@@ -2,6 +2,7 @@ import { getMethodEvidenceStatus, formatEvidenceLabel } from '../../utils/capabi
 import { useEffect, useRef, useState } from 'react';
 import { Search, RefreshCw, AlertCircle } from 'lucide-react';
 import { Card } from '../common/Card';
+import { PanelLabel } from '../common/PanelLabel';
 import type { CapabilitySnapshot } from '../../types/capability';
 import { discoverCapabilities } from '../../services/capabilityDiscovery';
 
@@ -67,9 +68,10 @@ export function CapabilityDiscoveryPanel({ endpoint, snapshot, onSnapshotChange,
   return (
     <Card>
       <div className="space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-2 border-b border-slate-800 pb-4">
           <div>
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            <PanelLabel index="05" label="CAPABILITIES" />
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2 mt-2">
               <Search className="w-5 h-5 text-cyan-400" />
               RPC Capability Discovery
             </h3>
@@ -78,7 +80,7 @@ export function CapabilityDiscoveryPanel({ endpoint, snapshot, onSnapshotChange,
             </p>
           </div>
           <div className="text-xs text-slate-400">
-            Target: <code className="text-slate-200">{endpoint || 'None'}</code>
+            Target: <code className="text-slate-200 font-data">{endpoint || 'None'}</code>
           </div>
         </div>
 

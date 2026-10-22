@@ -3,6 +3,7 @@ import type { RpcDiagnosticResult, RpcMethodPreset } from '../../types/rpc';
 import type { CapabilitySnapshot } from '../../types/capability';
 import type { DiagnosticHistoryItem } from '../../types/rpc';
 import { Card } from '../common/Card';
+import { PanelLabel } from '../common/PanelLabel';
 import { Terminal, Send, RefreshCw } from 'lucide-react';
 import { getMethodEvidenceStatus, formatEvidenceLabel, type MethodEvidenceStatus } from '../../utils/capabilityEvidence';
 
@@ -124,13 +125,16 @@ export function RpcConsole({ endpoint, isConnected, onRunDiagnostic, isLoading, 
   return (
     <Card>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Terminal className="w-5 h-5 text-cyan-400" />
-            <h3 className="text-lg font-semibold text-white">RPC Diagnostic Console</h3>
+        <div className="flex items-start justify-between">
+          <div>
+            <PanelLabel index="01" label="RPC CONSOLE" />
+            <div className="flex items-center gap-2 mt-2">
+              <Terminal className="w-5 h-5 text-cyan-400" />
+              <h3 className="text-lg font-semibold text-white">RPC Diagnostic Console</h3>
+            </div>
           </div>
           <span className="text-xs text-slate-400">
-            Target: <code className="text-slate-200">{endpoint || 'None'}</code>
+            Target: <code className="text-slate-200 font-data">{endpoint || 'None'}</code>
           </span>
         </div>
 
