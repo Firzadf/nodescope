@@ -1,5 +1,4 @@
 import type { LucideIcon } from 'lucide-react';
-import { Card } from '../common/Card';
 
 interface MetricCardProps {
   title: string;
@@ -11,21 +10,16 @@ interface MetricCardProps {
 
 export function MetricCard({ title, value, icon: Icon, subtitle, unavailable }: MetricCardProps) {
   return (
-    <Card>
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-slate-400">{title}</p>
-          <p className="mt-2 text-3xl font-semibold text-white font-data">
-            {unavailable || value === null ? (
-              <span className="text-slate-500 text-xl">—</span>
-            ) : (
-              value
-            )}
-          </p>
-          {subtitle && <p className="mt-1 text-xs text-slate-500">{subtitle}</p>}
-        </div>
-        <Icon className="w-8 h-8 text-cyan-500/50" />
+    <div className="bg-panel px-5 py-4">
+      <div className="flex items-center gap-2">
+        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${unavailable ? 'bg-slate-600' : 'bg-emerald-400'}`} />
+        <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-500">{title}</p>
+        <Icon className="w-3.5 h-3.5 text-slate-600 ml-auto shrink-0" />
       </div>
-    </Card>
+      <p className="mt-2.5 text-[26px] leading-none font-semibold text-white font-data truncate">
+        {unavailable || value === null ? <span className="text-slate-600">—</span> : value}
+      </p>
+      {subtitle && <p className="mt-2 text-[11px] text-slate-500 font-data truncate">{subtitle}</p>}
+    </div>
   );
 }

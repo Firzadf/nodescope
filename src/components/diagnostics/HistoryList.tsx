@@ -14,9 +14,14 @@ export function HistoryList({ history, onSelect, onClear }: HistoryListProps) {
     return (
       <Card>
         <PanelLabel index="02" label="HISTORY" />
-        <div className="text-center py-8 text-slate-500">
-          <p className="text-sm">No diagnostic history in this session yet.</p>
-          <p className="text-xs text-slate-600 mt-1">Run a diagnostic from the RPC Diagnostics tab and results will appear here.</p>
+        <h3 className="text-lg font-semibold text-white mt-2">Diagnostic History</h3>
+        <div className="empty-shell px-5 py-6 flex items-start gap-4 mt-4">
+          <Clock className="w-5 h-5 text-slate-600 mt-0.5 shrink-0" />
+          <div>
+            <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">Empty ledger</p>
+            <p className="text-sm text-slate-400 mt-1.5">No diagnostic history in this session yet.</p>
+            <p className="text-xs text-slate-500 mt-1">Run a diagnostic from the RPC Diagnostics tab and results will appear here.</p>
+          </div>
         </div>
       </Card>
     );
@@ -29,7 +34,7 @@ export function HistoryList({ history, onSelect, onClear }: HistoryListProps) {
           <div>
             <PanelLabel index="02" label="HISTORY" />
             <div className="flex items-center gap-2 mt-2">
-              <Clock className="w-5 h-5 text-cyan-400" />
+              <Clock className="w-5 h-5 text-slate-400" />
               <h3 className="text-lg font-semibold text-white">Diagnostic History</h3>
             </div>
           </div>
@@ -46,7 +51,7 @@ export function HistoryList({ history, onSelect, onClear }: HistoryListProps) {
             <div
               key={item.id}
               onClick={() => onSelect(item)}
-              className="bg-slate-950/60 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-lg p-3 flex items-center justify-between cursor-pointer transition-colors"
+              className="bg-black/25 hover:bg-slate-900 border border-line hover:border-line rounded-lg p-3 flex items-center justify-between cursor-pointer transition-colors"
             >
               <div className="flex items-center gap-3">
                 {item.success ? (

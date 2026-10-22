@@ -129,7 +129,7 @@ export function RpcConsole({ endpoint, isConnected, onRunDiagnostic, isLoading, 
           <div>
             <PanelLabel index="01" label="RPC CONSOLE" />
             <div className="flex items-center gap-2 mt-2">
-              <Terminal className="w-5 h-5 text-cyan-400" />
+              <Terminal className="w-5 h-5 text-slate-400" />
               <h3 className="text-lg font-semibold text-white">RPC Diagnostic Console</h3>
             </div>
           </div>
@@ -151,7 +151,7 @@ export function RpcConsole({ endpoint, isConnected, onRunDiagnostic, isLoading, 
               <select
                 value={selectedPreset}
                 onChange={(e) => handlePresetChange(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                className="w-full bg-slate-950 border border-line rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
               >
                 {presetEvidence.map(({ preset, status }) => (
                   <option key={preset.method || 'custom'} value={preset.method}>
@@ -189,7 +189,7 @@ export function RpcConsole({ endpoint, isConnected, onRunDiagnostic, isLoading, 
                 onChange={(e) => setCustomMethod(e.target.value)}
                 placeholder="e.g., eth_chainId"
                 required
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                className="w-full bg-slate-950 border border-line rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-cyan-500"
               />
             </div>
           </div>
@@ -202,7 +202,7 @@ export function RpcConsole({ endpoint, isConnected, onRunDiagnostic, isLoading, 
               onChange={(e) => setParamsInput(e.target.value)}
               placeholder="[]"
               className={`w-full bg-slate-950 border rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:ring-2 ${
-                paramError ? 'border-red-500 focus:ring-red-500' : 'border-slate-700 focus:ring-cyan-500'
+                paramError ? 'border-red-500 focus:ring-red-500' : 'border-line focus:ring-cyan-500'
               }`}
             />
             {paramError && <p className="text-xs text-red-400 mt-1">{paramError}</p>}
@@ -212,7 +212,7 @@ export function RpcConsole({ endpoint, isConnected, onRunDiagnostic, isLoading, 
             <button
               type="submit"
               disabled={isLoading || !customMethod.trim() || !endpoint.trim()}
-              className="px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white font-medium rounded-lg text-sm flex items-center gap-2 transition-colors"
+              className="btn-primary px-6 py-2.5 font-medium rounded-lg text-sm flex items-center gap-2"
             >
               {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               {isLoading ? 'Executing...' : 'Run Diagnostic'}

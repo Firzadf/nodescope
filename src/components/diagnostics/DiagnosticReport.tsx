@@ -65,11 +65,11 @@ export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticRepo
   return (
     <Card>
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-2 border-b border-slate-800 pb-4">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-2 border-b border-line pb-4">
           <div>
             <PanelLabel index="01" label="REPORT" />
             <h3 className="text-lg font-semibold text-white flex items-center gap-2 mt-2">
-              <FileText className="w-5 h-5 text-cyan-400" />
+              <FileText className="w-5 h-5 text-slate-400" />
               Diagnostic Report
             </h3>
             <p className="text-xs text-slate-400 mt-1">
@@ -80,7 +80,7 @@ export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticRepo
             type="button"
             onClick={exportAsJson}
             disabled={exporting || recordCount === 0}
-            className="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white font-medium rounded-lg text-sm flex items-center gap-2 transition-colors"
+            className="btn-primary px-5 py-2.5 font-medium rounded-lg text-sm flex items-center gap-2"
           >
             {exporting ? <span className="w-4 h-4 animate-spin border-2 border-white border-t-transparent rounded-full" /> : <Download className="w-4 h-4" />}
             {exporting ? 'Generating...' : 'Export as JSON'}
@@ -95,7 +95,7 @@ export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticRepo
 
         {recordCount > 0 && (
           <div className="space-y-4">
-            <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-4">
+            <div className="bg-black/25 border border-line rounded-lg p-4">
               <h4 className="text-sm font-medium text-slate-300 mb-3">Summary</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
@@ -117,11 +117,11 @@ export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticRepo
               </div>
             </div>
 
-            <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-4">
+            <div className="bg-black/25 border border-line rounded-lg p-4">
               <h4 className="text-sm font-medium text-slate-300 mb-2">Record Details Preview</h4>
               <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
                 {history.slice(0, 3).map((item) => (
-                  <div key={item.id} className="bg-slate-900 border border-slate-800 rounded p-2.5 text-xs">
+                  <div key={item.id} className="bg-slate-900 border border-line rounded p-2.5 text-xs">
                     <div className="flex justify-between mb-1">
                       <code className="text-cyan-400">{item.request.method}</code>
                       <span className="text-slate-500">{new Date(item.timestamp).toLocaleTimeString()}</span>
@@ -143,7 +143,7 @@ export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticRepo
             </div>
 
             {totalFindings > 0 && (
-              <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-4">
+              <div className="bg-black/25 border border-line rounded-lg p-4">
                 <h4 className="text-sm font-medium text-slate-300 mb-2">Diagnostic Findings</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div>
@@ -165,7 +165,7 @@ export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticRepo
                 </div>
                 <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
                   {findings.map((finding, index) => (
-                    <div key={index} className="bg-slate-900 border border-slate-800 rounded p-3 text-xs">
+                    <div key={index} className="bg-slate-900 border border-line rounded p-3 text-xs">
                       <div className="flex items-start gap-2 mb-1">
                         <span className={`font-medium text-xs ${getSeverityColor(finding.severity)}`}>
                           {finding.severity.toUpperCase()}
@@ -185,9 +185,12 @@ export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticRepo
         )}
 
         {recordCount === 0 && (
-          <div className="text-center py-8 text-slate-500">
-            <FileText className="w-8 h-8 mx-auto mb-2 text-slate-600" />
-            <p className="text-sm">No diagnostic history in this session yet.</p>
+          <div className="empty-shell px-5 py-6 flex items-start gap-4">
+            <FileText className="w-5 h-5 text-slate-600 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">No records</p>
+              <p className="text-sm text-slate-400 mt-1.5">No diagnostic history in this session yet.</p>
+            </div>
           </div>
         )}
       </div>

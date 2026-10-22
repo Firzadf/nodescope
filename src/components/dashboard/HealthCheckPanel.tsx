@@ -112,15 +112,15 @@ export function HealthCheckPanel({
   return (
     <Card>
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-3 border-b border-slate-700 pb-4">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-3 border-b border-line pb-4">
           <div>
             <PanelLabel index="03" label="HEALTH CHECK" />
             <h3 className="text-lg font-semibold text-white flex items-center gap-2 mt-2">
-              <Activity className="w-5 h-5 text-cyan-400" />
+              <Activity className="w-5 h-5 text-slate-400" />
               Node Health Check
             </h3>
             <p className="text-xs text-slate-400 mt-1">
-              Explicit user-triggered node health assessment. No background polling or synthetic metrics.
+              User-triggered node health assessment. No background polling or synthetic metrics.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -131,7 +131,7 @@ export function HealthCheckPanel({
               type="button"
               onClick={handleTrigger}
               disabled={isActionDisabled}
-              className="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white font-medium rounded-lg text-sm flex items-center gap-2 transition-colors shadow-sm"
+              className="btn-primary px-5 py-2.5 font-medium rounded-lg text-sm flex items-center gap-2"
             >
               {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
               {isLoading ? 'Running Health Check...' : 'Run Health Check'}
@@ -154,19 +154,22 @@ export function HealthCheckPanel({
         )}
 
         {!latestSnapshot && !isLoading && (
-          <div className="text-center py-8 text-slate-500 border border-dashed border-slate-800 rounded-lg">
-            <Activity className="w-8 h-8 mx-auto mb-2 text-slate-600" />
-            <p className="text-sm font-medium text-slate-400">No health check performed in this session yet.</p>
-            <p className="text-xs text-slate-500 mt-1">
-              Click &quot;Run Health Check&quot; above to query known read-only endpoints for the active profile.
-            </p>
+          <div className="empty-shell px-5 py-6 flex items-start gap-4">
+            <Activity className="w-5 h-5 text-slate-600 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">No data yet</p>
+              <p className="text-sm font-medium text-slate-300 mt-1.5">No health check performed in this session yet.</p>
+              <p className="text-xs text-slate-500 mt-1">
+                Click &quot;Run Health Check&quot; above to query known read-only endpoints for the active profile.
+              </p>
+            </div>
           </div>
         )}
 
         {latestSnapshot && (
           <div className="space-y-4">
-            <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-4">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-3 text-xs">
+            <div className="bg-black/25 border border-line rounded-lg p-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-line pb-3 mb-3 text-xs">
                 <div className="flex items-center gap-2">
                   <span className="text-slate-400">Snapshot ID:</span>
                   <code className="text-slate-200 font-mono text-[11px]">{latestSnapshot.id}</code>
@@ -189,13 +192,13 @@ export function HealthCheckPanel({
                 {latestSnapshot.checks.map((check: HealthCheckCheck) => (
                   <div
                     key={check.method}
-                    className="bg-slate-900 border border-slate-800 rounded-lg p-3 text-xs space-y-1.5"
+                    className="bg-slate-900 border border-line rounded-lg p-3 text-xs space-y-1.5"
                   >
                     <div className="flex items-center justify-between">
                       <code className="text-cyan-400 font-mono font-medium">{check.method}</code>
                       <OutcomeBadge outcome={check.outcome} />
                     </div>
-                    <div className="flex items-center justify-between text-slate-400 pt-1 border-t border-slate-800/60">
+                    <div className="flex items-center justify-between text-slate-400 pt-1 border-t border-line/60">
                       <span>Observed value:</span>
                       <span className="text-slate-200 font-mono font-medium">
                         {check.observedValue !== null ? String(check.observedValue) : '—'}
@@ -216,13 +219,13 @@ export function HealthCheckPanel({
             </div>
 
             {latestSnapshot.findings.length > 0 && (
-              <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-4 space-y-3">
+              <div className="bg-black/25 border border-line rounded-lg p-4 space-y-3">
                 <h4 className="text-sm font-medium text-slate-300">Derived Diagnostic Findings</h4>
                 <div className="space-y-2">
                   {latestSnapshot.findings.map((f: Finding, idx: number) => (
                     <div
                       key={`${f.ruleId}-${idx}`}
-                      className="bg-slate-900 border border-slate-800 rounded p-3 text-xs space-y-1"
+                      className="bg-slate-900 border border-line rounded p-3 text-xs space-y-1"
                     >
                       <div className="flex items-center gap-2">
                         <FindingSeverityBadge severity={f.severity} />
@@ -238,7 +241,7 @@ export function HealthCheckPanel({
               </div>
             )}
 
-            <div className="bg-slate-900/40 border border-slate-800/60 rounded-lg p-3 text-[11px] text-slate-400">
+            <div className="bg-slate-900/40 border border-line/60 rounded-lg p-3 text-[11px] text-slate-400">
               <span className="font-medium text-slate-300">Observation note: </span>
               A successful block height query confirms single-measurement retrieval only. It does not prove active synchronization or continuous block production.
             </div>

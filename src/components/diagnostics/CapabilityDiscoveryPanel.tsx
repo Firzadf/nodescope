@@ -37,7 +37,7 @@ function statusTone(status: CapabilitySnapshot['discoveryStatus']): string {
     case 'transport_error':
       return 'text-red-400 border-red-500/30 bg-red-500/10';
     default:
-      return 'text-slate-400 border-slate-700 bg-slate-800';
+      return 'text-slate-400 border-line bg-slate-800';
   }
 }
 
@@ -68,15 +68,15 @@ export function CapabilityDiscoveryPanel({ endpoint, snapshot, onSnapshotChange,
   return (
     <Card>
       <div className="space-y-4">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-2 border-b border-slate-800 pb-4">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-2 border-b border-line pb-4">
           <div>
             <PanelLabel index="05" label="CAPABILITIES" />
             <h3 className="text-lg font-semibold text-white flex items-center gap-2 mt-2">
-              <Search className="w-5 h-5 text-cyan-400" />
+              <Search className="w-5 h-5 text-slate-400" />
               RPC Capability Discovery
             </h3>
             <p className="text-xs text-slate-400 mt-1">
-              Lists methods advertised by <code className="text-slate-300">rpc_methods</code> without executing them. No polling; no side effects.
+              Advertised methods from <code className="text-slate-300">rpc_methods</code> — listed, never executed. No polling.
             </p>
           </div>
           <div className="text-xs text-slate-400">
@@ -88,14 +88,17 @@ export function CapabilityDiscoveryPanel({ endpoint, snapshot, onSnapshotChange,
           type="button"
           onClick={handleDiscover}
           disabled={isDisabled}
-          className="w-full md:w-auto px-5 py-2.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-sm font-medium text-slate-200 rounded-lg flex items-center justify-center gap-2 transition-colors border border-slate-700"
+          className="btn-ghost w-full md:w-auto px-5 py-2.5 text-sm font-medium rounded-lg flex items-center justify-center gap-2"
         >
           {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
           {loading ? 'Discovering…' : 'Discover Capabilities'}
         </button>
 
         {!snapshot && !loading && (
-          <p className="text-xs text-slate-500">No discovery attempted. Click Discover Capabilities to query this endpoint.</p>
+          <div className="empty-shell px-5 py-4">
+            <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">Not queried</p>
+            <p className="text-xs text-slate-500 mt-1.5">No discovery attempted. Click Discover Capabilities to query this endpoint.</p>
+          </div>
         )}
 
         {snapshot && (
@@ -118,14 +121,14 @@ export function CapabilityDiscoveryPanel({ endpoint, snapshot, onSnapshotChange,
             </div>
 
             {snapshot.error && (
-              <div className="bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-amber-300 flex gap-2">
+              <div className="bg-slate-950 border border-line rounded-lg p-3 text-xs text-amber-300 flex gap-2">
                 <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <span className="font-mono break-all">{snapshot.error}</span>
               </div>
             )}
 
             {snapshot.discoveryStatus === 'success' && (
-              <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-4 space-y-2">
+              <div className="bg-black/25 border border-line rounded-lg p-4 space-y-2">
                 <div className="text-xs text-slate-400">
                   Advertised methods (safe allowlist): <span className="text-slate-200 font-medium">{snapshot.safeAdvertisedMethods.length}</span>
                   <span className="text-slate-500"> of {snapshot.rawMethodCount} total unique methods observed</span>
@@ -143,11 +146,11 @@ export function CapabilityDiscoveryPanel({ endpoint, snapshot, onSnapshotChange,
                             ? 'bg-red-500/15 text-red-300 border-red-500/25'
                             : status === 'advertised'
                             ? 'bg-amber-500/15 text-amber-300 border-amber-500/25'
-                            : 'bg-slate-800 text-slate-400 border-slate-700';
+                            : 'bg-slate-800 text-slate-400 border-line';
                         return (
                           <li
                             key={entry.method}
-                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-slate-900 border border-slate-800 text-xs font-mono text-slate-200"
+                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-slate-900 border border-line text-xs font-mono text-slate-200"
                             title={label}
                           >
                             {entry.method}

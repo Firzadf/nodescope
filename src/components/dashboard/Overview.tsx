@@ -53,8 +53,8 @@ export function Overview({
     metricsDetailed.clientVersion.value !== null ? metricsDetailed.clientVersion.value : '—';
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="space-y-6 stagger">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-line border border-line rounded-xl overflow-hidden shadow-[0_16px_40px_-24px_rgba(0,0,0,0.7)]">
         <MetricCard
           title="Connection Status"
           value={connectionStatus.toUpperCase()}
@@ -115,15 +115,15 @@ export function Overview({
       />
 
       {connectionStatus !== 'connected' && (
-        <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-4">
+        <div className="bg-panel border border-line rounded-xl p-4">
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center">
-              <span className="text-cyan-400 text-sm font-semibold">i</span>
+            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-[#8C1DEF] to-[#0181FB] flex items-center justify-center">
+              <span className="text-white text-sm font-bold">i</span>
             </div>
             <div>
-              <p className="text-sm font-medium text-cyan-300">Demo & Preview Mode Active</p>
+              <p className="text-sm font-medium text-slate-100">Demo & Preview Mode Active</p>
               <p className="mt-1 text-sm text-slate-400">
-                NodeScope requires an active, reachable Portaldot JSON-RPC endpoint with CORS enabled for direct browser requests. No continuous auto-polling or mock live metrics are displayed.
+                Requires a reachable Portaldot JSON-RPC endpoint with CORS enabled for direct browser requests. No auto-polling, no mock metrics.
               </p>
             </div>
           </div>

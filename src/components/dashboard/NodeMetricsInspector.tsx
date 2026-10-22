@@ -71,7 +71,7 @@ function StatusBadge({ status }: { status: MetricStatus }) {
     case 'not_tested':
     default:
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700">
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-400 border border-line">
           Not Tested
         </span>
       );
@@ -180,15 +180,15 @@ export function NodeMetricsInspector({
   return (
     <Card>
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-2 border-b border-slate-800 pb-4">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-2 border-b border-line pb-4">
           <div>
             <PanelLabel index="02" label="NODE METRICS" />
             <h3 className="text-lg font-semibold text-white flex items-center gap-2 mt-2">
-              <Zap className="w-5 h-5 text-cyan-400" />
+              <Zap className="w-5 h-5 text-slate-400" />
               Node Metrics Inspector
             </h3>
             <p className="text-xs text-slate-400 mt-1">
-              Conservative diagnostic inspector. All queries are explicitly user-triggered. No continuous polling.
+              All queries are user-triggered. No continuous polling.
             </p>
           </div>
           <div className="text-xs text-slate-400">
@@ -207,7 +207,7 @@ export function NodeMetricsInspector({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Metric 1: RPC Latency */}
-          <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-4 space-y-3">
+          <div className="bg-black/25 border border-line rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-cyan-400" />
@@ -238,7 +238,7 @@ export function NodeMetricsInspector({
           </div>
 
           {/* Metric 2: Client Version */}
-          <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-4 space-y-3">
+          <div className="bg-black/25 border border-line rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Server className="w-4 h-4 text-cyan-400" />
@@ -269,7 +269,7 @@ export function NodeMetricsInspector({
           </div>
 
           {/* Metric 3: Peer Count */}
-          <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-4 space-y-3">
+          <div className="bg-black/25 border border-line rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-cyan-400" />
@@ -303,7 +303,7 @@ export function NodeMetricsInspector({
           </div>
 
           {/* Metric 4: Block Height */}
-          <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-4 space-y-3">
+          <div className="bg-black/25 border border-line rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Database className="w-4 h-4 text-cyan-400" />
@@ -324,7 +324,7 @@ export function NodeMetricsInspector({
                 value={selectedBlockMethod}
                 onChange={(e) => setSelectedBlockMethod(e.target.value)}
                 disabled={loadingMetric !== null}
-                className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                className="w-full bg-slate-900 border border-line rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-cyan-500"
               >
                 {BLOCK_METHOD_OPTIONS.map((opt) => (
                   <option key={opt.method} value={opt.method}>

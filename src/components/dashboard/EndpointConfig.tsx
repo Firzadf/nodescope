@@ -56,9 +56,10 @@ export function EndpointConfig({
   const isConnecting = connectionStatus === 'connecting' || isLoading;
 
   return (
-    <Card>
+    <Card className="relative overflow-hidden">
+      <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#8C1DEF] via-[#5B6CF0] to-[#0181FB]" />
       <div className="space-y-4">
-        <div className="flex items-center justify-between gap-3 border-b border-slate-700 pb-3 mb-4">
+        <div className="flex items-center justify-between gap-3 border-b border-line pb-3 mb-4">
           <div className="flex items-center gap-3">
             <div>
               <PanelLabel index="01" label="ENDPOINT" />
@@ -83,26 +84,30 @@ export function EndpointConfig({
 
         <div className="space-y-2">
           <label className="block text-sm font-medium text-slate-300">Endpoint Scope</label>
-          <div className="flex gap-2 text-xs">
-            <label className="flex items-center gap-1.5 cursor-pointer">
+          <div className="flex flex-wrap gap-2">
+            <label className="cursor-pointer">
               <input
                 type="radio"
                 name="endpoint-profile"
                 checked={endpointProfile === 'portaldot_v3_evm'}
                 onChange={() => onProfileChange('portaldot_v3_evm')}
-                className="accent-cyan-500"
+                className="peer sr-only"
               />
-              <span className="text-slate-200">Portaldot V3 EVM (HTTP JSON-RPC)</span>
+              <span className="inline-flex items-center rounded-full border border-line px-3 py-1.5 text-xs text-slate-400 transition-all hover:border-slate-500 hover:text-slate-200 peer-checked:border-transparent peer-checked:text-white peer-checked:font-medium peer-checked:bg-[linear-gradient(135deg,#8C1DEF,#0181FB)] peer-focus-visible:ring-2 peer-focus-visible:ring-[#0181FB]/70">
+                Portaldot V3 EVM (HTTP JSON-RPC)
+              </span>
             </label>
-            <label className="flex items-center gap-1.5 cursor-pointer ml-4">
+            <label className="cursor-pointer">
               <input
                 type="radio"
                 name="endpoint-profile"
                 checked={endpointProfile === 'generic_http'}
                 onChange={() => onProfileChange('generic_http')}
-                className="accent-slate-400"
+                className="peer sr-only"
               />
-              <span className="text-slate-400">Generic / Substrate HTTP JSON-RPC</span>
+              <span className="inline-flex items-center rounded-full border border-line px-3 py-1.5 text-xs text-slate-400 transition-all hover:border-slate-500 hover:text-slate-200 peer-checked:border-transparent peer-checked:text-white peer-checked:font-medium peer-checked:bg-[linear-gradient(135deg,#8C1DEF,#0181FB)] peer-focus-visible:ring-2 peer-focus-visible:ring-[#0181FB]/70">
+                Generic / Substrate HTTP JSON-RPC
+              </span>
             </label>
           </div>
           <p className="text-[11px] text-slate-500">
@@ -122,10 +127,10 @@ export function EndpointConfig({
                 onChange={(e) => handleUrlChange(e.target.value)}
                 placeholder="https://test-evm-rpc-v3.portaldot.dev"
                 disabled={isConnected || isConnecting}
-                className={`w-full bg-slate-950 border rounded-lg px-4 py-2.5 text-sm text-white font-data placeholder-slate-500 focus:outline-none focus:ring-2 ${
+                className={`w-full bg-black/30 border rounded-lg px-4 py-2.5 text-sm text-white font-data placeholder-slate-500 focus:outline-none focus:ring-2 ${
                   validationError
                     ? 'border-red-500 focus:ring-red-500'
-                    : 'border-slate-700 focus:ring-cyan-500'
+                    : 'border-line focus:ring-[#0181FB]/70'
                 } disabled:opacity-50`}
               />
             </div>
@@ -133,7 +138,7 @@ export function EndpointConfig({
               <button
                 type="button"
                 onClick={onDisconnect}
-                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg text-sm transition-colors"
+                className="px-5 py-2.5 border border-red-500/30 text-red-300 hover:bg-red-500/10 font-medium rounded-lg text-sm transition-colors"
               >
                 Disconnect
               </button>
@@ -142,7 +147,7 @@ export function EndpointConfig({
                 type="button"
                 onClick={onConnect}
                 disabled={isConnecting || !!validationError || !inputUrl.trim()}
-                className="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white font-medium rounded-lg text-sm flex items-center gap-2 transition-colors"
+                className="btn-primary px-5 py-2.5 font-medium rounded-lg text-sm flex items-center gap-2"
               >
                 {isConnecting && <RefreshCw className="w-4 h-4 animate-spin" />}
                 {isConnecting ? 'Testing...' : 'Connect & Test'}
@@ -158,10 +163,10 @@ export function EndpointConfig({
         </div>
 
         {evmConnectionDetails && endpointProfile === 'portaldot_v3_evm' && (
-          <div className="bg-slate-950 border border-slate-800 rounded-lg p-3 space-y-2">
+          <div className="bg-slate-950 border border-line rounded-lg p-3 space-y-2">
             <div className="text-xs font-medium text-slate-300">EVM Endpoint Checks (HTTP JSON-RPC — no WebSocket)</div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-              <div className="bg-slate-900/60 border border-slate-800 rounded p-2.5">
+              <div className="bg-black/25 border border-line rounded p-2.5">
                 <div className="text-slate-500">eth_chainId</div>
                 <div className={evmConnectionDetails.validation.isPortaldotV3Testnet ? 'text-emerald-400 font-medium' : evmConnectionDetails.validation.chainId !== null ? 'text-amber-400 font-medium' : 'text-red-400 font-medium'}>
                   {evmConnectionDetails.validation.isPortaldotV3Testnet
@@ -178,7 +183,7 @@ export function EndpointConfig({
                   <div className="text-red-400 font-mono mt-1 text-[11px]">{evmConnectionDetails.chainIdResult.error}</div>
                 )}
               </div>
-              <div className="bg-slate-900/60 border border-slate-800 rounded p-2.5">
+              <div className="bg-black/25 border border-line rounded p-2.5">
                 <div className="text-slate-500">eth_blockNumber</div>
                 <div className={evmConnectionDetails.blockResult.success ? 'text-emerald-400 font-medium' : evmConnectionDetails.blockResult.response?.error?.code === -32601 ? 'text-amber-400 font-medium' : 'text-red-400 font-medium'}>
                   {evmConnectionDetails.blockResult.success
@@ -196,8 +201,8 @@ export function EndpointConfig({
           </div>
         )}
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-3 text-xs text-slate-400 space-y-1">
-          <p className="font-medium text-slate-300">CORS & Browser Security Notice:</p>
+        <div className="bg-black/25 border border-line rounded-lg p-3 text-xs text-slate-400 space-y-1">
+          <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-400">CORS & Browser Security Notice</p>
           <p>
             Direct browser-to-node requests require the target JSON-RPC node to enable CORS headers (e.g.{' '}
             <code className="text-slate-200">Access-Control-Allow-Origin: *</code>). If you encounter network errors, verify your
