@@ -4,11 +4,11 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --color-ink: #05080f;
-  --color-panel: #0a0f1c;
-  --color-panel-raised: #0d1524;
-  --color-deep: #070b14;
-  --color-line: rgb(148 163 184 / 0.14);
+  --color-ink: #060b1d;
+  --color-panel: #0a1226;
+  --color-panel-raised: #0e1730;
+  --color-deep: #040818;
+  --color-line: rgb(148 178 255 / 0.15);
 }
 
 @layer base {
