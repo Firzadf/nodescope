@@ -2,7 +2,6 @@
 import '@testing-library/jest-dom/vitest';
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
-import { webcrypto } from 'node:crypto';
 import { ReportVerifier } from './ReportVerifier';
 import {
   attachSessionTrends,
@@ -17,11 +16,11 @@ import {
   type HealthCheckSnapshot,
 } from '../../types/healthCheck';
 
-// jsdom may not expose WebCrypto's subtle API; Node 24's implementation is
-// the same one the utils tests run against, so lend it to the DOM global.
-if (!globalThis.crypto?.subtle) {
-  Object.defineProperty(globalThis, 'crypto', { value: webcrypto, configurable: true });
-}
+// Hashing uses the global WebCrypto API in both environments: Node 24's
+// global in the utils tests, and jsdom 29's native subtle implementation
+// here (probed during development — it produces correct SHA-256 digests).
+// The app tsconfig restricts ambient types to vite/client, so no node:*
+// imports are available to test files; none are needed.
 
 afterEach(() => cleanup());
 
