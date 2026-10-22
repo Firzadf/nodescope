@@ -374,4 +374,72 @@ describe('SnapshotComparison UI', () => {
 
     expect(snapshots).toEqual(cloneBefore);
   });
+
+  it('shows a caveated block delta and names both endpoints for a cross-endpoint same-chain pair', () => {
+    const evmChecks = (blockHex: string) => [
+      { method: 'eth_chainId', outcome: 'success' as const, success: true, latencyMs: 25, observedValue: '0x190f1ca9', error: null },
+      { method: 'eth_blockNumber', outcome: 'success' as const, success: true, latencyMs: 40, observedValue: blockHex, error: null },
+      { method: 'web3_clientVersion', outcome: 'success' as const, success: true, latencyMs: 30, observedValue: 'eth-rpc/test', error: null },
+      { method: 'net_version', outcome: 'success' as const, success: true, latencyMs: 20, observedValue: '420420777', error: null },
+    ];
+    const snapA = createSnapshot({
+      id: 'snap-a',
+      timestamp: 1700000000000,
+      endpointOrigin: 'https://a.example.test',
+      checks: evmChecks('0x100'), // 256
+    });
+    const snapB = createSnapshot({
+      id: 'snap-b',
+      timestamp: 1700000060000,
+      endpointOrigin: 'https://b.example.test',
+      checks: evmChecks('0x105'), // 261
+    });
+
+    render(<SnapshotComparison snapshots={[snapB, snapA]} />);
+
+    expect(screen.getByText(/Mode: Cross-Endpoint/i)).toBeInTheDocument();
+    expect(screen.getByText(/Both endpoints reported chain ID 420420777/i)).toBeInTheDocument();
+    // Both endpoints named in the banner (and again under the selectors).
+    expect(screen.getAllByText(/https:\/\/a\.example\.test/).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText(/https:\/\/b\.example\.test/).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText(/Available \(Cross-Endpoint\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/\+5 blocks/)).toBeInTheDocument();
+    // The sync-point caveat appears in both the banner and under the delta itself.
+    expect(screen.getAllByText(/endpoints may be at different sync points/i).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('withholds the block delta as not comparable and shows the error finding for different chains', () => {
+    const snapA = createSnapshot({
+      id: 'snap-a',
+      timestamp: 1700000000000,
+      endpointOrigin: 'https://a.example.test',
+      checks: [
+        { method: 'eth_chainId', outcome: 'success' as const, success: true, latencyMs: 25, observedValue: '0x190f1ca9', error: null },
+        { method: 'eth_blockNumber', outcome: 'success' as const, success: true, latencyMs: 40, observedValue: '0x100', error: null },
+        { method: 'web3_clientVersion', outcome: 'success' as const, success: true, latencyMs: 30, observedValue: 'eth-rpc/test', error: null },
+        { method: 'net_version', outcome: 'success' as const, success: true, latencyMs: 20, observedValue: '420420777', error: null },
+      ],
+    });
+    const snapB = createSnapshot({
+      id: 'snap-b',
+      timestamp: 1700000060000,
+      endpointOrigin: 'https://other-chain.example.test',
+      checks: [
+        { method: 'eth_chainId', outcome: 'success' as const, success: true, latencyMs: 25, observedValue: '0x1', error: null },
+        { method: 'eth_blockNumber', outcome: 'success' as const, success: true, latencyMs: 40, observedValue: '0x999', error: null },
+        { method: 'web3_clientVersion', outcome: 'success' as const, success: true, latencyMs: 30, observedValue: 'eth-rpc/test', error: null },
+        { method: 'net_version', outcome: 'success' as const, success: true, latencyMs: 20, observedValue: '1', error: null },
+      ],
+    });
+
+    render(<SnapshotComparison snapshots={[snapB, snapA]} />);
+
+    expect(screen.getByText(/Different chains: endpoint A reported chain ID 420420777, endpoint B reported chain ID 1/i)).toBeInTheDocument();
+    expect(screen.getByText(/Not Comparable \(Different Chains: 420420777 vs 1\)/i)).toBeInTheDocument();
+    // The critical (error) cross-endpoint finding is rendered.
+    expect(screen.getByText('cross_endpoint_different_chain')).toBeInTheDocument();
+    expect(screen.getByText('Endpoints are on different chains')).toBeInTheDocument();
+    // No signed block delta is presented anywhere.
+    expect(screen.queryByText(/\d+ blocks/)).toBeNull();
+  });
 });

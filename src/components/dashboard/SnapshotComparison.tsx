@@ -12,6 +12,7 @@ import {
   type FindingComparisonStatus,
   type BlockHeightDeltaStatus,
 } from '../../utils/snapshotComparer';
+import { analyzeCrossEndpoint } from '../../utils/crossEndpointAnalysis';
 
 interface SnapshotComparisonProps {
   snapshots: HealthCheckSnapshot[];
@@ -118,6 +119,13 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
   const comparison = useMemo(() => {
     if (!snapshotA || !snapshotB) return null;
     return compareSnapshots(snapshotA, snapshotB);
+  }, [snapshotA, snapshotB]);
+
+  // Cross-endpoint discipline (chain identity, delta comparability, findings).
+  // Null for like-for-like pairs, which render exactly as before.
+  const crossAnalysis = useMemo(() => {
+    if (!snapshotA || !snapshotB) return null;
+    return analyzeCrossEndpoint(snapshotA, snapshotB);
   }, [snapshotA, snapshotB]);
 
   if (snapshots.length < 2) {
@@ -253,20 +261,159 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
         <div key={`${activeIdA}:${activeIdB}`} className="diff-reveal space-y-6">
         {/* Compatibility Warning */}
         {comparison && !comparison.comparable && (
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-xs text-amber-300 flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-400" />
+          <div
+            className={`rounded-lg p-3 text-xs flex items-start gap-2 border ${
+              crossAnalysis?.chainRelation === 'different_chain'
+                ? 'bg-red-500/10 border-red-500/30 text-red-300'
+                : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+            }`}
+          >
+            <AlertTriangle
+              className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+                crossAnalysis?.chainRelation === 'different_chain' ? 'text-red-400' : 'text-amber-400'
+              }`}
+            />
             <div>
-              <p className="font-semibold text-amber-200">Cross-Endpoint / Profile Comparison</p>
-              <p className="mt-0.5">{comparison.incompatibilityReason}</p>
-              <p className="text-[11px] text-amber-400/80 mt-1">
-                Showing individual result diffs for reference only. Do not interpret as a direct time-series progression.
+              <p
+                className={`font-semibold ${
+                  crossAnalysis?.chainRelation === 'different_chain' ? 'text-red-200' : 'text-amber-200'
+                }`}
+              >
+                Cross-Endpoint / Profile Comparison
               </p>
+              <p className="mt-0.5">{comparison.incompatibilityReason}</p>
+              {crossAnalysis && (
+                <div className="mt-1.5 font-mono text-[11px] space-y-0.5">
+                  <div>
+                    A — <span className="font-medium">{crossAnalysis.originA}</span> ({crossAnalysis.profileA})
+                  </div>
+                  <div>
+                    B — <span className="font-medium">{crossAnalysis.originB}</span> ({crossAnalysis.profileB})
+                  </div>
+                </div>
+              )}
+              {crossAnalysis?.chainRelation === 'different_chain' ? (
+                <p className="text-[11px] text-red-400/90 mt-1">
+                  Different chains: endpoint A reported chain ID {crossAnalysis.chainIdA}, endpoint B reported chain ID{' '}
+                  {crossAnalysis.chainIdB}. The block-height delta is not comparable and is withheld below.
+                </p>
+              ) : crossAnalysis?.chainRelation === 'same_chain' ? (
+                <p className="text-[11px] text-amber-400/80 mt-1">
+                  Both endpoints reported chain ID {crossAnalysis.chainIdA}. The block-height delta below compares the
+                  two endpoints at their respective check times — endpoints may be at different sync points. Do not
+                  interpret as a direct time-series progression.
+                </p>
+              ) : (
+                <p className="text-[11px] text-amber-400/80 mt-1">
+                  Showing individual result diffs for reference only. Do not interpret as a direct time-series progression.
+                </p>
+              )}
             </div>
           </div>
         )}
 
-        {/* Block Height Delta */}
-        {comparison && (
+        {/* Cross-Endpoint Findings */}
+        {crossAnalysis && crossAnalysis.findings.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-baseline justify-between gap-3">
+              <h4 className="text-sm font-semibold text-slate-300">Cross-Endpoint Findings</h4>
+              <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">[ Fig. 02 — Endpoint findings ]</span>
+            </div>
+            <div className="space-y-2">
+              {crossAnalysis.findings.map((f) => (
+                <div
+                  key={`${f.ruleId}-${f.title}`}
+                  className="bg-slate-900 border border-line rounded p-3 text-xs space-y-1"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-400 font-mono text-[11px]">{f.ruleId}</span>
+                      <span className="text-white font-medium">{f.title}</span>
+                    </div>
+                    <span
+                      className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border ${
+                        f.severity === 'error'
+                          ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                          : f.severity === 'warning'
+                          ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                          : 'bg-[#0181FB]/15 text-[#7DB4FF] border-[#0181FB]/30'
+                      }`}
+                    >
+                      {f.severity}
+                    </span>
+                  </div>
+                  <p className="text-slate-400">{f.evidence}</p>
+                  <p className="text-slate-500">{f.explanation}</p>
+                  <p className="text-slate-500">
+                    <span className="text-slate-400 font-medium">Recommendation: </span>
+                    {f.recommendation}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Block Height Delta — cross-endpoint discipline takes over when the
+            analysis reaches a determinate verdict (available-with-caveat or
+            not-comparable); otherwise today's rendering applies unchanged. */}
+        {comparison && crossAnalysis && crossAnalysis.blockDelta.status !== 'unavailable' ? (
+          <div className="bg-black/25 border border-line rounded-lg p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                Block Height Delta
+              </span>
+              <span className="text-xs text-slate-400">
+                Method:{' '}
+                <code className="text-slate-200 font-data">
+                  {crossAnalysis.blockDelta.methodA === crossAnalysis.blockDelta.methodB
+                    ? crossAnalysis.blockDelta.methodA
+                    : `A: ${crossAnalysis.blockDelta.methodA} · B: ${crossAnalysis.blockDelta.methodB}`}
+                </code>
+              </span>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-line">
+              <div className="text-xs">
+                <span className="text-slate-400">Status: </span>
+                {crossAnalysis.blockDelta.status === 'not_comparable' ? (
+                  <span className="text-red-400 font-medium">
+                    Not Comparable (Different Chains: {crossAnalysis.chainIdA} vs {crossAnalysis.chainIdB})
+                  </span>
+                ) : (
+                  <span className="text-emerald-400 font-medium">Available (Cross-Endpoint)</span>
+                )}
+              </div>
+              <div className="text-xs">
+                <span className="text-slate-400">Delta (B - A): </span>
+                {crossAnalysis.blockDelta.status === 'available' && crossAnalysis.blockDelta.delta !== null ? (
+                  <span className="text-gradient font-data font-bold text-base">
+                    {crossAnalysis.blockDelta.delta.startsWith('-') ? '' : '+'}
+                    {crossAnalysis.blockDelta.delta} blocks
+                  </span>
+                ) : (
+                  <span className="text-red-400 font-medium">Not comparable</span>
+                )}
+              </div>
+            </div>
+            {(crossAnalysis.blockDelta.a !== null || crossAnalysis.blockDelta.b !== null) && (
+              <div className="text-[11px] text-slate-500 flex gap-4 pt-1">
+                {crossAnalysis.blockDelta.a !== null && (
+                  <span>Snapshot A: <code className="text-slate-400">{crossAnalysis.blockDelta.a}</code></span>
+                )}
+                {crossAnalysis.blockDelta.b !== null && (
+                  <span>Snapshot B: <code className="text-slate-400">{crossAnalysis.blockDelta.b}</code></span>
+                )}
+              </div>
+            )}
+            {crossAnalysis.blockDelta.status === 'available' && snapshotA && snapshotB && (
+              <p className="text-[11px] text-amber-400/80">
+                Cross-endpoint delta: the endpoints may be at different sync points. Snapshot A was taken at{' '}
+                {new Date(snapshotA.timestamp).toLocaleTimeString()}, snapshot B at{' '}
+                {new Date(snapshotB.timestamp).toLocaleTimeString()}.
+              </p>
+            )}
+          </div>
+        ) : comparison && (
           <div className="bg-black/25 border border-line rounded-lg p-4 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
