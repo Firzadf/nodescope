@@ -111,14 +111,24 @@ function App() {
   }, [healthSnapshots]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200">
+    <div className="min-h-screen bg-ink text-slate-200">
       <Header connectionStatus={connectionStatus} />
       <div className="flex">
         <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
+        <main className="relative flex-1 p-6 bg-blueprint">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(640px_260px_at_28%_0%,rgba(140,29,239,0.08),transparent_70%)]" />
+          <div className="relative max-w-7xl mx-auto space-y-6">
             {activeSection === 'overview' && (
               <>
+                <div className="flex flex-wrap items-end justify-between gap-3 pt-1">
+                  <div>
+                    <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">NodeScope / Overview</p>
+                    <h2 className="text-3xl font-bold tracking-tight text-white mt-1.5">
+                      Node health, <span className="text-gradient">proven over time.</span>
+                    </h2>
+                  </div>
+                  <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500 pb-1">Portaldot V3 EVM · Chain 420420777</p>
+                </div>
                 <EndpointConfig
                   endpoint={endpoint}
                   onEndpointChange={setEndpoint}
@@ -148,7 +158,16 @@ function App() {
               </>
             )}
             {activeSection === 'diagnostics' && (
-              <div className="space-y-6">
+              <div className="space-y-6 stagger">
+                <div className="flex flex-wrap items-end justify-between gap-3 pt-1">
+                  <div>
+                    <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">NodeScope / RPC Diagnostics</p>
+                    <h2 className="text-3xl font-bold tracking-tight text-white mt-1.5">
+                      Ask the node. <span className="text-gradient">Keep the receipt.</span>
+                    </h2>
+                  </div>
+                  <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500 pb-1">Manual JSON-RPC · User-triggered only</p>
+                </div>
                 <RpcConsole
                   endpoint={endpoint}
                   isConnected={connectionStatus === 'connected'}
@@ -159,10 +178,10 @@ function App() {
                 />
                 <ResponseViewer result={currentResult} />
                 {evmConnectionDetails && endpointProfile === 'portaldot_v3_evm' && (
-                  <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-4 space-y-2">
+                  <div className="bg-panel border border-line rounded-xl p-4 space-y-2">
                     <h4 className="text-sm font-medium text-slate-300">EVM Connection Check Details</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-data">
-                      <div className="bg-slate-950 border border-slate-800 rounded p-3">
+                      <div className="bg-black/25 border border-line rounded-lg p-3">
                         <div className="text-slate-400">eth_chainId</div>
                         <div className={evmConnectionDetails.validation.isPortaldotV3Testnet ? 'text-emerald-400 font-medium' : evmConnectionDetails.validation.chainId !== null ? 'text-amber-400 font-medium' : 'text-red-400 font-medium'}>
                           {evmConnectionDetails.validation.isPortaldotV3Testnet
@@ -176,7 +195,7 @@ function App() {
                           <div className="text-slate-400 font-mono mt-1">RPC error [{String(evmConnectionDetails.chainIdResult.response.error.code)}]: {evmConnectionDetails.chainIdResult.response.error.message}</div>
                         )}
                       </div>
-                      <div className="bg-slate-950 border border-slate-800 rounded p-3">
+                      <div className="bg-black/25 border border-line rounded-lg p-3">
                         <div className="text-slate-400">eth_blockNumber</div>
                         <div className={evmConnectionDetails.blockResult.success ? 'text-emerald-400 font-medium' : evmConnectionDetails.blockResult.response?.error?.code === -32601 ? 'text-amber-400 font-medium' : 'text-red-400 font-medium'}>
                           {evmConnectionDetails.blockResult.success
@@ -192,7 +211,16 @@ function App() {
               </div>
             )}
             {activeSection === 'history' && (
-              <div className="space-y-6">
+              <div className="space-y-6 stagger">
+                <div className="flex flex-wrap items-end justify-between gap-3 pt-1">
+                  <div>
+                    <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">NodeScope / History</p>
+                    <h2 className="text-3xl font-bold tracking-tight text-white mt-1.5">
+                      Every check, <span className="text-gradient">on record.</span>
+                    </h2>
+                  </div>
+                  <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500 pb-1">Session ledger · Exportable JSON</p>
+                </div>
                 <DiagnosticReport history={history} />
                 <HistoryList
                   history={history}
@@ -210,10 +238,13 @@ function App() {
           </div>
         </main>
       </div>
-      <footer className="border-t border-slate-800">
+      <footer className="border-t border-line">
         <div className="px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-2">
           <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">
             NodeScope — Built for Portaldot Hacker House 2026
+          </p>
+          <p className="hidden lg:block font-data text-[11px] uppercase tracking-[0.18em] text-slate-600">
+            Report schema · nodescope.diagnostic-report.v1
           </p>
           <div className="flex items-center gap-5 font-data text-[11px] uppercase tracking-[0.18em]">
             <a href="https://github.com/Firzadf/nodescope" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors">

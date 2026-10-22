@@ -3,14 +3,42 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --color-ink: #05080f;
+  --color-panel: #0a0f1c;
+  --color-panel-raised: #0d1524;
+  --color-deep: #070b14;
+  --color-line: rgb(148 163 184 / 0.14);
 }
 
 @layer base {
   html {
     font-family: "Inter", sans-serif;
   }
+  body {
+    background-color: var(--color-ink);
+  }
   h1, h2, h3, h4, h5, h6 {
     font-family: "Space Grotesk", sans-serif;
+  }
+  ::selection {
+    background-color: #8c1def;
+    color: #fff;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #26314a transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: #26314a;
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
   }
 }
 
@@ -18,6 +46,66 @@
   .font-data {
     font-family: "JetBrains Mono", monospace;
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Primary action: Portaldot gradient, reserved for the one action that matters per panel. */
+  .btn-primary {
+    background-image: linear-gradient(135deg, #8c1def 0%, #0181fb 100%);
+    color: #fff;
+    box-shadow:
+      0 10px 26px -10px rgb(1 129 251 / 0.5),
+      inset 0 1px 0 rgb(255 255 255 / 0.18);
+    transition: filter 0.18s ease, transform 0.12s ease, opacity 0.18s ease;
+  }
+  .btn-primary:hover:not(:disabled) {
+    filter: brightness(1.13);
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(1px) scale(0.99);
+  }
+  .btn-primary:disabled {
+    opacity: 0.38;
+    filter: saturate(0.35);
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  /* Secondary action: quiet bordered ghost. */
+  .btn-ghost {
+    border: 1px solid rgb(148 163 184 / 0.2);
+    background-color: rgb(255 255 255 / 0.02);
+    color: #cbd5e1;
+    transition: border-color 0.18s ease, color 0.18s ease, background-color 0.18s ease, opacity 0.18s ease;
+  }
+  .btn-ghost:hover:not(:disabled) {
+    border-color: rgb(148 163 184 / 0.38);
+    color: #fff;
+    background-color: rgb(255 255 255 / 0.045);
+  }
+  .btn-ghost:disabled {
+    opacity: 0.38;
+    filter: saturate(0.35);
+    cursor: not-allowed;
+  }
+
+  /* Designed empty state shell: dashed hairline, faint fill, left-aligned instrument layout. */
+  .empty-shell {
+    border: 1px dashed rgb(148 163 184 / 0.18);
+    border-radius: 0.75rem;
+    background-color: rgb(255 255 255 / 0.015);
+  }
+
+  /* Faint dot texture for the main canvas. */
+  .bg-blueprint {
+    background-image: radial-gradient(rgb(148 163 184 / 0.055) 1px, transparent 1.4px);
+    background-size: 26px 26px;
+  }
+
+  .text-gradient {
+    background-image: linear-gradient(92deg, #8c1def 0%, #0181fb 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 }
 
@@ -42,8 +130,42 @@
   stroke-linecap: round;
 }
 
-@media (prefers-reduced-motion) {
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Panels rise in sequence when a view mounts. */
+.stagger > * {
+  animation: fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.stagger > *:nth-child(2) {
+  animation-delay: 0.06s;
+}
+.stagger > *:nth-child(3) {
+  animation-delay: 0.12s;
+}
+.stagger > *:nth-child(4) {
+  animation-delay: 0.18s;
+}
+.stagger > *:nth-child(5) {
+  animation-delay: 0.24s;
+}
+.stagger > *:nth-child(6) {
+  animation-delay: 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
   .pulse-anim {
+    animation: none;
+  }
+  .stagger > * {
     animation: none;
   }
 }
