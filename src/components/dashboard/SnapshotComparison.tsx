@@ -123,9 +123,12 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
     return (
       <Card>
         <div className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-            <GitCompare className="w-5 h-5 text-cyan-400" />
-            <h3 className="text-lg font-semibold text-white">Snapshot Comparison</h3>
+          <div className="border-b border-slate-800 pb-3">
+            <PanelLabel index="04" label="COMPARISON" />
+            <div className="flex items-center gap-2 mt-2">
+              <GitCompare className="w-5 h-5 text-cyan-400" />
+              <h3 className="text-lg font-semibold text-white">Snapshot Comparison</h3>
+            </div>
           </div>
           <div className="text-center py-8 text-slate-500 border border-dashed border-slate-800 rounded-lg">
             <GitCompare className="w-8 h-8 mx-auto mb-2 text-slate-600" />

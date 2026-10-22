@@ -13,6 +13,7 @@ export function HistoryList({ history, onSelect, onClear }: HistoryListProps) {
   if (history.length === 0) {
     return (
       <Card>
+        <PanelLabel index="02" label="HISTORY" />
         <div className="text-center py-8 text-slate-500">
           <p className="text-sm">No diagnostic history in this session yet.</p>
           <p className="text-xs text-slate-600 mt-1">Run a diagnostic from the RPC Diagnostics tab and results will appear here.</p>
