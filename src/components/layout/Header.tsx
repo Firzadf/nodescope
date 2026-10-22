@@ -35,7 +35,7 @@ export function Header({ connectionStatus }: HeaderProps) {
                   className={isConnected ? "pulse-anim" : ""}
                 />
               </svg>
-              <span className="text-xs font-data text-slate-400">
+              <span key={isConnected ? 'live' : 'idle'} className="state-swap text-xs font-data text-slate-400">
                 {isConnected ? 'LIVE PULSE' : 'IDLE'}
               </span>
             </div>

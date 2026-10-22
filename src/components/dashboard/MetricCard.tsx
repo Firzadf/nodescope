@@ -17,7 +17,13 @@ export function MetricCard({ title, value, icon: Icon, subtitle, unavailable }: 
         <Icon className="w-3.5 h-3.5 text-slate-600 ml-auto shrink-0" />
       </div>
       <p className="mt-2.5 text-[26px] leading-none font-semibold text-white font-data truncate">
-        {unavailable || value === null ? <span className="text-slate-600">—</span> : value}
+        {unavailable || value === null ? (
+          <span className="text-slate-600">—</span>
+        ) : (
+          <span key={String(value)} className="value-pop">
+            {value}
+          </span>
+        )}
       </p>
       {subtitle && <p className="mt-2 text-[11px] text-slate-500 font-data truncate">{subtitle}</p>}
     </div>

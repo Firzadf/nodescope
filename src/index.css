@@ -162,6 +162,98 @@
   animation-delay: 0.3s;
 }
 
+/* ---- Motion system (emil discipline: strong ease-out, <300ms UI, press states) ---- */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+.btn-primary,
+.btn-ghost {
+  transition-timing-function: var(--ease-out);
+}
+.btn-primary:active:not(:disabled),
+.btn-ghost:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Themed browser surfaces: caret + focus ring come from the palette. */
+input,
+textarea,
+select {
+  caret-color: #0181fb;
+}
+:focus-visible {
+  outline: 2px solid rgb(1 129 251 / 0.55);
+  outline-offset: 2px;
+}
+
+/* Odometer digits: fixed slots, each digit rolls vertically into place. */
+.odometer {
+  display: inline-flex;
+  overflow: hidden;
+  height: 1em;
+  line-height: 1;
+}
+.odometer-col {
+  display: inline-block;
+  width: 0.62em;
+  height: 1em;
+  overflow: hidden;
+}
+.odometer-strip {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.9s var(--ease-out);
+  will-change: transform;
+}
+.odometer-strip > span {
+  height: 1em;
+  line-height: 1;
+  text-align: center;
+}
+
+/* Instrument value changes: pop-in and state swaps instead of jump cuts. */
+@keyframes value-pop {
+  from {
+    opacity: 0;
+    transform: translateY(45%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.value-pop {
+  display: inline-block;
+  animation: value-pop 0.28s var(--ease-out) both;
+}
+@keyframes state-swap {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.state-swap {
+  display: inline-block;
+  animation: state-swap 0.25s var(--ease-out) both;
+}
+@keyframes cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+.cursor-blink {
+  animation: cursor-blink 1.1s step-end infinite;
+}
+
 /* Landing: method ticker marquee + hero ECG trace draw. */
 @keyframes marquee {
   from {
@@ -204,5 +296,13 @@
   .ecg-path {
     animation: none;
     stroke-dashoffset: 0;
+  }
+  .odometer-strip {
+    transition: none;
+  }
+  .value-pop,
+  .state-swap,
+  .cursor-blink {
+    animation: none;
   }
 }
