@@ -62,7 +62,15 @@ describe('Landing', () => {
 
   it('labels the roadmap honestly', () => {
     render(<Landing />);
-    expect(screen.getAllByText(/Planned — not shipped/i).length).toBe(3);
+    expect(screen.getAllByText(/Planned — not shipped/i).length).toBe(2);
+    expect(screen.getAllByText(/Shipped — live in the app/i).length).toBe(1);
     expect(screen.getByText(/Check-in submitted/i)).toBeInTheDocument();
+  });
+
+  it('lists Trends & Verdict as a shipped capability, not a promise', () => {
+    render(<Landing />);
+    expect(screen.getByText('Trends & Verdict')).toBeInTheDocument();
+    expect(screen.getByText('Trends & verdict')).toBeInTheDocument();
+    expect(screen.getByText(/rules shown, no score/i)).toBeInTheDocument();
   });
 });
