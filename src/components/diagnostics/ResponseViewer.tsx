@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { RpcDiagnosticResult } from '../../types/rpc';
 import { Card } from '../common/Card';
 import { PanelLabel } from '../common/PanelLabel';
@@ -8,12 +8,66 @@ interface ResponseViewerProps {
   result: RpcDiagnosticResult | null;
 }
 
+/** Minimal JSON syntax tinting: keys recede to white, strings/numbers/literals carry the color. */
+function highlightJson(json: string): ReactNode[] {
+  const pattern = /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false)\b|\bnull\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g;
+  const nodes: ReactNode[] = [];
+  let last = 0;
+  let k = 0;
+  let m: RegExpExecArray | null;
+  while ((m = pattern.exec(json)) !== null) {
+    if (m.index > last) {
+      nodes.push(
+        <span key={k++} className="text-slate-500">
+          {json.slice(last, m.index)}
+        </span>,
+      );
+    }
+    const [full, str, colon, bool] = m;
+    if (str !== undefined) {
+      nodes.push(
+        <span key={k++} className={colon ? 'text-slate-100' : 'text-sky-300/90'}>
+          {str}
+        </span>,
+      );
+      if (colon) {
+        nodes.push(
+          <span key={k++} className="text-slate-500">
+            {colon}
+          </span>,
+        );
+      }
+    } else if (bool !== undefined || full === 'null') {
+      nodes.push(
+        <span key={k++} className="text-violet-300/90">
+          {full}
+        </span>,
+      );
+    } else {
+      nodes.push(
+        <span key={k++} className="text-amber-200/90">
+          {full}
+        </span>,
+      );
+    }
+    last = m.index + full.length;
+  }
+  if (last < json.length) {
+    nodes.push(
+      <span key={k++} className="text-slate-500">
+        {json.slice(last)}
+      </span>,
+    );
+  }
+  return nodes;
+}
+
 export function ResponseViewer({ result }: ResponseViewerProps) {
   const [copied, setCopied] = useState(false);
 
   if (!result) {
     return (
-      <Card>
+      <Card ticks>
         <div className="space-y-4">
           <div>
             <PanelLabel index="02" label="RESULT" />
@@ -44,7 +98,7 @@ export function ResponseViewer({ result }: ResponseViewerProps) {
   const formattedJson = JSON.stringify(result.response || { error: result.error }, null, 2);
 
   return (
-    <Card>
+    <Card ticks>
       <div className="space-y-4">
         <div className="flex items-start justify-between">
           <div>
@@ -60,35 +114,35 @@ export function ResponseViewer({ result }: ResponseViewerProps) {
           </div>
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-md text-xs font-medium transition-colors"
+            className="btn-ghost flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
             {copied ? 'Copied!' : 'Copy Payload'}
           </button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-950/50 p-3 rounded-lg border border-line text-xs">
-          <div>
-            <span className="text-slate-500 block">Method</span>
-            <code className="text-slate-200 font-mono">{result.request.method}</code>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-line border border-line rounded-lg overflow-hidden text-xs">
+          <div className="bg-panel px-3.5 py-3">
+            <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-500 block mb-1">Method</span>
+            <code className="text-slate-100 font-data">{result.request.method}</code>
           </div>
-          <div>
-            <span className="text-slate-500 block">Status</span>
-            <span className={result.success ? 'text-emerald-400 font-medium' : 'text-red-400 font-medium'}>
+          <div className="bg-panel px-3.5 py-3">
+            <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-500 block mb-1">Status</span>
+            <span className={result.success ? 'text-emerald-400 font-medium font-data' : 'text-red-400 font-medium font-data'}>
               {result.success ? 'Success' : 'Failed'}
             </span>
           </div>
-          <div>
-            <span className="text-slate-500 block">Latency</span>
-            <span className="text-slate-200 flex items-center gap-1 font-mono">
-              <Zap className="w-3.5 h-3.5 text-cyan-400" />
+          <div className="bg-panel px-3.5 py-3">
+            <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-500 block mb-1">Latency</span>
+            <span className="text-slate-100 flex items-center gap-1.5 font-data">
+              <Zap className="w-3.5 h-3.5 text-slate-500" />
               {result.latency !== null ? `${result.latency}ms` : '—'}
             </span>
           </div>
-          <div>
-            <span className="text-slate-500 block">Timestamp</span>
-            <span className="text-slate-200 flex items-center gap-1 font-mono">
-              <Clock className="w-3.5 h-3.5 text-slate-400" />
+          <div className="bg-panel px-3.5 py-3">
+            <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-500 block mb-1">Timestamp</span>
+            <span className="text-slate-100 flex items-center gap-1.5 font-data">
+              <Clock className="w-3.5 h-3.5 text-slate-500" />
               {new Date(result.timestamp).toLocaleTimeString()}
             </span>
           </div>
@@ -100,10 +154,13 @@ export function ResponseViewer({ result }: ResponseViewerProps) {
           </div>
         )}
 
-        <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1">JSON Response / Output</label>
-          <pre className="bg-slate-950 border border-line rounded-lg p-4 text-xs font-mono text-slate-300 overflow-x-auto max-h-[300px]">
-            {formattedJson}
+        <div className="border border-line rounded-lg overflow-hidden">
+          <div className="flex items-center justify-between gap-3 bg-black/30 px-3.5 py-2 border-b border-line">
+            <span className="font-data text-[11px] text-slate-400 truncate">&gt;_ RAW RESPONSE · {result.request.method}</span>
+            <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600 shrink-0">[ Fig. 02 — Raw response ]</span>
+          </div>
+          <pre className="bg-slate-950/60 p-4 text-xs font-mono text-slate-400 overflow-x-auto max-h-[300px] leading-relaxed">
+            {highlightJson(formattedJson)}
           </pre>
         </div>
       </div>

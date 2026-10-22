@@ -12,7 +12,7 @@ interface HistoryListProps {
 export function HistoryList({ history, onSelect, onClear }: HistoryListProps) {
   if (history.length === 0) {
     return (
-      <Card>
+      <Card ticks>
         <PanelLabel index="02" label="HISTORY" />
         <h3 className="text-lg font-semibold text-white mt-2">Diagnostic History</h3>
         <div className="empty-shell px-5 py-6 flex items-start gap-4 mt-4">
@@ -27,8 +27,11 @@ export function HistoryList({ history, onSelect, onClear }: HistoryListProps) {
     );
   }
 
+  const successCount = history.filter((i) => i.success).length;
+  const failedCount = history.length - successCount;
+
   return (
-    <Card>
+    <Card ticks>
       <div className="space-y-4">
         <div className="flex items-start justify-between">
           <div>
@@ -46,30 +49,40 @@ export function HistoryList({ history, onSelect, onClear }: HistoryListProps) {
           </button>
         </div>
 
-        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
-          {history.map((item) => (
+        <div className="flex items-center justify-between gap-3 border-y border-line py-2">
+          <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">[ Fig. 03 — Session ledger ]</span>
+          <span className="font-data text-[10px] uppercase tracking-[0.14em] text-slate-500">
+            {history.length} records · {successCount} success · {failedCount} failed
+          </span>
+        </div>
+
+        <div className="space-y-1.5 max-h-[400px] overflow-y-auto pr-1">
+          {history.map((item, index) => (
             <div
               key={item.id}
               onClick={() => onSelect(item)}
-              className="bg-black/25 hover:bg-slate-900 border border-line hover:border-line rounded-lg p-3 flex items-center justify-between cursor-pointer transition-colors"
+              className="bg-black/25 hover:bg-white/[0.04] border border-line rounded-lg px-3 py-2.5 flex items-center justify-between cursor-pointer transition-colors"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="font-data text-[11px] text-slate-600 w-8 shrink-0">
+                  {String(history.length - index).padStart(3, '0')}
+                </span>
                 {item.success ? (
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                 ) : (
                   <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
                 )}
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-white font-mono">{item.request.method}</span>
-                    <span className="text-xs text-slate-500 truncate max-w-[200px]">{item.endpoint}</span>
+                    <span className="text-sm font-medium text-white font-data">{item.request.method}</span>
+                    <span className="text-xs text-slate-500 truncate max-w-[200px] font-data">{item.endpoint}</span>
                   </div>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-[11px] text-slate-400 font-data">
                     {new Date(item.timestamp).toLocaleTimeString()} {item.latency !== null ? `• ${item.latency}ms` : ''}
                   </span>
                 </div>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-500" />
+              <ArrowRight className="w-4 h-4 text-slate-500 shrink-0" />
             </div>
           ))}
         </div>

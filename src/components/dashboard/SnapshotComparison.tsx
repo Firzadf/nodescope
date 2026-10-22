@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { GitCompare, AlertTriangle, ArrowRight, Clock } from 'lucide-react';
 import { Card } from '../common/Card';
 import { PanelLabel } from '../common/PanelLabel';
+import { SnapshotStrip } from './SnapshotStrip';
 import type { HealthCheckSnapshot } from '../../types/healthCheck';
 import {
   compareSnapshots,
@@ -121,7 +122,7 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
 
   if (snapshots.length < 2) {
     return (
-      <Card>
+      <Card ticks>
         <div className="space-y-4">
           <div className="border-b border-line pb-3">
             <PanelLabel index="04" label="COMPARISON" />
@@ -130,6 +131,7 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
               <h3 className="text-lg font-semibold text-white">Snapshot Comparison</h3>
             </div>
           </div>
+          <SnapshotStrip snapshots={snapshots} />
           <div className="empty-shell px-5 py-6 flex items-start gap-4">
             <GitCompare className="w-5 h-5 text-slate-600 mt-0.5 shrink-0" />
             <div>
@@ -146,7 +148,7 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
   }
 
   return (
-    <Card>
+    <Card ticks>
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-3 border-b border-line pb-4">
           <div>
@@ -172,12 +174,14 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
           )}
         </div>
 
+        <SnapshotStrip snapshots={snapshots} />
+
         {/* Snapshot Selectors */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Snapshot A (Baseline) */}
           <div className="bg-slate-900 border border-line rounded-lg p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <label htmlFor="snapshot-a-select" className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">
+              <label htmlFor="snapshot-a-select" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 Snapshot A (Baseline)
               </label>
               {snapshotA && (
@@ -212,7 +216,7 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
           {/* Snapshot B (Current) */}
           <div className="bg-slate-900 border border-line rounded-lg p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <label htmlFor="snapshot-b-select" className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">
+              <label htmlFor="snapshot-b-select" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 Snapshot B (Current)
               </label>
               {snapshotB && (
@@ -267,7 +271,7 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
                 Block Height Delta
               </span>
               <span className="text-xs text-slate-400">
-                Method: <code className="text-cyan-400">{comparison.blockHeightDelta.method || '—'}</code>
+                Method: <code className="text-slate-200 font-data">{comparison.blockHeightDelta.method || '—'}</code>
               </span>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-line">
@@ -286,7 +290,7 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
               <div className="text-xs">
                 <span className="text-slate-400">Delta (B - A): </span>
                 {comparison.blockHeightDelta.status === 'available' && comparison.blockHeightDelta.delta !== null ? (
-                  <span className="text-cyan-400 font-mono font-bold text-sm">
+                  <span className="text-gradient font-data font-bold text-base">
                     {comparison.blockHeightDelta.delta.startsWith('-') ? '' : '+'}
                     {comparison.blockHeightDelta.delta} blocks
                   </span>
@@ -307,7 +311,10 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
         {/* Checks Diff Table */}
         {comparison && (
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-slate-300">Method Checks Diff</h4>
+            <div className="flex items-baseline justify-between gap-3">
+              <h4 className="text-sm font-semibold text-slate-300">Method Checks Diff</h4>
+              <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">[ Fig. 01 — Method diff ]</span>
+            </div>
             <div className="overflow-x-auto border border-line rounded-lg">
               <table className="w-full text-left text-xs border-collapse">
                 <thead className="bg-slate-900 border-b border-line text-slate-400 uppercase text-[10px]">
@@ -326,7 +333,7 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
 
                     return (
                       <tr key={check.method} className="hover:bg-slate-900/50">
-                        <td className="p-2.5 text-cyan-400 font-medium">{check.method}</td>
+                        <td className="p-2.5 text-slate-200 font-data font-medium">{check.method}</td>
                         <td className="p-2.5">
                           <CheckStatusBadge status={check.status} />
                         </td>
@@ -334,7 +341,7 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
                           {check.a && check.b ? (
                             <span className={`inline-flex items-center gap-1.5 ${outcomeChanged ? 'text-amber-400' : 'text-slate-300'}`}>
                               <span>{check.a.outcome}</span>
-                              <ArrowRight className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" aria-label="to" />
+                              <ArrowRight className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" aria-label="to" />
                               <span>{check.b.outcome}</span>
                             </span>
                           ) : check.a ? (
@@ -349,7 +356,7 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
                           {check.a && check.b ? (
                             <span className={`inline-flex items-center gap-1.5 ${valChanged ? 'text-amber-400' : 'text-slate-300'}`}>
                               <span>{formatValue(check.a.observedValue)}</span>
-                              <ArrowRight className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" aria-label="to" />
+                              <ArrowRight className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" aria-label="to" />
                               <span>{formatValue(check.b.observedValue)}</span>
                             </span>
                           ) : check.a ? (
@@ -418,7 +425,7 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
                                 ? 'bg-red-500/20 text-red-400 border-red-500/30'
                                 : currentFinding.severity === 'warning'
                                 ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                                : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
+                                : 'bg-[#0181FB]/15 text-[#7DB4FF] border-[#0181FB]/30'
                             }`}
                           >
                             {currentFinding.severity}

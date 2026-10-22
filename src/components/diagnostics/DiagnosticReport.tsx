@@ -63,7 +63,7 @@ export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticRepo
   const infoFindings = findings.filter((f) => f.severity === 'info').length;
 
   return (
-    <Card>
+    <Card ticks>
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-2 border-b border-line pb-4">
           <div>
@@ -123,7 +123,7 @@ export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticRepo
                 {history.slice(0, 3).map((item) => (
                   <div key={item.id} className="bg-slate-900 border border-line rounded p-2.5 text-xs">
                     <div className="flex justify-between mb-1">
-                      <code className="text-cyan-400">{item.request.method}</code>
+                      <code className="text-slate-200 font-data">{item.request.method}</code>
                       <span className="text-slate-500">{new Date(item.timestamp).toLocaleTimeString()}</span>
                     </div>
                     <div className="flex justify-between text-xs">
@@ -160,22 +160,23 @@ export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticRepo
                   </div>
                   <div>
                     <div className="text-xs text-slate-500">Info</div>
-                    <div className="text-lg font-semibold text-cyan-400 font-data">{infoFindings}</div>
+                    <div className="text-lg font-semibold text-[#7DB4FF] font-data">{infoFindings}</div>
                   </div>
                 </div>
                 <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
                   {findings.map((finding, index) => (
-                    <div key={index} className="bg-slate-900 border border-line rounded p-3 text-xs">
+                    <div key={index} className="bg-black/25 border border-line rounded-lg p-3 text-xs">
                       <div className="flex items-start gap-2 mb-1">
+                        <span className="font-data text-slate-600">[{String(index + 1).padStart(3, '0')}]</span>
                         <span className={`font-medium text-xs ${getSeverityColor(finding.severity)}`}>
                           {finding.severity.toUpperCase()}
                         </span>
-                        <span className="text-slate-400 font-mono">{finding.ruleId}</span>
+                        <span className="text-slate-400 font-data">{finding.ruleId}</span>
                         <span className="text-white font-medium">{finding.title}</span>
                       </div>
                       <div className="text-slate-300 mb-1">{finding.evidence}</div>
                       <div className="text-slate-500 mb-1">{finding.explanation}</div>
-                      <div className="text-cyan-400 font-medium">{finding.recommendation}</div>
+                      <div className="text-[#7DB4FF] font-medium">{finding.recommendation}</div>
                     </div>
                   ))}
                 </div>
@@ -201,7 +202,7 @@ export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticRepo
 function getSeverityColor(severity: Finding['severity']): string {
   if (severity === 'error') return 'text-red-400';
   if (severity === 'warning') return 'text-amber-400';
-  return 'text-cyan-400';
+  return 'text-[#7DB4FF]';
 }
 
 function getOutcomeLabel(item: DiagnosticHistoryItem): string {
