@@ -475,7 +475,7 @@ export function Landing() {
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-4">
           {[
             { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · returned by eth_chainId' },
-            { value: '242', label: 'Tests passing', sub: '20 files · Vitest · suite verified 23 Oct 2026' },
+            { value: '262', label: 'Tests passing', sub: '22 files · Vitest · suite verified 23 Oct 2026' },
             { value: '38', label: 'RPC methods probed', sub: '7 supported on this EVM profile · the rest answered method-not-found — reported, not hidden' },
             { value: '+12', label: 'Blocks between demo snapshots', sub: 'A 143,764 at 15:48:05 → B 143,776 at 15:49:21 WIB · 76 seconds apart' },
           ].map((s, i) => (
@@ -527,7 +527,7 @@ export function Landing() {
               {[
                 { n: '01', title: 'Connect & check', body: 'Point NodeScope at any Portaldot V3 EVM endpoint. A health check runs the core JSON-RPC methods and records the result as a structured snapshot.' },
                 { n: '02', title: 'Snapshot', body: 'Snapshots are timestamped observations — block height, chain ID, client version, latency, per-method outcomes — stored for the session, up to 20.' },
-                { n: '03', title: 'Compare & export', body: 'Pick any two snapshots — or read the whole session. NodeScope diffs snapshots deterministically, trends latency and block progression across all of them, and ends in a verdict whose rules are printed, not hidden. Everything folds into an exportable diagnostic report (schema v1) you can share.' },
+                { n: '03', title: 'Compare & export', body: 'Pick any two snapshots — or read the whole session. NodeScope diffs snapshots deterministically, trends latency and block progression across all of them, and ends in a verdict whose rules are printed, not hidden. Everything folds into an exportable diagnostic report (schema v1) you can share — stamped with a SHA-256 integrity hash, so anyone can verify the file was not altered after export.' },
               ].map((s) => (
                 <div key={s.n} className="bg-panel p-6">
                   <p className="font-data text-sm text-slate-500">{s.n}</p>
@@ -604,6 +604,7 @@ export function Landing() {
                     { cap: 'Capability discovery', what: 'Probes 38 JSON-RPC methods; an unsupported answer is reported as data, never dressed up as success.', proof: '7 supported on Portaldot V3 EVM' },
                     { cap: 'RPC console', what: 'Run any method by hand — presets, custom params, and evidence badges drawn from your own run history.', proof: 'User-triggered only · nothing polls' },
                     { cap: 'Diagnostic reports', what: 'Every run folds into one shareable JSON report with categorized findings and recommendations.', proof: 'Schema nodescope.diagnostic-report.v1' },
+                    { cap: 'Report verification', what: 'Exports are stamped with SHA-256 over a canonical form of the report. Anyone can drop the file back into NodeScope and check the stamp — changing any value in the file breaks it.', proof: 'Verify in History · no server, no account' },
                     { cap: 'Command palette', what: '⌘K drives navigation, connection, health checks, diagnostics, and copying evidence — keyboard first.', proof: 'Press ⌘K inside the app' },
                   ].map((r) => (
                     <tr key={r.cap} className="transition-colors hover:bg-white/[0.03]">
