@@ -62,8 +62,8 @@ describe('Landing', () => {
 
   it('labels the roadmap honestly', () => {
     render(<Landing />);
-    expect(screen.getAllByText(/Planned — not shipped/i).length).toBe(2);
-    expect(screen.getAllByText(/Shipped — live in the app/i).length).toBe(1);
+    expect(screen.getAllByText(/Planned — not shipped/i).length).toBe(1);
+    expect(screen.getAllByText(/Shipped — live in the app/i).length).toBe(2);
     expect(screen.getByText(/Check-in submitted/i)).toBeInTheDocument();
   });
 

@@ -475,7 +475,7 @@ export function Landing() {
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-4">
           {[
             { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · returned by eth_chainId' },
-            { value: '262', label: 'Tests passing', sub: '22 files · Vitest · suite verified 23 Oct 2026' },
+            { value: '283', label: 'Tests passing', sub: '23 files · Vitest · suite verified 23 Oct 2026' },
             { value: '38', label: 'RPC methods probed', sub: '7 supported on this EVM profile · the rest answered method-not-found — reported, not hidden' },
             { value: '+12', label: 'Blocks between demo snapshots', sub: 'A 143,764 at 15:48:05 → B 143,776 at 15:49:21 WIB · 76 seconds apart' },
           ].map((s, i) => (
@@ -688,7 +688,7 @@ export function Landing() {
             <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-3">
               {[
                 { title: 'Trends & Verdict', status: 'shipped' as const, body: 'Per-method latency trends and block progression across a whole session of snapshots, ending in a deterministic verdict — HEALTHY, DEGRADED, or UNSTABLE — with every rule that fired printed next to it. No score, no black box.' },
-                { title: 'Multi-Endpoint Watchlist', status: 'planned' as const, body: 'Save several endpoints and compare their health side by side — built for operators running more than one node.' },
+                { title: 'Multi-Endpoint Comparison', status: 'shipped' as const, body: 'Health snapshots from different endpoints, compared side by side — with comparability discipline: matching chain IDs earn a caveated block delta, different chains are declared not comparable instead of subtracted, and method-support and client differences surface as findings. (Not a watchlist — nothing is monitored in the background; you bring the snapshots.)' },
                 { title: 'Portaldot Mainnet Profile', status: 'planned' as const, body: 'A first-class profile for Portaldot V3 mainnet the day it opens, reusing the same snapshot and evidence engine.' },
               ].map((r) => (
                 <div key={r.title} className="bg-panel/70 p-6">
