@@ -1,18 +1,26 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Download, FileText } from 'lucide-react';
 import { Card } from '../common/Card';
 import { PanelLabel } from '../common/PanelLabel';
 import type { DiagnosticHistoryItem } from '../../types/rpc';
 import type { Finding } from '../../types/diagnostic';
-import { buildDiagnosticReport, sanitizeEndpointOrigin } from '../../utils/reportBuilder';
+import type { HealthCheckSnapshot } from '../../types/healthCheck';
+import {
+  attachSessionTrends,
+  buildDiagnosticReport,
+  sanitizeEndpointOrigin,
+} from '../../utils/reportBuilder';
+import { computeSessionTrends } from '../../utils/sessionTrends';
 import { evaluateHistoryFindings } from '../../services/diagnosticRules';
 
 interface DiagnosticReportProps {
   history: DiagnosticHistoryItem[];
   latencyThresholdMs?: number;
+  healthSnapshots?: HealthCheckSnapshot[];
 }
 
-export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticReportProps) {
+export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots = [] }: DiagnosticReportProps) {
+  const sessionTrends = useMemo(() => computeSessionTrends(healthSnapshots), [healthSnapshots]);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
@@ -23,7 +31,10 @@ export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticRepo
 
       const exportRuleConfig = latencyThresholdMs !== undefined ? { latencyThresholdMs } : {};
       const exportFindings: Finding[] = evaluateHistoryFindings(history, exportRuleConfig);
-      const report = buildDiagnosticReport(history, exportFindings);
+      const report = attachSessionTrends(
+        buildDiagnosticReport(history, exportFindings),
+        healthSnapshots
+      );
       const blob = new Blob([JSON.stringify(report, null, 2)], {
         type: 'application/json',
       });
@@ -114,6 +125,31 @@ export function DiagnosticReport({ history, latencyThresholdMs }: DiagnosticRepo
                   <div className="text-xs text-slate-500">Network/HTTP Errors</div>
                   <div className="text-lg font-semibold text-red-400 font-data">{networkErrorCount}</div>
                 </div>
+              </div>
+              <div className="mt-4 pt-3 border-t border-line text-xs">
+                {sessionTrends.status === 'available' ? (
+                  <p className="text-slate-400">
+                    Session verdict:{' '}
+                    <span
+                      className={`font-data font-semibold ${
+                        sessionTrends.verdict.level === 'healthy'
+                          ? 'text-emerald-400'
+                          : sessionTrends.verdict.level === 'degraded'
+                            ? 'text-amber-400'
+                            : 'text-red-400'
+                      }`}
+                    >
+                      {sessionTrends.verdict.level.toUpperCase()}
+                    </span>{' '}
+                    — {sessionTrends.verdict.rules.filter((r) => r.fired).length} rule(s) fired · the export
+                    includes the session trends &amp; verdict block with its evidence.
+                  </p>
+                ) : (
+                  <p className="text-slate-500">
+                    Session trends are not in this export yet — they need at least 2 health checks for one
+                    endpoint (currently {sessionTrends.snapshotCount}).
+                  </p>
+                )}
               </div>
             </div>
 

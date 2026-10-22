@@ -138,6 +138,22 @@ function App() {
   };
   const paletteCommands: PaletteCommand[] = [
     { id: 'nav-overview', label: 'Go to Overview', group: 'Navigate', hint: '01', keywords: 'home dashboard panels', run: () => setActiveSection('overview') },
+    {
+      id: 'nav-trends',
+      label: 'Go to Trends & Verdict',
+      group: 'Navigate',
+      hint: '05',
+      keywords: 'trends verdict session drift stall latency progression health',
+      run: () => {
+        setActiveSection('overview');
+        window.setTimeout(() => {
+          const el = document.getElementById('session-trends');
+          if (!el) return;
+          const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+        }, 60);
+      },
+    },
     { id: 'nav-diagnostics', label: 'Go to RPC Diagnostics', group: 'Navigate', hint: '02', keywords: 'console rpc run method', run: () => setActiveSection('diagnostics') },
     { id: 'nav-history', label: 'Go to History', group: 'Navigate', hint: '03', keywords: 'report export ledger records', run: () => setActiveSection('history') },
     ...(isConnected
@@ -281,7 +297,7 @@ function App() {
                   </div>
                   <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500 pb-1">Session ledger · Exportable JSON</p>
                 </div>
-                <DiagnosticReport history={history} />
+                <DiagnosticReport history={history} healthSnapshots={healthSnapshots} />
                 <HistoryList
                   history={history}
                   onSelect={(item) => {

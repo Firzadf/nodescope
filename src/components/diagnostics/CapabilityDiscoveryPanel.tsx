@@ -70,7 +70,7 @@ export function CapabilityDiscoveryPanel({ endpoint, snapshot, onSnapshotChange,
       <div className="space-y-4">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-2 border-b border-line pb-4">
           <div>
-            <PanelLabel index="05" label="CAPABILITIES" />
+            <PanelLabel index="06" label="CAPABILITIES" />
             <h3 className="text-lg font-semibold text-white flex items-center gap-2 mt-2">
               <Search className="w-5 h-5 text-slate-400" />
               RPC Capability Discovery
