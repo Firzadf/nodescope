@@ -115,6 +115,14 @@ function App() {
     return result;
   };
 
+  // Keeps the RPC console's method fields in sync with runs triggered
+  // from elsewhere (command palette, overview metric tests).
+  const [consoleMethodSignal, setConsoleMethodSignal] = useState<{ method: string; nonce: number } | null>(null);
+  const handleRunDiagnosticTracked = async (method: string, params: unknown[]) => {
+    setConsoleMethodSignal({ method, nonce: Date.now() });
+    return handleRunDiagnostic(method, params);
+  };
+
   const latestHealthSnapshot = useMemo(() => {
     if (healthSnapshots.length === 0) return null;
     return healthSnapshots.reduce(
@@ -126,7 +134,7 @@ function App() {
   const isConnected = connectionStatus === 'connected';
   const runDiagnosticAndShow = (method: string, params: unknown[] = []) => {
     setActiveSection('diagnostics');
-    void handleRunDiagnostic(method, params);
+    void handleRunDiagnosticTracked(method, params);
   };
   const paletteCommands: PaletteCommand[] = [
     { id: 'nav-overview', label: 'Go to Overview', group: 'Navigate', hint: '01', keywords: 'home dashboard panels', run: () => setActiveSection('overview') },
@@ -196,7 +204,7 @@ function App() {
                   connectionStatus={connectionStatus}
                   metricsDetailed={metricsDetailed}
                   onUpdateMetricsDetailed={setMetricsDetailed}
-                  onExecuteRpc={handleRunDiagnostic}
+                  onExecuteRpc={handleRunDiagnosticTracked}
                   endpointProfile={endpointProfile}
                   capabilitySnapshot={capabilitySnapshot} // Pass down snapshot
                   history={history} // Pass down history
@@ -222,10 +230,11 @@ function App() {
                 <RpcConsole
                   endpoint={endpoint}
                   isConnected={connectionStatus === 'connected'}
-                  onRunDiagnostic={handleRunDiagnostic}
+                  onRunDiagnostic={handleRunDiagnosticTracked}
                   isLoading={isLoading}
                   capabilitySnapshot={capabilitySnapshot} // Pass down snapshot
                   history={history} // Pass down history
+                  methodSignal={consoleMethodSignal}
                 />
                 <ResponseViewer result={currentResult} />
                 {evmConnectionDetails && endpointProfile === 'portaldot_v3_evm' && (

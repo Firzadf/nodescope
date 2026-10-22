@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { RpcDiagnosticResult, RpcMethodPreset } from '../../types/rpc';
 import type { CapabilitySnapshot } from '../../types/capability';
 import type { DiagnosticHistoryItem } from '../../types/rpc';
@@ -72,11 +72,20 @@ interface RpcConsoleProps {
   isLoading: boolean;
   capabilitySnapshot: CapabilitySnapshot | null;
   history: DiagnosticHistoryItem[];
+  /** Set when a diagnostic is triggered outside the console (palette, overview) so the form follows the run. */
+  methodSignal?: { method: string; nonce: number } | null;
 }
 
-export function RpcConsole({ endpoint, isConnected, onRunDiagnostic, isLoading, capabilitySnapshot, history }: RpcConsoleProps) {
+export function RpcConsole({ endpoint, isConnected, onRunDiagnostic, isLoading, capabilitySnapshot, history, methodSignal }: RpcConsoleProps) {
   const [selectedPreset, setSelectedPreset] = useState<string>('eth_chainId');
   const [customMethod, setCustomMethod] = useState<string>('eth_chainId');
+
+  useEffect(() => {
+    if (methodSignal) {
+      setSelectedPreset(PRESETS.some((p) => p.method === methodSignal.method) ? methodSignal.method : '');
+      setCustomMethod(methodSignal.method);
+    }
+  }, [methodSignal]);
   const [paramsInput, setParamsInput] = useState<string>('[]');
   const [paramError, setParamError] = useState<string | null>(null);
 
