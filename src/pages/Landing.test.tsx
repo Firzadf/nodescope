@@ -46,6 +46,20 @@ describe('Landing', () => {
     expect(screen.getByText(/0 new · 0 resolved · 0 regressions/i)).toBeInTheDocument();
   });
 
+  it('shows the console-vs-NodeScope flow visual with the real demo pair', () => {
+    render(<Landing />);
+    expect(screen.getByText(/asks once/i)).toBeInTheDocument();
+    expect(screen.getByText(/proves over time/i)).toBeInTheDocument();
+    expect(screen.getByText(/report exported/i)).toBeInTheDocument();
+    expect(screen.getByText(/Δ \+12 · 76 s/)).toBeInTheDocument();
+  });
+
+  it('renders the evidence grid with one cell per observed block', () => {
+    render(<Landing />);
+    const grid = screen.getByRole('img', { name: /48 consecutive blocks/i });
+    expect(grid.children).toHaveLength(48);
+  });
+
   it('labels the roadmap honestly', () => {
     render(<Landing />);
     expect(screen.getAllByText(/Planned — not shipped/i).length).toBe(3);

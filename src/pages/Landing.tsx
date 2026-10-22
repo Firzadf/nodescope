@@ -475,7 +475,7 @@ export function Landing() {
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-4">
           {[
             { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · returned by eth_chainId' },
-            { value: '209', label: 'Tests passing', sub: '17 files · Vitest · suite verified 22 Oct 2026' },
+            { value: '213', label: 'Tests passing', sub: '18 files · Vitest · suite verified 23 Oct 2026' },
             { value: '38', label: 'RPC methods probed', sub: '7 supported on this EVM profile · the rest answered method-not-found — reported, not hidden' },
             { value: '+12', label: 'Blocks between demo snapshots', sub: 'A 143,764 at 15:48:05 → B 143,776 at 15:49:21 WIB · 76 seconds apart' },
           ].map((s, i) => (
