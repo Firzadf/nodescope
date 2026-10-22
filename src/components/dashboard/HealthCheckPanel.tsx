@@ -147,9 +147,20 @@ export function HealthCheckPanel({
         )}
 
         {!isConnected && (
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-xs text-amber-300 flex items-start gap-2">
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-xs text-amber-300 flex items-start gap-2.5">
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <span>Node is not marked as connected. You can still run explicit health checks to inspect endpoint behavior.</span>
+            <div>
+              <p className="font-data text-[10px] uppercase tracking-[0.2em] text-amber-400/90">Status — Not connected</p>
+              <p className="mt-1">Node is not marked as connected. You can still run explicit health checks to inspect endpoint behavior.</p>
+            </div>
+          </div>
+        )}
+
+        {!latestSnapshot && isLoading && (
+          <div className="empty-shell px-5 py-6 space-y-3" aria-hidden="true">
+            <div className="h-3 w-44 rounded bg-white/[0.07] animate-pulse" />
+            <div className="h-3 w-72 max-w-full rounded bg-white/[0.045] animate-pulse" />
+            <div className="h-3 w-28 rounded bg-white/[0.055] animate-pulse" />
           </div>
         )}
 

@@ -197,10 +197,11 @@ export function NodeMetricsInspector({
         </div>
 
         {!isConnected && (
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-xs text-amber-300 flex items-start gap-2">
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-xs text-amber-300 flex items-start gap-2.5">
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <div>
-              <span>Node is not marked as connected. You may still trigger individual diagnostics to inspect endpoint behavior.</span>
+              <p className="font-data text-[10px] uppercase tracking-[0.2em] text-amber-400/90">Status — Not connected</p>
+              <p className="mt-1">Node is not marked as connected. You may still trigger individual diagnostics to inspect endpoint behavior.</p>
             </div>
           </div>
         )}
