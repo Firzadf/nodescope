@@ -8,6 +8,7 @@ import { RpcConsole } from './components/diagnostics/RpcConsole';
 import { ResponseViewer } from './components/diagnostics/ResponseViewer';
 import { HistoryList } from './components/diagnostics/HistoryList';
 import { DiagnosticReport } from './components/diagnostics/DiagnosticReport';
+import { ReportVerifier } from './components/diagnostics/ReportVerifier';
 import type { ConnectionStatus, NodeMetricsDetailed } from './types/node';
 import type { RpcDiagnosticResult, DiagnosticHistoryItem } from './types/rpc';
 import type { EvmConnectionDetails, EndpointProfile } from './types/endpoint';
@@ -309,6 +310,7 @@ function App() {
                     setHistory([]);
                   }}
                 />
+                <ReportVerifier />
               </div>
             )}
           </div>

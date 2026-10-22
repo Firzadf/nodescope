@@ -10,6 +10,7 @@ import {
   buildDiagnosticReport,
   sanitizeEndpointOrigin,
 } from '../../utils/reportBuilder';
+import { stampReportIntegrity } from '../../utils/reportIntegrity';
 import { computeSessionTrends } from '../../utils/sessionTrends';
 import { evaluateHistoryFindings } from '../../services/diagnosticRules';
 
@@ -24,16 +25,15 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
-  const exportAsJson = () => {
+  const exportAsJson = async () => {
     try {
       setExporting(true);
       setExportError(null);
 
       const exportRuleConfig = latencyThresholdMs !== undefined ? { latencyThresholdMs } : {};
       const exportFindings: Finding[] = evaluateHistoryFindings(history, exportRuleConfig);
-      const report = attachSessionTrends(
-        buildDiagnosticReport(history, exportFindings),
-        healthSnapshots
+      const report = await stampReportIntegrity(
+        attachSessionTrends(buildDiagnosticReport(history, exportFindings), healthSnapshots)
       );
       const blob = new Blob([JSON.stringify(report, null, 2)], {
         type: 'application/json',
@@ -85,6 +85,8 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
             </h3>
             <p className="text-xs text-slate-400 mt-1">
               Summarize user-triggered diagnostics for export. No background requests or fabricated data.
+              Every export is stamped with a SHA-256 integrity hash — anyone can check the file in the
+              Verify panel below.
             </p>
           </div>
           <button
