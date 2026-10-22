@@ -1,8 +1,22 @@
 # NodeScope
 
+![NodeScope logo](logo.png)
+
 A professional blockchain node health diagnostic dashboard for inspecting node connectivity, JSON-RPC responses, block height, latency, and node errors. **NodeScope proves node health over time** through timestamped snapshots, before/after comparison, and exportable diagnostic reports.
 
-**Current Status:** Phase 1 (Health Check Snapshots) and Phase 2 (Snapshot Comparison) complete. Portaldot V3.0 EVM endpoint verified and integrated. 188 passing tests across 14 test files.
+## Demo Materials
+
+- **Demo video:** [Watch on YouTube](https://www.youtube.com/watch?v=qne3_eZdcKA)
+- **Live app:** [nodescope.vercel.app](https://nodescope.vercel.app/)
+- **DoraHacks BUIDL:** [NodeScope project](https://dorahacks.io/build/50146/)
+- **Screenshots:** [Representative screenshots](docs/screenshots/README.md)
+
+![Health check results](docs/screenshots/02-health-check-results.png)
+![Snapshot comparison](docs/screenshots/03-snapshot-comparison.png)
+
+---
+
+**Current Status:** Phase 1 (Health Check Snapshots) and Phase 2 (Snapshot Comparison) complete. Portaldot V3.0 EVM endpoint verified and integrated. 197 passing tests across 15 test files.
 
 ## Project Overview
 
@@ -39,7 +53,7 @@ NodeScope is built for the Portaldot Hacker House 2026 (Track 3: Node Operations
 Clone or navigate to the project directory:
 
 ```bash
-cd D:\Hackathon\nodescope
+cd nodescope
 ```
 
 Install dependencies:
@@ -110,12 +124,12 @@ npm run preview
 - **Timestamped snapshot storage** — sessionStorage-backed, max 20 snapshots per session, includes snapshot ID, timestamp, endpoint origin, profile, checks, and deduplicated findings
 - **Latest snapshot display** — Health Check Panel shows individual check results and derived findings with severity badges
 
-**Test Coverage (Phase 1):** 159 passing tests across 10 test files.
+**Test Coverage (Phase 1):** included in the 197-test suite below.
 
 ### Phase 2 — Snapshot Comparison (Complete ✅)
 
 - **Snapshot A/B selector** — user-selectable baseline (older) and current (newer) snapshots
-- **Default selection** — if 2+ snapshots exist, automatically selects most recent pair (A = older, B = newer)
+- **Default selection** — if 2+ snapshots exist, automatically selects the two most recent (newest-first ordering, chosen by timestamp)
 - **Empty state** — explicit message when <2 snapshots; comparison disabled
 - **Compatibility check** — same endpoint/profile marked "like-for-like"; cross-endpoint marked with warning
 - **Block height delta** — safely derived only when both snapshots contain valid eth_blockNumber or equivalent; displayed as decimal string with status (success, unavailable, unsupported, invalid)
@@ -124,7 +138,13 @@ npm run preview
 - **Null handling** — explicitly distinguishes unavailable from 0, false, or ""
 - **Pure comparison** — deterministic output, no mutation of stored snapshots
 
-**Test Coverage (Phase 2):** 29 additional tests in SnapshotComparison and related utilities, 188 total passing tests.
+### Fixes After Phase 2
+
+- **First-load Connect button** — endpoint state now initializes from the shared `DEFAULT_PORTALDOT_V3_EVM_RPC` constant, so a prefilled valid URL enables "Connect & Test" immediately without typing
+- **Snapshot recency** — latest snapshot is selected by maximum `timestamp` rather than array position, matching the newest-first storage order from `saveHealthSnapshot`
+- **Latency-only changes** — a check whose only difference is latency no longer flips status to `changed`; status tracks outcome, success, observedValue, and error
+- **Demo banner** — overview banner renders only while `connectionStatus !== 'connected'`
+- **Duplicate error text** — removed the doubled "Fail — …" string in the EVM connection detail card
 
 ### Core Infrastructure (Complete ✅)
 
@@ -139,16 +159,14 @@ npm run preview
 - **URL validation** — http:// and https:// only, credential stripping, query parameter redaction
 - **Chain ID validator** — Portaldot V3.0 chain ID 420420777 (0x190f1ca9) with comparison and error messages
 
-**Test Coverage (Infrastructure):** 14 test files including rpcClient, urlValidator, chainIdValidator, connectionTester, capabilityDiscovery, diagnosticRules, reportBuilder, snapshotComparer.
-
 ## Portaldot Integration & Deployment Evidence
 
 ### Verified Endpoint
 
 - **URL:** `https://test-evm-rpc-v3.portaldot.dev`
 - **Transport:** HTTP JSON-RPC POST via browser fetch()
-- **CORS:** Permits cross-origin requests from browser clients
-- **Connection Verified:** Oct 21, 2026 via direct client testing
+- **CORS:** cross-origin requests permitted; direct browser fetch() verified working
+- **Connection Verified:** Oct 21, 2026, 22:10–22:11 WIB via direct client testing
 
 ### Chain ID Verification
 
@@ -163,13 +181,17 @@ npm run preview
 |-----------|--------|----------------------|------------------|--------|
 | 2026-10-21 22:10:55 WIB | eth_blockNumber | 133242 | 0x2087a | ✅ success |
 | 2026-10-21 22:11:38 WIB | eth_blockNumber | 133248 | 0x20880 | ✅ success |
+| 2026-10-22 15:48:05 WIB | eth_blockNumber | 143764 | 0x23194 | ✅ success |
+| 2026-10-22 15:49:21 WIB | eth_blockNumber | 143776 | 0x231a0 | ✅ success |
+
+Block height advanced from 133248 (Oct 21, 22:11 WIB) to 143776 (Oct 22, 15:49 WIB) — 10,528 blocks across ~17.6 hours, consistent with continuous testnet production.
 
 ### Verified RPC Methods (EVM Endpoint)
 
 | Method | Status | Evidence | Notes |
 |--------|--------|----------|-------|
 | `eth_chainId` | ✅ live_verified | Returns 0x190f1ca9 (420420777) | Chain identity confirmed |
-| `eth_blockNumber` | ✅ live_verified | Returns current block hex (e.g., 0x20880 = 133248) | Block sync confirmed |
+| `eth_blockNumber` | ✅ live_verified | Returns current block hex (e.g., 0x231a0 = 143776) | Block production confirmed |
 | `web3_clientVersion` | ✅ live_verified | Returns client string (e.g., eth-rpc/main-fddd431) | Used in health checks |
 | `net_version` | ✅ live_verified | Standard EVM method, included in health checks | Network identifier |
 | `system_health` | ⚠️ returns_-32601 | JSON-RPC error [-32601] on EVM endpoint | Substrate-only method; expected on EVM profile |
@@ -188,7 +210,7 @@ When endpoint profile is set to `portaldot_v3_evm`:
 ### Honest Limitations
 
 - **HTTP JSON-RPC only** — WebSocket transport not implemented; Substrate WebSocket endpoint `wss://test-node-v3.portaldot.dev` is not reachable by this client
-- **Browser CORS dependency** — direct fetch() requires the RPC endpoint to permit `Access-Control-Allow-Origin: *` or a compatible CORS header. A private or firewalled endpoint may require a local proxy (not provided)
+- **Browser CORS dependency** — cross-origin requests must be permitted by the RPC endpoint for direct browser fetch() to work. A private or firewalled endpoint may require a local proxy (not provided)
 - **SessionStorage-only snapshots** — stored in browser sessionStorage, limited to ~5MB per domain, max 20 snapshots cached per session. Snapshots lost on tab close or browser restart; export them to JSON for long-term retention
 - **No contract deployment** — NodeScope is a diagnostic and monitoring tool, not a contract IDE or wallet. No smart contract development, deployment, or signing features
 - **No private key handling** — no seed phrases, private keys, or wallet mnemonics accepted; the tool only reads node state via RPC
@@ -219,7 +241,7 @@ src/
 ├── types/
 │   ├── node.ts                    # Node metrics types
 │   ├── rpc.ts                     # JSON-RPC types
-│   ├── endpoint.ts                # Endpoint profile types
+│   ├── endpoint.ts                # Endpoint profile types, default endpoint constant
 │   ├── diagnostic.ts              # Finding, rule types
 │   ├── healthCheck.ts             # Health snapshot and check types
 │   └── health.ts                  # Generic health and metric types
@@ -238,27 +260,28 @@ src/
 
 **Test Framework:** Vitest 5 with @testing-library/react  
 **Coverage Target:** 80%+  
-**Current Status:** 188 passing tests across 14 test files
+**Current Status:** 197 passing tests across 15 test files
 
 ### Test Files
 
-| File | Tests | Coverage | Focus |
-|------|-------|----------|-------|
-| `rpcClient.test.ts` | 12 | 100% | JSON-RPC client, timeouts, error handling |
-| `urlValidator.test.ts` | 8 | 100% | URL validation, credential stripping |
-| `chainIdValidator.test.ts` | 9 | 100% | Chain ID validation, Portaldot V3 ID |
-| `connectionTester.test.ts` | 18 | 100% | Endpoint connectivity, profile handling |
-| `capabilityDiscovery.test.ts` | 14 | 100% | Method discovery, evidence classification |
-| `capabilityEvidence.test.ts` | 12 | 100% | Evidence label assignment |
-| `diagnosticRules.test.ts` | 28 | 100% | Finding evaluation, deduplication |
-| `reportBuilder.test.ts` | 19 | 100% | Report export, schema validation |
-| `healthCheckRunner.test.ts` | 15 | 100% | Health check orchestration |
-| `healthSnapshotStorage.test.ts` | 11 | 100% | SessionStorage backend, validation |
-| `snapshotComparer.test.ts` | 18 | 100% | Snapshot comparison, determinism |
-| `SnapshotComparison.test.tsx` | 8 | 100% | React component rendering, user interaction |
-| `NodeMetricsInspector.test.ts` | 8 | 100% | Metrics display and formatting |
-| `metricParsers.test.ts` | 10 | 100% | RPC response parsing |
-| **Total** | **188** | **100%** | Full stack |
+| File | Focus |
+|------|-------|
+| `rpcClient.test.ts` | JSON-RPC client, timeouts, error handling |
+| `urlValidator.test.ts` | URL validation, credential stripping |
+| `chainIdValidator.test.ts` | Chain ID validation, Portaldot V3 ID |
+| `connectionTester.test.ts` | Endpoint connectivity, profile handling |
+| `capabilityDiscovery.test.ts` | Method discovery, evidence classification |
+| `capabilityEvidence.test.ts` | Evidence label assignment |
+| `diagnosticRules.test.ts` | Finding evaluation, deduplication |
+| `reportBuilder.test.ts` | Report export, schema validation |
+| `healthCheckRunner.test.ts` | Health check orchestration |
+| `healthSnapshotStorage.test.ts` | SessionStorage backend, validation |
+| `snapshotComparer.test.ts` | Snapshot comparison, determinism |
+| `SnapshotComparison.test.tsx` | React component rendering, user interaction |
+| `EndpointConfig.test.tsx` | Connect & Test button mount/state agreement (regression) |
+| `NodeMetricsInspector.test.ts` | Metrics display and formatting |
+| `metricParsers.test.ts` | RPC response parsing |
+| **Total** | **197 passing tests, 15 test files** |
 
 ### Running Tests
 
@@ -276,24 +299,25 @@ npm run test:coverage
 npm test -- snapshotComparer.test.ts
 ```
 
-## Outstanding Items & Roadmap
+## Roadmap
 
-### Before Final Submission (Nov 6)
+### Completed
 
-- ✅ **Phase 1 — Health Check Snapshots** (complete commit: Oct 21)
-- ✅ **Phase 2 — Snapshot Comparison** (complete commit: Oct 21)
-- ⏳ **Demo video** (max 3 minutes, showing core workflow) — TODO: record and upload to public URL
+- ✅ **Phase 1 — Health Check Snapshots**
+- ✅ **Phase 2 — Snapshot Comparison**
+- ✅ **Post-Phase-2 fixes** — snapshot recency, latency-only status, Connect button first-load state, banner logic
+- ✅ **Demo video:** [https://www.youtube.com/watch?v=qne3_eZdcKA](https://www.youtube.com/watch?v=qne3_eZdcKA)
 - ✅ **Live app:** [https://nodescope.vercel.app/](https://nodescope.vercel.app/)
-- ⏳ **Screenshots** — TODO: add 3-5 screenshots to `docs/screenshots/` and link in README
+- ✅ **Screenshots:** [docs/screenshots/](docs/screenshots/README.md)
+- ✅ **DoraHacks BUIDL:** [https://dorahacks.io/build/50146/](https://dorahacks.io/build/50146/)
 
 ### Phase 3 — Report Integration Enhancements (DEFERRED)
 
-Phase 3 (optional, deferred pending early feedback):
 - Extend diagnostic report export to include snapshot findings without breaking schema
 - Add "Export Health Snapshot" button for standalone snapshot export
-- Planned for post-check-in if time permits; not blocking submission
+- Planned for post-check-in; not blocking submission
 
-**Rationale:** Phase 1 + 2 deliver core value (health monitoring, before/after analysis, export). Phase 3 adds incremental refinement. Prioritizing demo materials and live deployment over additional features to meet Oct 24 check-in deadline.
+**Rationale:** Phase 1 + 2 deliver core value (health monitoring, before/after analysis, export). Phase 3 adds incremental refinement.
 
 ### Phase 2.5 — Trends & Historical Analysis (UNDER CONSIDERATION)
 
@@ -369,15 +393,8 @@ MIT (as per Portaldot Hacker House requirements).
 
 ---
 
-**TODO Placeholders for Check-In Submission:**
+**Project Status:** Check-in submitted Oct 22, 2026. Repository public with 7 commits, development records retained.
 
-- [ ] **Demo Video URL** — record and upload a 3-minute demo video showing: (1) endpoint configuration with Portaldot V3 chain ID validation, (2) health check snapshot run, (3) snapshot comparison showing block delta, (4) report export. Add link to README under "Demo Materials".
-- ✅ **Live App URL:** [https://nodescope.vercel.app/](https://nodescope.vercel.app/) — available for live testing.
-- [ ] **Screenshots** — add 3-5 representative screenshots to `docs/screenshots/` (endpoint config, health check results, snapshot comparison, report export) and link in README.
-
-**Project Status for Oct 24 Check-In:**
-- ✅ Repository public, 3+ commits, development records retained
-- ✅ Phase 1 & Phase 2 complete, 188 tests, architecture documented
-- ✅ Portaldot V3.0 EVM integration verified, chain ID validated, methods documented
-- ✅ README updated with honest deployment info and feature list
-- ⏳ Demo video, live deployment, screenshots (in progress)
+- ✅ Phase 1 & Phase 2 complete, 197 tests across 15 files
+- ✅ Portaldot V3.0 EVM integration verified, chain ID 420420777 validated, methods documented
+- ✅ Demo video, live deployment, and screenshots published
