@@ -44,6 +44,20 @@ export interface SessionTrendsExport extends SessionTrends {
   blockIntervalNote: string;
 }
 
+/**
+ * Optional integrity stamp (stage 2): a SHA-256 hash over the canonical form
+ * of the report, computed at export time by `stampReportIntegrity` in
+ * reportIntegrity.ts. Additive — the schema stays v1 and v1 consumers ignore
+ * this field. The hash covers everything in the report except this block.
+ */
+export interface ReportIntegrity {
+  algorithm: 'SHA-256';
+  /** Lowercase hex, 64 characters. */
+  hash: string;
+  /** Human-readable statement of exactly what the hash covers. */
+  scope: string;
+}
+
 export interface DiagnosticReportExport {
   schemaVersion: typeof REPORT_SCHEMA_VERSION;
   exportedAt: string;
@@ -51,6 +65,7 @@ export interface DiagnosticReportExport {
   records: DiagnosticReportEntry[];
   findings?: Finding[];
   sessionTrends?: SessionTrendsExport;
+  integrity?: ReportIntegrity;
 }
 
 export function sanitizeEndpointOrigin(endpoint: string): string {
