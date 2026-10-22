@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Header } from './components/layout/Header';
+import { CommandPalette, type PaletteCommand } from './components/common/CommandPalette';
 import { Sidebar } from './components/layout/Sidebar';
 import { Overview } from './components/dashboard/Overview';
 import { EndpointConfig } from './components/dashboard/EndpointConfig';
@@ -39,6 +40,18 @@ function App() {
   const [capabilitySnapshot, setCapabilitySnapshot] = useState<CapabilitySnapshot | null>(null); // Lift capability snapshot state
   const [healthSnapshots, setHealthSnapshots] = useState<HealthCheckSnapshot[]>(() => getHealthSnapshots());
   const [isHealthChecking, setIsHealthChecking] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen((open) => !open);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const handleRunHealthCheck = async () => {
     setIsHealthChecking(true);
@@ -110,13 +123,51 @@ function App() {
     );
   }, [healthSnapshots]);
 
+  const isConnected = connectionStatus === 'connected';
+  const runDiagnosticAndShow = (method: string, params: unknown[] = []) => {
+    setActiveSection('diagnostics');
+    void handleRunDiagnostic(method, params);
+  };
+  const paletteCommands: PaletteCommand[] = [
+    { id: 'nav-overview', label: 'Go to Overview', group: 'Navigate', hint: '01', keywords: 'home dashboard panels', run: () => setActiveSection('overview') },
+    { id: 'nav-diagnostics', label: 'Go to RPC Diagnostics', group: 'Navigate', hint: '02', keywords: 'console rpc run method', run: () => setActiveSection('diagnostics') },
+    { id: 'nav-history', label: 'Go to History', group: 'Navigate', hint: '03', keywords: 'report export ledger records', run: () => setActiveSection('history') },
+    ...(isConnected
+      ? [{ id: 'act-disconnect', label: 'Disconnect from endpoint', group: 'Actions', keywords: 'stop close session', run: () => handleDisconnect() } as PaletteCommand]
+      : [{ id: 'act-connect', label: 'Connect & Test endpoint', group: 'Actions', keywords: 'start connect test rpc url', run: () => { void handleConnect(); } } as PaletteCommand]),
+    {
+      id: 'act-health',
+      label: 'Run Health Check',
+      group: 'Actions',
+      keywords: 'health check snapshot node status',
+      run: () => {
+        setActiveSection('overview');
+        void handleRunHealthCheck();
+      },
+    },
+    { id: 'run-block', label: 'Run eth_blockNumber', group: 'Run diagnostic', hint: 'RPC', keywords: 'block number height latest', run: () => runDiagnosticAndShow('eth_blockNumber') },
+    { id: 'run-chain', label: 'Run eth_chainId', group: 'Run diagnostic', hint: 'RPC', keywords: 'chain id network', run: () => runDiagnosticAndShow('eth_chainId') },
+    { id: 'run-net', label: 'Run net_version', group: 'Run diagnostic', hint: 'RPC', keywords: 'network version', run: () => runDiagnosticAndShow('net_version') },
+    { id: 'run-client', label: 'Run web3_clientVersion', group: 'Run diagnostic', hint: 'RPC', keywords: 'client version node software', run: () => runDiagnosticAndShow('web3_clientVersion') },
+    { id: 'copy-endpoint', label: 'Copy endpoint URL', group: 'Copy', keywords: 'clipboard url rpc address', run: () => { void navigator.clipboard.writeText(endpoint); } },
+    ...(currentResult
+      ? [{ id: 'copy-result', label: 'Copy latest result JSON', group: 'Copy', keywords: 'clipboard payload response json', run: () => { void navigator.clipboard.writeText(JSON.stringify(currentResult, null, 2)); } } as PaletteCommand]
+      : []),
+    { id: 'open-github', label: 'Open GitHub repository', group: 'Open', keywords: 'source code repo external', run: () => window.open('https://github.com/Firzadf/nodescope', '_blank', 'noreferrer') },
+    { id: 'open-buidl', label: 'Open DoraHacks BUIDL', group: 'Open', keywords: 'hackathon submission external', run: () => window.open('https://dorahacks.io/build/50146', '_blank', 'noreferrer') },
+    { id: 'open-demo', label: 'Open demo video', group: 'Open', keywords: 'youtube watch external', run: () => window.open('https://www.youtube.com/watch?v=qne3_eZdcKA', '_blank', 'noreferrer') },
+  ];
+
   return (
     <div className="min-h-screen bg-ink text-slate-200">
       <Header connectionStatus={connectionStatus} />
       <div className="flex">
-        <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+        <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} onOpenPalette={() => setPaletteOpen(true)} />
         <main className="relative flex-1 p-6 bg-blueprint">
           <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(640px_260px_at_28%_0%,rgba(140,29,239,0.08),transparent_70%)]" />
+          <div aria-hidden="true" className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 select-none font-data text-[10px] uppercase tracking-[0.3em] text-slate-700 [writing-mode:vertical-rl] 2xl:block">
+            NodeScope · Portaldot V3 EVM · Chain 420420777 · Read-only diagnostics
+          </div>
           <div className="relative max-w-7xl mx-auto space-y-6">
             {activeSection === 'overview' && (
               <>
@@ -259,6 +310,7 @@ function App() {
           </div>
         </div>
       </footer>
+      <CommandPalette open={paletteOpen} commands={paletteCommands} onClose={() => setPaletteOpen(false)} />
     </div>
   );
 }

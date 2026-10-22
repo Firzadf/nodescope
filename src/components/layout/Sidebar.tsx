@@ -1,4 +1,4 @@
-import { Activity, Terminal, Clock } from 'lucide-react';
+import { Activity, Terminal, Clock, Search } from 'lucide-react';
 
 type NavItem = {
   id: string;
@@ -15,13 +15,25 @@ const navItems: NavItem[] = [
 interface SidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
+  onOpenPalette: () => void;
 }
 
-export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
+export function Sidebar({ activeSection, onSectionChange, onOpenPalette }: SidebarProps) {
   return (
     <aside className="w-64 bg-deep border-r border-line min-h-screen flex flex-col shrink-0">
       <div className="px-5 pt-6 pb-2">
         <p className="font-data text-[10px] uppercase tracking-[0.24em] text-slate-600">Workspace</p>
+      </div>
+      <div className="px-3 pb-3">
+        <button
+          type="button"
+          onClick={onOpenPalette}
+          className="flex w-full items-center gap-2.5 rounded-lg border border-line bg-white/[0.02] px-3.5 py-2.5 text-sm text-slate-400 transition-colors hover:border-slate-500/50 hover:text-slate-200"
+        >
+          <Search className="w-4 h-4 shrink-0" />
+          Jump to…
+          <kbd className="ml-auto shrink-0 rounded border border-line px-1.5 py-0.5 font-data text-[10px] text-slate-500">⌘K</kbd>
+        </button>
       </div>
       <nav className="px-3 space-y-1.5">
         {navItems.map((item, i) => {
