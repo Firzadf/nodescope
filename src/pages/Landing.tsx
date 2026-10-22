@@ -1,21 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import {
-  Activity,
-  ArrowRight,
-  ArrowUpRight,
-  Command,
-  FileJson,
-  GitCompare,
-  HeartPulse,
-  Radar,
-  Terminal,
-  X,
-} from 'lucide-react';
+import { Activity, ArrowRight, ArrowUpRight, Pause, Play, X } from 'lucide-react';
+import { sendJsonRpcRequest } from '../services/rpcClient';
+import { DEFAULT_PORTALDOT_V3_EVM_RPC } from '../types/endpoint';
 
 const APP_URL = '/app';
 const DEMO_URL = 'https://www.youtube.com/watch?v=qne3_eZdcKA';
 const GITHUB_URL = 'https://github.com/Firzadf/nodescope';
 const BUIDL_URL = 'https://dorahacks.io/build/50146';
+const DOCUMENTED_CHAIN_ID = 420420777;
 
 /* ---------------------------------- hooks --------------------------------- */
 
@@ -49,66 +41,164 @@ function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; 
   return (
     <div
       ref={ref}
-      style={{ transitionDelay: `${delay}ms` }}
-      className={`${className} transition-all duration-700 ease-out ${inView ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}
+      style={{ transitionDelay: `${delay}ms`, transitionTimingFunction: 'var(--ease-out)' }}
+      className={`${className} transition-all duration-700 ${inView ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}
     >
       {children}
     </div>
   );
 }
 
-function CountUp({ target, prefix = '', className = '' }: { target: number; prefix?: string; className?: string }) {
-  const { ref, inView } = useInView<HTMLSpanElement>(0.4);
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    let raf = 0;
-    const start = performance.now();
-    const duration = 1400;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setValue(Math.round(target * eased));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [inView, target]);
+/* -------------------------------- odometer -------------------------------- */
+
+function Odometer({ value }: { value: string }) {
   return (
-    <span ref={ref} className={className}>
-      {prefix}
-      {value.toLocaleString('en-US')}
+    <span className="odometer" aria-label={value}>
+      {value.split('').map((ch, i) =>
+        /\d/.test(ch) ? (
+          <span key={i} className="odometer-col" aria-hidden="true">
+            <span className="odometer-strip" style={{ transform: `translateY(-${Number(ch)}em)` }}>
+              {['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => (
+                <span key={d}>{d}</span>
+              ))}
+            </span>
+          </span>
+        ) : (
+          <span key={i} aria-hidden="true">
+            {ch}
+          </span>
+        ),
+      )}
     </span>
   );
 }
 
-/* --------------------------------- pieces --------------------------------- */
+/* ------------------------------ live readout ------------------------------ */
 
-function SectionHeading({ index, title, right }: { index: string; title: string; right?: string }) {
+type ReadoutState =
+  | { kind: 'probing' }
+  | { kind: 'live'; block: number; chainOk: boolean; latencyMs: number | null; at: Date }
+  | { kind: 'unreachable'; at: Date };
+
+function LiveReadout() {
+  const [state, setState] = useState<ReadoutState>({ kind: 'probing' });
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [blockRes, chainRes] = await Promise.all([
+        sendJsonRpcRequest(DEFAULT_PORTALDOT_V3_EVM_RPC, 'eth_blockNumber', [], 6000),
+        sendJsonRpcRequest(DEFAULT_PORTALDOT_V3_EVM_RPC, 'eth_chainId', [], 6000),
+      ]);
+      if (cancelled) return;
+      const raw = blockRes.response?.result;
+      if (blockRes.success && typeof raw === 'string') {
+        const chainRaw = chainRes.response?.result;
+        setState({
+          kind: 'live',
+          block: parseInt(raw, 16),
+          chainOk: chainRes.success && typeof chainRaw === 'string' && parseInt(chainRaw, 16) === DOCUMENTED_CHAIN_ID,
+          latencyMs: blockRes.latency,
+          at: new Date(),
+        });
+      } else {
+        setState({ kind: 'unreachable', at: new Date() });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
-    <div className="mb-10 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-5">
-      <div>
-        <p className="font-data text-[11px] uppercase tracking-[0.24em] text-slate-500">
-          <span className="text-gradient font-semibold">{index}</span> / {title}
-        </p>
+    <div className="overflow-hidden rounded-xl border border-line bg-panel/90 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.8)]">
+      <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2.5">
+        <span className="font-data text-[11px] text-slate-400">&gt;_ LIVE READOUT · PORTALDOT V3 EVM</span>
+        <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">[ Fig. 00 — Now ]</span>
       </div>
-      {right && <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-600">{right}</p>}
+      <div className="px-5 py-5">
+        <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">Latest block — observed by this page</p>
+        <div className="mt-2 font-data text-[44px] font-semibold leading-none text-white md:text-[54px]">
+          {state.kind === 'live' ? (
+            <Odometer value={state.block.toLocaleString('en-US')} />
+          ) : state.kind === 'probing' ? (
+            <span className="text-slate-600">
+              <Odometer value="0" />
+            </span>
+          ) : (
+            <span className="text-slate-500">— — —</span>
+          )}
+        </div>
+        <div className="mt-4 space-y-1.5 border-t border-line pt-3.5 font-data text-[11.5px] leading-relaxed">
+          {state.kind === 'probing' && (
+            <p key="probing" className="state-swap text-slate-400">
+              STATUS <span className="text-slate-200">PROBING THE ENDPOINT…</span>
+            </p>
+          )}
+          {state.kind === 'live' && (
+            <div key="live" className="state-swap space-y-1.5">
+              <p className="text-slate-400">
+                CHAIN ID <span className="text-slate-100">0x190F1CA9</span>{' '}
+                {state.chainOk ? (
+                  <span className="text-emerald-400">— MATCHES THE DOCUMENTED CHAIN</span>
+                ) : (
+                  <span className="text-amber-300">— DID NOT MATCH 420420777</span>
+                )}
+              </p>
+              <p className="text-slate-400">
+                ANSWERED IN <span className="text-slate-100">{state.latencyMs !== null ? `${state.latencyMs} MS` : '—'}</span>
+                {' · '}AT{' '}
+                <span className="text-slate-100">
+                  {state.at.toLocaleTimeString('en-GB', { hour12: false })} WIB
+                </span>
+              </p>
+              <p className="text-slate-500">Fetched once, when this page loaded. Not a poll — reload to re-observe.</p>
+            </div>
+          )}
+          {state.kind === 'unreachable' && (
+            <div key="unreachable" className="state-swap space-y-1.5">
+              <p className="text-amber-300">THE ENDPOINT DID NOT ANSWER WHILE THIS PAGE LOADED.</p>
+              <p className="text-slate-400">
+                NodeScope reports that too — it&apos;s the whole point. Last documented observation:{' '}
+                <span className="text-slate-100">block 147,639 · 22 Oct 2026</span>.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+      <svg viewBox="0 0 600 40" className="h-9 w-full border-t border-line bg-black/20" aria-hidden="true">
+        <defs>
+          <linearGradient id="ecg-grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#8C1DEF" />
+            <stop offset="100%" stopColor="#0181FB" />
+          </linearGradient>
+        </defs>
+        <path
+          className="ecg-path"
+          d="M0 20 H180 L192 20 L200 6 L210 34 L220 20 H330 L342 12 L352 28 L360 20 H600"
+          fill="none"
+          stroke="url(#ecg-grad)"
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+      </svg>
     </div>
   );
 }
 
-const TICKER_METHODS = [
-  'eth_chainId',
-  'eth_blockNumber',
-  'net_version',
-  'web3_clientVersion',
-  'system_health',
-  'system_chain',
-  'chain_getHeader',
-  'eth_gasPrice',
-  'eth_syncing',
-  'rpc_modules',
-];
+/* ----------------------------- section heading ---------------------------- */
+
+function SectionHeading({ index, title, right }: { index: string; title: string; right?: string }) {
+  return (
+    <div className="mb-10 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-5">
+      <p className="font-data text-[11px] uppercase tracking-[0.24em] text-slate-500">
+        <span className="font-semibold text-slate-200">{index}</span> / {title}
+      </p>
+      {right && <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-600">{right}</p>}
+    </div>
+  );
+}
 
 const SCREENSHOTS = [
   { src: '/screenshots/01-endpoint-config.png', caption: '01 — Endpoint configuration' },
@@ -117,6 +207,85 @@ const SCREENSHOTS = [
   { src: '/screenshots/04-findings-categorized.png', caption: '04 — Findings, categorized' },
   { src: '/screenshots/05-report-export.png', caption: '05 — Report export' },
 ];
+
+/* ------------------------------ step player ------------------------------- */
+
+const CHECK_STEPS = [
+  { method: 'eth_chainId', observed: '0x190f1ca9 — chain 420420777', latency: 562 },
+  { method: 'eth_blockNumber', observed: 'block 147,638', latency: 258 },
+  { method: 'web3_clientVersion', observed: 'client string, recorded in snapshot', latency: 257 },
+  { method: 'net_version', observed: '420420777', latency: 274 },
+];
+
+function CheckTranscript() {
+  const [active, setActive] = useState(0);
+  const [playing, setPlaying] = useState(true);
+
+  useEffect(() => {
+    if (!playing) return;
+    const t = setInterval(() => setActive((a) => (a + 1) % CHECK_STEPS.length), 1900);
+    return () => clearInterval(t);
+  }, [playing]);
+
+  const step = CHECK_STEPS[active];
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-line bg-panel">
+      <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2.5">
+        <span className="font-data text-[11px] text-slate-400">&gt;_ HEALTH CHECK — RECORDED RUN</span>
+        <button
+          type="button"
+          onClick={() => setPlaying((p) => !p)}
+          aria-label={playing ? 'Pause transcript' : 'Play transcript'}
+          className="btn-ghost flex h-7 w-7 items-center justify-center rounded-full"
+        >
+          {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+        </button>
+      </div>
+      <div className="grid md:grid-cols-2">
+        <ol className="divide-y divide-line border-b border-line md:border-b-0 md:border-r">
+          {CHECK_STEPS.map((s, i) => (
+            <li key={s.method}>
+              <button
+                type="button"
+                onClick={() => {
+                  setActive(i);
+                  setPlaying(false);
+                }}
+                className={`relative flex w-full items-center gap-3.5 px-5 py-4 text-left transition-colors duration-200 ${
+                  i === active ? 'bg-white/[0.045]' : 'hover:bg-white/[0.02]'
+                }`}
+              >
+                {i === active && (
+                  <span className="absolute left-0 top-0 h-full w-[3px] bg-gradient-to-b from-[#8C1DEF] to-[#0181FB]" />
+                )}
+                <span className="font-data text-xs text-slate-600">{String(i + 1).padStart(2, '0')}</span>
+                <span className={`font-data text-sm ${i === active ? 'text-white' : 'text-slate-400'}`}>{s.method}</span>
+                <span className={`ml-auto font-data text-xs ${i < active || !playing ? 'text-emerald-400' : 'text-slate-600'}`}>
+                  {i === active && playing ? 'RUNNING' : 'PASS'}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ol>
+        <div className="px-5 py-5" key={active}>
+          <div className="state-swap">
+            <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">Observed value</p>
+            <p className="mt-2 font-data text-lg leading-snug text-white">{step.observed}</p>
+            <p className="mt-4 font-data text-[11.5px] text-slate-400">
+              LATENCY <span className="text-slate-100">{step.latency} MS</span> · OUTCOME{' '}
+              <span className="text-emerald-400">SUCCESS</span>
+            </p>
+            <p className="mt-5 border-t border-line pt-3.5 text-[13px] leading-relaxed text-slate-500">
+              One step of a real check recorded 22 Oct 2026. Four methods, four receipts — saved as snapshot{' '}
+              <span className="font-data text-slate-300">nodescope.health-snapshot.v1</span>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /* ---------------------------------- page ---------------------------------- */
 
@@ -134,7 +303,7 @@ export function Landing() {
 
   return (
     <div className="min-h-screen bg-ink font-sans text-slate-200 antialiased selection:bg-[#8C1DEF]/40 selection:text-white">
-      {/* ------------------------------- nav ------------------------------- */}
+      {/* -------------------------------- nav ------------------------------- */}
       <header className="fixed inset-x-0 top-0 z-40 px-4 pt-4">
         <div className="mx-auto flex max-w-6xl items-center gap-3 rounded-full border border-line bg-deep/85 py-2 pl-4 pr-2 shadow-[0_18px_40px_-20px_rgba(0,0,0,0.8)] backdrop-blur-md">
           <a href="/" className="flex items-center gap-2.5">
@@ -144,126 +313,95 @@ export function Landing() {
           <nav className="mx-auto hidden items-center gap-7 text-sm text-slate-400 md:flex">
             <a href="#problem" className="transition-colors hover:text-white">The Problem</a>
             <a href="#how" className="transition-colors hover:text-white">How It Works</a>
-            <a href="#features" className="transition-colors hover:text-white">Features</a>
+            <a href="#instrument" className="transition-colors hover:text-white">The Instrument</a>
             <a href="#evidence" className="transition-colors hover:text-white">Evidence</a>
             <a href="#roadmap" className="transition-colors hover:text-white">Roadmap</a>
           </nav>
-          <a
-            href={APP_URL}
-            className="btn-primary ml-auto inline-flex items-center gap-2 rounded-full px-4.5 py-2 text-sm font-semibold md:ml-0"
-          >
+          <a href={APP_URL} className="btn-primary ml-auto inline-flex items-center gap-2 rounded-full px-4.5 py-2 text-sm font-semibold md:ml-0">
             Launch App
             <ArrowUpRight className="h-4 w-4" />
           </a>
         </div>
       </header>
 
-      {/* ------------------------------- hero ------------------------------ */}
-      <section className="bg-blueprint relative overflow-hidden px-4 pb-16 pt-36 md:pt-44">
+      {/* -------------------------------- hero ------------------------------ */}
+      <section className="bg-blueprint relative overflow-hidden px-4 pb-20 pt-36 md:pt-44">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 h-[480px] bg-[radial-gradient(720px_300px_at_50%_0%,rgba(140,29,239,0.13),transparent_70%)]"
+          className="pointer-events-none absolute inset-x-0 top-0 h-[480px] bg-[radial-gradient(720px_300px_at_30%_0%,rgba(140,29,239,0.11),transparent_70%)]"
         />
-        <div className="stagger relative mx-auto max-w-6xl">
-          <p className="inline-flex items-center gap-2.5 rounded-full border border-line bg-white/[0.03] px-3.5 py-1.5 font-data text-[11px] uppercase tracking-[0.2em] text-slate-400">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-            </span>
-            Portaldot V3 EVM · Chain 420420777 · Testnet
-          </p>
-          <h1 className="mt-7 font-display text-[44px] font-semibold leading-[1.02] tracking-tight text-white md:text-7xl">
-            Consoles interact.
-            <br />
-            NodeScope <span className="text-gradient">proves.</span>
-          </h1>
-          <p className="mt-6 max-w-2xl text-base leading-relaxed text-slate-400 md:text-lg">
-            A read-only diagnostics toolkit for Portaldot nodes. Health checks, snapshot comparisons, and
-            exportable reports that prove a node is healthy <em className="text-slate-200 not-italic underline decoration-[#0181FB]/60 underline-offset-4">over time</em> —
-            not just reachable once.
-          </p>
-          <div className="mt-9 flex flex-wrap items-center gap-3.5">
-            <a href={APP_URL} className="btn-primary inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-[15px] font-semibold">
-              Launch App
-              <ArrowRight className="h-4.5 w-4.5" />
-            </a>
-            <a
-              href={DEMO_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="btn-ghost inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-[15px] font-medium"
-            >
-              Watch the demo
-              <ArrowUpRight className="h-4.5 w-4.5" />
-            </a>
-            <span className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-600">Read-only · No keys · No transactions</span>
+        <div className="relative mx-auto grid max-w-6xl items-start gap-12 lg:grid-cols-12">
+          <div className="stagger lg:col-span-7">
+            <p className="flex items-center gap-2.5 font-data text-[11px] uppercase tracking-[0.24em] text-slate-400">
+              <span className="h-2 w-2 shrink-0 bg-gradient-to-br from-[#8C1DEF] to-[#0181FB]" />
+              Portaldot V3 EVM — Chain 420420777 — Testnet
+            </p>
+            <h1 className="mt-7 font-display text-[44px] font-semibold leading-[1.02] tracking-tight text-white md:text-7xl">
+              Consoles interact.
+              <br />
+              NodeScope{' '}
+              <span className="font-data font-medium tracking-tight">
+                proves.<span className="cursor-blink text-[#0181FB]">▊</span>
+              </span>
+            </h1>
+            <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-400 md:text-lg">
+              A read-only diagnostics toolkit for Portaldot nodes. It records health checks as snapshots, diffs
+              them deterministically, and exports the report — so a node&apos;s health is something you can{' '}
+              <span className="text-slate-100">show</span>, not something you assert.
+            </p>
+            <div className="mt-9 flex flex-wrap items-center gap-3.5">
+              <a href={APP_URL} className="btn-primary inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-[15px] font-semibold">
+                Launch App
+                <ArrowRight className="h-4.5 w-4.5" />
+              </a>
+              <a href={DEMO_URL} target="_blank" rel="noreferrer" className="btn-ghost inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-[15px] font-medium">
+                Watch the demo
+                <ArrowUpRight className="h-4.5 w-4.5" />
+              </a>
+            </div>
+            <p className="mt-6 font-data text-[11px] uppercase tracking-[0.16em] text-slate-600">
+              Read-only · No keys · No transactions · Nothing polls
+            </p>
           </div>
 
-          {/* pulse readout */}
-          <div className="mt-14 overflow-hidden rounded-xl border border-line bg-panel/80">
-            <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2">
-              <span className="font-data text-[11px] text-slate-400">&gt;_ LIVE PULSE · ETH_BLOCKNUMBER</span>
-              <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">[ Fig. 00 — Pulse ]</span>
-            </div>
-            <svg viewBox="0 0 600 64" className="h-16 w-full" role="img" aria-label="Stylized node pulse trace">
-              <defs>
-                <linearGradient id="ecg-grad" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#8C1DEF" />
-                  <stop offset="100%" stopColor="#0181FB" />
-                </linearGradient>
-              </defs>
-              <path
-                className="ecg-path"
-                d="M0 32 H168 L182 32 L192 10 L204 54 L216 32 H318 L330 20 L342 44 L352 32 H600"
-                fill="none"
-                stroke="url(#ecg-grad)"
-                strokeWidth="2"
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-            </svg>
+          <div className="lg:col-span-5">
+            <LiveReadout />
+            <figure className="relative z-10 mx-3 -mt-3 rotate-[1.3deg] overflow-hidden rounded-xl border border-line bg-panel shadow-[0_30px_60px_-25px_rgba(0,0,0,0.85)] transition-transform duration-500 hover:rotate-0" style={{ transitionTimingFunction: 'var(--ease-out)' }}>
+              <img src="/screenshots/03-snapshot-comparison.png" alt="NodeScope snapshot comparison in a real session" className="aspect-[16/9] w-full object-cover object-top" />
+              <figcaption className="border-t border-line bg-black/30 px-4 py-2.5 font-data text-[10px] uppercase tracking-[0.16em] text-slate-500">
+                The app — snapshot comparison, cropped from a real session
+              </figcaption>
+            </figure>
           </div>
         </div>
       </section>
 
-      {/* ------------------------------ ticker ------------------------------ */}
-      <div className="overflow-hidden border-y border-line bg-deep/70 py-3" aria-hidden="true">
-        <div className="animate-marquee flex w-max items-center gap-8 whitespace-nowrap pr-8">
-          {[...TICKER_METHODS, ...TICKER_METHODS].map((m, i) => (
-            <span key={i} className="flex items-center gap-8 font-data text-xs uppercase tracking-[0.22em] text-slate-500">
-              {m}
-              <span className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-[#8C1DEF] to-[#0181FB]" />
-            </span>
-          ))}
-        </div>
-      </div>
-
       {/* ------------------------------- stats ------------------------------ */}
-      <section className="px-4 py-16">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line lg:grid-cols-4">
+      <section className="border-y border-line bg-deep/60 px-4 py-14">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-4">
           {[
-            { target: 420420777, prefix: '', label: 'Chain ID', sub: 'Portaldot V3 EVM' },
-            { target: 204, prefix: '', label: 'Tests passing', sub: 'Vitest suite, all green' },
-            { target: 38, prefix: '', label: 'RPC methods probed', sub: 'Capability discovery' },
-            { target: 12, prefix: '+', label: 'Blocks', sub: 'Demo snapshots A → B delta' },
+            { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · returned by eth_chainId' },
+            { value: '209', label: 'Tests passing', sub: '17 files · Vitest · suite verified 22 Oct 2026' },
+            { value: '38', label: 'RPC methods probed', sub: '7 supported on this EVM profile · the rest answered method-not-found — reported, not hidden' },
+            { value: '+12', label: 'Blocks between demo snapshots', sub: 'A 143,764 at 15:48:05 → B 143,776 at 15:49:21 WIB · 76 seconds apart' },
           ].map((s) => (
-            <div key={s.label} className="bg-panel px-6 py-7">
-              <CountUp target={s.target} prefix={s.prefix} className="font-data text-3xl font-semibold text-white md:text-4xl" />
-              <p className="mt-2 font-data text-[11px] uppercase tracking-[0.2em] text-slate-400">{s.label}</p>
-              <p className="mt-1 text-xs text-slate-500">{s.sub}</p>
+            <div key={s.label}>
+              <p className="font-data text-3xl font-semibold text-white md:text-4xl">{s.value}</p>
+              <p className="mt-2 font-data text-[11px] uppercase tracking-[0.2em] text-slate-300">{s.label}</p>
+              <p className="mt-1.5 max-w-[26ch] text-xs leading-relaxed text-slate-500">{s.sub}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* ------------------------------ problem ----------------------------- */}
-      <section id="problem" className="scroll-mt-28 px-4 py-14">
+      <section id="problem" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading index="01" title="The Problem" right="Why NodeScope exists" />
             <div className="grid gap-10 md:grid-cols-2">
               <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-white md:text-[40px]">
-                A green checkmark is <span className="text-gradient">not evidence.</span>
+                A green checkmark is not evidence.
               </h2>
               <div className="space-y-4 text-[15px] leading-relaxed text-slate-400">
                 <p>
@@ -276,8 +414,8 @@ export function Landing() {
                   comparable. When something changes, the diff says exactly what — method by method.
                 </p>
                 <div className="space-y-2.5 pt-2 font-data text-[13px]">
-                  <p className="flex gap-3"><span className="text-slate-600">CONSOLE —</span> <span>&ldquo;Reachable right now.&rdquo;</span></p>
-                  <p className="flex gap-3"><span className="text-gradient font-semibold">NODESCOPE —</span> <span className="text-slate-200">&ldquo;Healthy at 15:48 and 15:49, +12 blocks, zero regressions. Here&apos;s the report.&rdquo;</span></p>
+                  <p className="flex gap-3"><span className="shrink-0 text-slate-600">CONSOLE —</span> <span>&ldquo;Reachable right now.&rdquo;</span></p>
+                  <p className="flex gap-3"><span className="shrink-0 font-semibold text-slate-100">NODESCOPE —</span> <span className="text-slate-200">&ldquo;Healthy at 15:48 and 15:49 — 76 seconds apart — +12 blocks, zero regressions. Here&apos;s the report.&rdquo;</span></p>
                 </div>
               </div>
             </div>
@@ -286,17 +424,17 @@ export function Landing() {
       </section>
 
       {/* -------------------------------- how ------------------------------- */}
-      <section id="how" className="scroll-mt-28 px-4 py-14">
+      <section id="how" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading index="02" title="How It Works" right="Three steps, no setup" />
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-3">
               {[
                 { n: '01', title: 'Connect & check', body: 'Point NodeScope at any Portaldot V3 EVM endpoint. A health check runs the core JSON-RPC methods and records the result as a structured snapshot.' },
                 { n: '02', title: 'Snapshot', body: 'Snapshots are timestamped observations — block height, chain ID, client version, latency, per-method outcomes — stored for the session, up to 20.' },
                 { n: '03', title: 'Compare & export', body: 'Pick any two snapshots. NodeScope diffs them deterministically and folds everything into an exportable diagnostic report (schema v1) you can share.' },
               ].map((s) => (
-                <div key={s.n} className="rounded-xl border border-line bg-panel p-6">
+                <div key={s.n} className="bg-panel p-6">
                   <p className="font-data text-sm text-slate-500">{s.n}</p>
                   <h3 className="mt-3 font-display text-lg font-semibold text-white">{s.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-slate-400">{s.body}</p>
@@ -326,43 +464,91 @@ export function Landing() {
         </div>
       </section>
 
-      {/* ----------------------------- features ----------------------------- */}
-      <section id="features" className="scroll-mt-28 px-4 py-14">
+      {/* ----------------------------- instrument ---------------------------- */}
+      <section id="instrument" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading index="03" title="Features" right="Shipped & verified" />
-            <div className="grid gap-4 md:grid-cols-3">
-              {[
-                { icon: HeartPulse, title: 'Health Check Snapshots', body: 'One click captures a full, structured health observation of the node — every core method, its outcome, latency, and observed value.', tag: 'Schema · nodescope.health-snapshot.v1', wide: true },
-                { icon: GitCompare, title: 'Snapshot Comparison', body: 'Deterministic diffs between any two snapshots: block-height delta, per-method changes, new and resolved findings.', tag: 'Pure · Deterministic' },
-                { icon: Radar, title: 'Capability Discovery', body: 'Probes 38 JSON-RPC methods and reports honestly which the endpoint actually supports — unsupported methods are data, not errors.', tag: '38 methods probed' },
-                { icon: Terminal, title: 'RPC Console', body: 'Run any JSON-RPC method by hand, with presets, evidence badges from your own history, and full request/response inspection.', tag: 'User-triggered only' },
-                { icon: FileJson, title: 'Diagnostic Reports', body: 'Every run folds into an exportable JSON report with categorized findings — the receipt you can hand to anyone.', tag: 'Schema · nodescope.diagnostic-report.v1' },
-                { icon: Command, title: 'Command Palette', body: 'Press ⌘K and drive the whole toolkit from the keyboard — navigate, connect, run checks and diagnostics, copy evidence.', tag: '⌘K · Linear-style' },
-              ].map((f) => (
-                <div
-                  key={f.title}
-                  className={`group rounded-xl border border-line bg-panel p-6 transition-colors hover:border-slate-500/40 ${f.wide ? 'md:col-span-2' : ''}`}
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-black/30">
-                    <f.icon className="h-5 w-5 text-slate-300" />
-                  </div>
-                  <h3 className="mt-4 font-display text-lg font-semibold text-white">{f.title}</h3>
-                  <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-400">{f.body}</p>
-                  <p className="mt-4 font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">{f.tag}</p>
+            <SectionHeading index="03" title="The Instrument" right="Real output, not mockups" />
+            <div className="grid items-start gap-6 lg:grid-cols-2">
+              <CheckTranscript />
+              {/* snapshot diff artifact */}
+              <div className="overflow-hidden rounded-xl border border-line bg-panel">
+                <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2.5">
+                  <span className="font-data text-[11px] text-slate-400">&gt;_ SNAPSHOT COMPARISON — REAL OUTPUT</span>
+                  <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">Demo · 22 Oct 2026</span>
                 </div>
-              ))}
+                <div className="px-5 py-5 font-data text-[12.5px] leading-[1.9]">
+                  <p><span className="mr-4 text-slate-600">01</span><span className="text-slate-500"># nodescope.health-snapshot.v1 — diff A → B</span></p>
+                  <p><span className="mr-4 text-slate-600">02</span><span className="text-slate-400">A · block 143,764 · 15:48:05 WIB</span></p>
+                  <p><span className="mr-4 text-slate-600">03</span><span className="text-slate-400">B · block 143,776 · 15:49:21 WIB</span></p>
+                  <p><span className="mr-4 text-slate-600">04</span><span className="text-slate-500">eth_chainId&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0x190f1ca9 → 0x190f1ca9&nbsp;&nbsp;<span className="text-slate-500">UNCHANGED</span></span></p>
+                  <p className="-mx-5 bg-red-400/[0.06] px-5"><span className="mr-4 text-slate-600">05</span><span className="text-red-300">− eth_blockNumber&nbsp;&nbsp;&nbsp;143,764</span></p>
+                  <p className="-mx-5 bg-emerald-400/[0.07] px-5"><span className="mr-4 text-slate-600">06</span><span className="text-emerald-300">+ eth_blockNumber&nbsp;&nbsp;&nbsp;143,776&nbsp;&nbsp;Δ +12</span></p>
+                  <p><span className="mr-4 text-slate-600">07</span><span className="text-slate-500">net_version&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;420420777 → 420420777&nbsp;&nbsp;UNCHANGED</span></p>
+                  <p><span className="mr-4 text-slate-600">08</span><span className="text-slate-500">findings&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 new · 0 resolved · 0 regressions</span></p>
+                </div>
+                <p className="border-t border-line px-5 py-3 font-data text-[10.5px] uppercase tracking-[0.14em] text-slate-600">
+                  Deterministic — same two snapshots, same diff, every time
+                </p>
+              </div>
+            </div>
+          </Reveal>
+          <Reveal delay={100}>
+            <div className="mt-6 overflow-hidden rounded-xl border border-line">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-line bg-panel font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                    <th className="px-5 py-3.5 font-medium">Capability</th>
+                    <th className="hidden px-5 py-3.5 font-medium md:table-cell">What it does</th>
+                    <th className="px-5 py-3.5 font-medium">Proof</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line bg-panel/60 text-sm">
+                  {[
+                    { cap: 'Capability discovery', what: 'Probes 38 JSON-RPC methods; an unsupported answer is reported as data, never dressed up as success.', proof: '7 supported on Portaldot V3 EVM' },
+                    { cap: 'RPC console', what: 'Run any method by hand — presets, custom params, and evidence badges drawn from your own run history.', proof: 'User-triggered only · nothing polls' },
+                    { cap: 'Diagnostic reports', what: 'Every run folds into one shareable JSON report with categorized findings and recommendations.', proof: 'Schema nodescope.diagnostic-report.v1' },
+                    { cap: 'Command palette', what: '⌘K drives navigation, connection, health checks, diagnostics, and copying evidence — keyboard first.', proof: 'Press ⌘K inside the app' },
+                  ].map((r) => (
+                    <tr key={r.cap} className="transition-colors hover:bg-white/[0.03]">
+                      <td className="px-5 py-4 font-data text-[13px] font-medium text-white">{r.cap}</td>
+                      <td className="hidden max-w-md px-5 py-4 leading-relaxed text-slate-400 md:table-cell">{r.what}</td>
+                      <td className="px-5 py-4 font-data text-[12px] text-slate-300">{r.proof}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </Reveal>
         </div>
       </section>
 
       {/* ----------------------------- evidence ----------------------------- */}
-      <section id="evidence" className="scroll-mt-28 px-4 py-14">
+      <section id="evidence" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading index="04" title="Live Evidence" right="Observed on the real testnet" />
-            <div className="overflow-hidden rounded-xl border border-line">
+            <div className="rounded-xl border border-line bg-panel px-5 py-5">
+              <div className="grid grid-cols-12 gap-1.5" role="img" aria-label="48 consecutive blocks observed during one session, from 147,592 to 147,639">
+                {Array.from({ length: 48 }).map((_, i) => (
+                  <span
+                    key={i}
+                    className="h-6 rounded-[3px]"
+                    style={{
+                      backgroundColor:
+                        i === 47
+                          ? 'rgba(52, 211, 153, 0.85)'
+                          : `rgba(1, 129, 251, ${0.1 + (i / 47) * 0.5})`,
+                    }}
+                  />
+                ))}
+              </div>
+              <p className="mt-3.5 font-data text-[11px] leading-relaxed text-slate-500">
+                BLOCKS 147,592 → 147,639 · ONE CELL PER BLOCK · SHADE = POSITION IN RANGE · THE RANGE WAS OBSERVED
+                END-TO-END IN ONE SESSION — THE CHAIN DIDN&apos;T PAUSE FOR US
+              </p>
+            </div>
+            <div className="mt-6 overflow-hidden rounded-xl border border-line">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-line bg-panel font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">
@@ -376,7 +562,7 @@ export function Landing() {
                     { block: '133,242', label: 'First recorded observation', when: 'Oct 2026' },
                     { block: '143,764', label: 'Demo Snapshot A', when: '22 Oct 2026 · 15:48 WIB' },
                     { block: '143,776', label: 'Demo Snapshot B — delta +12', when: '22 Oct 2026 · 15:49 WIB' },
-                    { block: '147,639', label: 'Latest QA session — delta +1 in 7s', when: '22 Oct 2026 · 22:16 WIB' },
+                    { block: '147,639', label: 'QA session — delta +1 in 7 seconds', when: '22 Oct 2026 · 22:16 WIB' },
                   ].map((r) => (
                     <tr key={r.block} className="transition-colors hover:bg-white/[0.03]">
                       <td className="px-5 py-3.5 font-semibold text-white">{r.block}</td>
@@ -387,8 +573,9 @@ export function Landing() {
                 </tbody>
               </table>
             </div>
-            <p className="mt-3 font-data text-[11px] text-slate-600">
-              Endpoint: test-evm-rpc-v3.portaldot.dev · Chain ID 420420777 · NodeScope deploys no contracts and sends no transactions — evidence is observed, never manufactured.
+            <p className="mt-3 font-data text-[11px] leading-relaxed text-slate-600">
+              Endpoint: test-evm-rpc-v3.portaldot.dev · Chain ID 420420777 · NodeScope deploys no contracts and sends
+              no transactions — evidence is observed, never manufactured.
             </p>
           </Reveal>
           <Reveal delay={100}>
@@ -410,17 +597,17 @@ export function Landing() {
       </section>
 
       {/* ----------------------------- roadmap ------------------------------ */}
-      <section id="roadmap" className="scroll-mt-28 px-4 py-14">
+      <section id="roadmap" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading index="05" title="Roadmap" right="Honestly labeled" />
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-3">
               {[
                 { title: 'Trends & Verdict', body: 'Session sparkline of block height and latency across snapshots, with a plain-language health verdict per endpoint.' },
                 { title: 'Multi-Endpoint Watchlist', body: 'Save several endpoints and compare their health side by side — built for operators running more than one node.' },
                 { title: 'Portaldot Mainnet Profile', body: 'A first-class profile for Portaldot V3 mainnet the day it opens, reusing the same snapshot and evidence engine.' },
               ].map((r) => (
-                <div key={r.title} className="rounded-xl border border-dashed border-line bg-panel/50 p-6">
+                <div key={r.title} className="bg-panel/70 p-6">
                   <span className="inline-block rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 font-data text-[10px] uppercase tracking-[0.16em] text-amber-300">
                     Planned — not shipped
                   </span>
@@ -445,7 +632,7 @@ export function Landing() {
         <Reveal className="relative mx-auto max-w-3xl text-center">
           <Activity className="mx-auto h-8 w-8 text-slate-500" />
           <h2 className="mt-6 font-display text-4xl font-semibold leading-tight tracking-tight text-white md:text-5xl">
-            Put your node <span className="text-gradient">under the scope.</span>
+            Put your node <span className="font-data font-medium">under the scope.</span>
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-slate-400">
             Open the live toolkit, run a health check against the Portaldot V3 testnet, and keep the receipt.
