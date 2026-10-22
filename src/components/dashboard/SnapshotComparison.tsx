@@ -249,6 +249,8 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
           </div>
         </div>
 
+        {/* Result blocks: keyed by the selected pair so a new selection replays the reveal. */}
+        <div key={`${activeIdA}:${activeIdB}`} className="diff-reveal space-y-6">
         {/* Compatibility Warning */}
         {comparison && !comparison.comparable && (
           <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-xs text-amber-300 flex items-start gap-2">
@@ -446,6 +448,7 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
             )}
           </div>
         )}
+        </div>
       </div>
     </Card>
   );

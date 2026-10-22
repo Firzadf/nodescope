@@ -158,9 +158,9 @@ export function HealthCheckPanel({
 
         {!latestSnapshot && isLoading && (
           <div className="empty-shell px-5 py-6 space-y-3" aria-hidden="true">
-            <div className="h-3 w-44 rounded bg-white/[0.07] animate-pulse" />
-            <div className="h-3 w-72 max-w-full rounded bg-white/[0.045] animate-pulse" />
-            <div className="h-3 w-28 rounded bg-white/[0.055] animate-pulse" />
+            <div className="skeleton-shimmer h-3 w-44 rounded" />
+            <div className="skeleton-shimmer h-3 w-72 max-w-full rounded" />
+            <div className="skeleton-shimmer h-3 w-28 rounded" />
           </div>
         )}
 
@@ -178,7 +178,7 @@ export function HealthCheckPanel({
         )}
 
         {latestSnapshot && (
-          <div className="space-y-4">
+          <div key={latestSnapshot.id} className="space-y-4">
             <div className="bg-black/25 border border-line rounded-lg p-4">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-line pb-3 mb-3 text-xs">
                 <div className="flex items-center gap-2">
@@ -199,7 +199,7 @@ export function HealthCheckPanel({
               </div>
 
               <h4 className="text-sm font-medium text-slate-300 mb-3">Individual Check Results</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="stagger grid grid-cols-1 md:grid-cols-2 gap-3">
                 {latestSnapshot.checks.map((check: HealthCheckCheck) => (
                   <div
                     key={check.method}

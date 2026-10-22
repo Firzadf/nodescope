@@ -25,7 +25,7 @@ export function SnapshotStrip({ snapshots }: SnapshotStripProps) {
         </p>
       </div>
       <div className="mt-2 flex gap-1" role="img" aria-label={`${ordered.length} health checks this session`}>
-        {ordered.map((s) => {
+        {ordered.map((s, i) => {
           const passed = s.checks.filter((c) => c.success).length;
           const total = s.checks.length;
           const block = s.checks.find((c) => c.method === 'eth_blockNumber')?.observedValue;
@@ -39,7 +39,8 @@ export function SnapshotStrip({ snapshots }: SnapshotStripProps) {
             <div
               key={s.id}
               title={`${new Date(s.timestamp).toLocaleTimeString()} · block ${block ?? '—'} · ${passed}/${total} checks passed`}
-              className={`h-7 min-w-[10px] flex-1 rounded-[4px] ${tone}`}
+              style={{ animationDelay: `${Math.min(i * 45, 600)}ms` }}
+              className={`strip-cell-in h-7 min-w-[10px] flex-1 rounded-[4px] ${tone}`}
             />
           );
         })}

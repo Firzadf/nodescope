@@ -178,7 +178,7 @@ function App() {
           </div>
           <div className="relative max-w-7xl mx-auto space-y-6">
             {activeSection === 'overview' && (
-              <>
+              <div className="space-y-6 stagger">
                 <div className="flex flex-wrap items-end justify-between gap-3 pt-1">
                   <div>
                     <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">NodeScope / Overview</p>
@@ -214,7 +214,7 @@ function App() {
                   onRunHealthCheck={handleRunHealthCheck}
                   isHealthChecking={isHealthChecking}
                 />
-              </>
+              </div>
             )}
             {activeSection === 'diagnostics' && (
               <div className="space-y-6 stagger">
