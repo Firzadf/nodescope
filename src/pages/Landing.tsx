@@ -42,7 +42,7 @@ function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; 
     <div
       ref={ref}
       style={{ transitionDelay: `${delay}ms`, transitionTimingFunction: 'var(--ease-out)' }}
-      className={`${className} transition-all duration-700 ${inView ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}
+      className={`reveal ${className} transition-all duration-700 ${inView ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}
     >
       {children}
     </div>
@@ -264,6 +264,13 @@ function CheckTranscript() {
                 <span className={`ml-auto font-data text-xs ${i < active || !playing ? 'text-emerald-400' : 'text-slate-600'}`}>
                   {i === active && playing ? 'RUNNING' : 'PASS'}
                 </span>
+                {i === active && playing && (
+                  <span
+                    key={active}
+                    aria-hidden="true"
+                    className="step-progress absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-[#8C1DEF] to-[#0181FB]"
+                  />
+                )}
               </button>
             </li>
           ))}
@@ -283,6 +290,93 @@ function CheckTranscript() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ------------------------------- flow visual ------------------------------ */
+
+/**
+ * One question, two answers. The console lane asks eth_blockNumber once and
+ * keeps nothing; the NodeScope lane turns the same method into two kept
+ * snapshots and a diff. All values are the real demo pair (22 Oct 2026).
+ * Pure SVG/CSS — paths draw in when the visual scrolls into view.
+ */
+function FlowVisual() {
+  const { ref, inView } = useInView<HTMLDivElement>(0.3);
+  return (
+    <div ref={ref} className={`mt-12 overflow-hidden rounded-xl border border-line bg-panel ${inView ? 'flow-in' : ''}`}>
+      <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2.5">
+        <span className="font-data text-[11px] text-slate-400">ONE QUESTION — eth_blockNumber — TWO ANSWERS</span>
+        <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">Demo data · 22 Oct 2026</span>
+      </div>
+      <div className="grid divide-y divide-line md:grid-cols-2 md:divide-x md:divide-y-0">
+        {/* Console lane: one call, one answer, nothing kept. */}
+        <div className="px-5 py-5">
+          <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">Console — asks once</p>
+          <svg viewBox="0 0 320 44" className="mt-4 w-full" aria-hidden="true">
+            <path pathLength={100} className="flow-draw" d="M8 22 H104" fill="none" stroke="#64748b" strokeWidth="1.6" />
+            <line x1="128" y1="22" x2="312" y2="22" stroke="#475569" strokeWidth="1.2" strokeDasharray="3 6" opacity="0.5" />
+            <circle className="flow-node" style={{ transitionDelay: '500ms' }} cx="116" cy="22" r="5" fill="#0a1226" stroke="#94a3b8" strokeWidth="1.6" />
+          </svg>
+          <p className="mt-3 font-data text-[12.5px] leading-relaxed text-slate-400">
+            eth_blockNumber → <span className="text-slate-200">143,764</span>
+            <span className="text-slate-600"> — answered, then gone. Nothing is kept, nothing can be shown later.</span>
+          </p>
+        </div>
+        {/* NodeScope lane: same call, kept twice, diffed, exported. */}
+        <div className="px-5 py-5">
+          <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-300">NodeScope — proves over time</p>
+          <svg viewBox="0 0 320 44" className="mt-4 w-full" aria-hidden="true">
+            <defs>
+              <linearGradient id="flow-grad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#8C1DEF" />
+                <stop offset="100%" stopColor="#0181FB" />
+              </linearGradient>
+            </defs>
+            <path pathLength={100} className="flow-draw" d="M8 22 H312" fill="none" stroke="url(#flow-grad)" strokeWidth="1.6" />
+            <circle className="flow-node" style={{ transitionDelay: '150ms' }} cx="8" cy="22" r="5" fill="#0a1226" stroke="#8C1DEF" strokeWidth="1.8" />
+            <circle className="flow-node" style={{ transitionDelay: '600ms' }} cx="140" cy="22" r="5" fill="#0a1226" stroke="#0181FB" strokeWidth="1.8" />
+            <circle className="flow-node" style={{ transitionDelay: '1000ms' }} cx="238" cy="22" r="5" fill="#0a1226" stroke="#34d399" strokeWidth="1.8" />
+            <circle className="flow-node" style={{ transitionDelay: '1350ms' }} cx="312" cy="22" r="5" fill="#0a1226" stroke="#e2e8f0" strokeWidth="1.8" />
+          </svg>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 font-data text-[11px] text-slate-500">
+            <span>A · <span className="text-slate-200">143,764</span></span>
+            <span>B · <span className="text-slate-200">143,776</span></span>
+            <span className="text-emerald-400">Δ +12 · 76 s</span>
+            <span className="text-slate-300">report exported</span>
+          </div>
+          <p className="mt-2 text-[12.5px] leading-relaxed text-slate-500">
+            The same answers, kept as snapshots — so the change between them is a fact, not a memory.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------ evidence grid ----------------------------- */
+
+function EvidenceGrid() {
+  const { ref, inView } = useInView<HTMLDivElement>(0.35);
+  return (
+    <div
+      ref={ref}
+      className={`grid grid-cols-12 gap-1.5 ${inView ? 'cells-in' : ''}`}
+      role="img"
+      aria-label="48 consecutive blocks observed during one session, from 147,592 to 147,639"
+    >
+      {Array.from({ length: 48 }).map((_, i) => (
+        <span
+          key={i}
+          className="evidence-cell h-6 rounded-[3px]"
+          style={{
+            transitionDelay: `${i * 18}ms`,
+            backgroundColor:
+              i === 47 ? 'rgba(52, 211, 153, 0.85)' : `rgba(1, 129, 251, ${0.1 + (i / 47) * 0.5})`,
+          }}
+        />
+      ))}
     </div>
   );
 }
@@ -384,12 +478,12 @@ export function Landing() {
             { value: '209', label: 'Tests passing', sub: '17 files · Vitest · suite verified 22 Oct 2026' },
             { value: '38', label: 'RPC methods probed', sub: '7 supported on this EVM profile · the rest answered method-not-found — reported, not hidden' },
             { value: '+12', label: 'Blocks between demo snapshots', sub: 'A 143,764 at 15:48:05 → B 143,776 at 15:49:21 WIB · 76 seconds apart' },
-          ].map((s) => (
-            <div key={s.label}>
+          ].map((s, i) => (
+            <Reveal key={s.label} delay={i * 80}>
               <p className="font-data text-3xl font-semibold text-white md:text-4xl">{s.value}</p>
               <p className="mt-2 font-data text-[11px] uppercase tracking-[0.2em] text-slate-300">{s.label}</p>
               <p className="mt-1.5 max-w-[26ch] text-xs leading-relaxed text-slate-500">{s.sub}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -419,6 +513,7 @@ export function Landing() {
                 </div>
               </div>
             </div>
+            <FlowVisual />
           </Reveal>
         </div>
       </section>
@@ -529,20 +624,7 @@ export function Landing() {
           <Reveal>
             <SectionHeading index="04" title="Live Evidence" right="Observed on the real testnet" />
             <div className="rounded-xl border border-line bg-panel px-5 py-5">
-              <div className="grid grid-cols-12 gap-1.5" role="img" aria-label="48 consecutive blocks observed during one session, from 147,592 to 147,639">
-                {Array.from({ length: 48 }).map((_, i) => (
-                  <span
-                    key={i}
-                    className="h-6 rounded-[3px]"
-                    style={{
-                      backgroundColor:
-                        i === 47
-                          ? 'rgba(52, 211, 153, 0.85)'
-                          : `rgba(1, 129, 251, ${0.1 + (i / 47) * 0.5})`,
-                    }}
-                  />
-                ))}
-              </div>
+              <EvidenceGrid />
               <p className="mt-3.5 font-data text-[11px] leading-relaxed text-slate-500">
                 BLOCKS 147,592 → 147,639 · ONE CELL PER BLOCK · SHADE = POSITION IN RANGE · THE RANGE WAS OBSERVED
                 END-TO-END IN ONE SESSION — THE CHAIN DIDN&apos;T PAUSE FOR US
