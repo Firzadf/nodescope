@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
   REPORT_SCHEMA_VERSION,
+  attachSessionTrends,
   buildDiagnosticReport,
   buildDiagnosticReportEntry,
   sanitizeEndpointOrigin,
 } from './reportBuilder';
 import type { DiagnosticHistoryItem } from '../types/rpc';
+import {
+  HEALTH_SNAPSHOT_SCHEMA_VERSION,
+  type HealthCheckCheck,
+  type HealthCheckSnapshot,
+} from '../types/healthCheck';
 import { evaluateHistoryFindings } from '../services/diagnosticRules';
 
 function blockRecord(overrides: Partial<DiagnosticHistoryItem> = {}): DiagnosticHistoryItem {
@@ -277,6 +283,77 @@ describe('reportBuilder', () => {
       expect(ruleIds).toContain('chain-id-verified');
       expect(ruleIds).toContain('method-unsupported-on-endpoint');
       expect(ruleIds).toContain('block-height-retrieved');
+    });
+  });
+
+  describe('attachSessionTrends (Phase 2.5, additive)', () => {
+    const T0 = 1700000000000;
+
+    function trendCheck(overrides: Partial<HealthCheckCheck> = {}): HealthCheckCheck {
+      return {
+        method: 'eth_blockNumber',
+        outcome: 'success',
+        success: true,
+        latencyMs: 40,
+        observedValue: '0x100',
+        error: null,
+        ...overrides,
+      };
+    }
+
+    function trendSnapshot(id: string, timestamp: number, blockHex: string): HealthCheckSnapshot {
+      return {
+        schemaVersion: HEALTH_SNAPSHOT_SCHEMA_VERSION,
+        id,
+        timestamp,
+        exportedAt: new Date(timestamp).toISOString(),
+        endpointOrigin: 'https://rpc.example.test',
+        endpointProfile: 'portaldot_v3_evm',
+        checks: [
+          trendCheck({ method: 'eth_chainId', observedValue: '0x190f1ca9' }),
+          trendCheck({ method: 'eth_blockNumber', observedValue: blockHex }),
+        ],
+        findings: [],
+      };
+    }
+
+    it('attaches the trends & verdict block when at least 2 snapshots support it', () => {
+      const base = buildDiagnosticReport([blockRecord()], new Date('2026-10-21T00:00:00.000Z'));
+      const snapshots = [trendSnapshot('s1', T0, '0x100'), trendSnapshot('s2', T0 + 76_000, '0x10c')];
+
+      const report = attachSessionTrends(base, snapshots);
+
+      expect(report.sessionTrends).toBeDefined();
+      expect(report.sessionTrends?.status).toBe('available');
+      expect(report.sessionTrends?.verdict.level).toBe('healthy');
+      expect(report.sessionTrends?.verdict.rules).toHaveLength(4);
+      expect(report.sessionTrends?.snapshotIds).toEqual(['s1', 's2']);
+      expect(report.sessionTrends?.blockProgression.totalDelta).toBe('12');
+      expect(report.sessionTrends?.blockIntervalNote).toMatch(/estimated from the wall-clock gap/);
+      // The block must survive a JSON round-trip (no BigInt leaks).
+      expect(() => JSON.stringify(report)).not.toThrow();
+    });
+
+    it('omits the block entirely when trends are insufficient (0 or 1 snapshots)', () => {
+      const base = buildDiagnosticReport([blockRecord()], new Date('2026-10-21T00:00:00.000Z'));
+      expect(attachSessionTrends(base, []).sessionTrends).toBeUndefined();
+      expect(
+        attachSessionTrends(base, [trendSnapshot('s1', T0, '0x100')]).sessionTrends
+      ).toBeUndefined();
+    });
+
+    it('keeps every v1 field untouched and does not mutate the base report', () => {
+      const base = buildDiagnosticReport([blockRecord()], new Date('2026-10-21T00:00:00.000Z'));
+      const snapshots = [trendSnapshot('s1', T0, '0x100'), trendSnapshot('s2', T0 + 76_000, '0x10c')];
+
+      const report = attachSessionTrends(base, snapshots);
+
+      expect(report).not.toBe(base);
+      expect(base.sessionTrends).toBeUndefined();
+      expect(report.schemaVersion).toBe(REPORT_SCHEMA_VERSION);
+      expect(report.exportedAt).toBe(base.exportedAt);
+      expect(report.recordCount).toBe(base.recordCount);
+      expect(report.records).toEqual(base.records);
     });
   });
 });

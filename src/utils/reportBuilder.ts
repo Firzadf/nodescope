@@ -1,12 +1,14 @@
 import type { DiagnosticHistoryItem } from '../types/rpc';
 import type { MetricStatus } from '../types/node';
 import type { Finding } from '../types/diagnostic';
+import type { HealthCheckSnapshot } from '../types/healthCheck';
 import {
   parseLatency,
   parseClientVersion,
   parsePeerCount,
   parseBlockHeight,
 } from './metricParsers';
+import { BLOCK_INTERVAL_NOTE, computeSessionTrends, type SessionTrends } from './sessionTrends';
 
 export const REPORT_SCHEMA_VERSION = 'nodescope.diagnostic-report.v1';
 
@@ -33,12 +35,22 @@ export interface DiagnosticReportEntry {
   findings?: Finding[];
 }
 
+/**
+ * Optional Phase 2.5 block: the session's deterministic trends and verdict,
+ * attached additively. The report schema stays v1 — v1 consumers ignore this
+ * field, and it is omitted entirely when no trend could honestly be computed.
+ */
+export interface SessionTrendsExport extends SessionTrends {
+  blockIntervalNote: string;
+}
+
 export interface DiagnosticReportExport {
   schemaVersion: typeof REPORT_SCHEMA_VERSION;
   exportedAt: string;
   recordCount: number;
   records: DiagnosticReportEntry[];
   findings?: Finding[];
+  sessionTrends?: SessionTrendsExport;
 }
 
 export function sanitizeEndpointOrigin(endpoint: string): string {
@@ -153,4 +165,24 @@ export function buildDiagnosticReport(
   if (findings !== undefined) exportPayload.findings = findings;
 
   return exportPayload;
+}
+
+/**
+ * Attach the session trends & verdict block to a report (Phase 2.5).
+ *
+ * Returns a NEW report object; the input is never mutated and every v1 field
+ * is carried over untouched. When the snapshots cannot support an honest
+ * trend (fewer than 2 for one endpoint), the report is returned unchanged —
+ * the export never claims a trend that was not computed.
+ */
+export function attachSessionTrends(
+  report: DiagnosticReportExport,
+  snapshots: HealthCheckSnapshot[]
+): DiagnosticReportExport {
+  const trends = computeSessionTrends(snapshots);
+  if (trends.status !== 'available') return report;
+  return {
+    ...report,
+    sessionTrends: { ...trends, blockIntervalNote: BLOCK_INTERVAL_NOTE },
+  };
 }
