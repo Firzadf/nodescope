@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Activity, Play, RefreshCw, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { Card } from '../common/Card';
+import { PanelLabel } from '../common/PanelLabel';
 import type { EndpointProfile } from '../../types/endpoint';
 import type { HealthCheckSnapshot, HealthCheckCheck, HealthCheckOutcome } from '../../types/healthCheck';
 import type { Finding } from '../../types/diagnostic';
@@ -111,9 +112,10 @@ export function HealthCheckPanel({
   return (
     <Card>
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-3 border-b border-slate-700 pb-4">
           <div>
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            <PanelLabel index="02" label="HEALTH CHECK" />
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2 mt-2">
               <Activity className="w-5 h-5 text-cyan-400" />
               Node Health Check
             </h3>

@@ -3,6 +3,7 @@ import { validateRpcUrl } from '../../utils/urlValidator';
 import type { ConnectionStatus } from '../../types/node';
 import type { EvmConnectionDetails, EndpointProfile } from '../../types/endpoint';
 import { Card } from '../common/Card';
+import { PanelLabel } from '../common/PanelLabel';
 import { Globe, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface EndpointConfigProps {
@@ -57,12 +58,14 @@ export function EndpointConfig({
   return (
     <Card>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Globe className="w-5 h-5 text-cyan-400" />
-            <h3 className="text-lg font-semibold text-white">RPC Endpoint Configuration</h3>
+        <div className="flex items-center justify-between gap-3 border-b border-slate-700 pb-3 mb-4">
+          <div className="flex items-center gap-3">
+            <div>
+              <PanelLabel index="01" label="ENDPOINT" />
+              <h3 className="text-lg font-semibold text-white mt-2">RPC Endpoint Configuration</h3>
+            </div>
           </div>
-          <div className="text-xs text-slate-400">
+          <div className="text-xs text-slate-400 text-right">
             Status:{' '}
             <span
               className={`font-medium ${

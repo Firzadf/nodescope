@@ -1,1 +1,51 @@
 @import "tailwindcss";
+
+@layer base {
+  html {
+    font-family: "Inter", sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Space Grotesk", sans-serif;
+  }
+}
+
+@layer components {
+  .font-data {
+    font-family: "JetBrains Mono", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@keyframes pulse-stroke {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 0.2;
+  }
+  50% {
+    stroke-dashoffset: 0;
+    opacity: 0.8;
+  }
+  100% {
+    stroke-dashoffset: -100;
+    opacity: 0.2;
+  }
+}
+
+.pulse-anim {
+  animation: pulse-stroke 2s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  stroke-dasharray: 100;
+  stroke-linecap: round;
+}
+
+@media (prefers-reduced-motion) {
+  .pulse-anim {
+    animation: none;
+  }
+
+  /* Disable panel fade/slide animations */
+  .panel-enter-animation {
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}

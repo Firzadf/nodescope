@@ -1,4 +1,3 @@
-import { Activity } from 'lucide-react';
 import { Badge } from '../common/Badge';
 import type { ConnectionStatus } from '../../types/node';
 
@@ -7,18 +6,42 @@ interface HeaderProps {
 }
 
 export function Header({ connectionStatus }: HeaderProps) {
+  const isConnected = connectionStatus === 'connected';
+
   return (
     <header className="bg-slate-900 border-b border-slate-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
-            <Activity className="w-8 h-8 text-cyan-400" />
+            <img src="/logo.png" alt="NodeScope" className="w-8 h-8 rounded-lg" />
             <div>
-              <h1 className="text-xl font-semibold text-white">NodeScope</h1>
-              <p className="text-xs text-slate-400">Blockchain Node Diagnostics</p>
+              <div className="flex items-baseline gap-2">
+                <h1 className="text-xl font-bold tracking-tight text-white">NodeScope</h1>
+                <span className="text-xs text-slate-400">Proves node health over time</span>
+              </div>
             </div>
           </div>
-          <Badge status={connectionStatus} />
+
+          <div className="flex items-center gap-4">
+            {/* Signature Detail: ECG / Pulse line */}
+            <div className="flex items-center gap-2 px-3 py-1 bg-slate-950/60 rounded-full border border-slate-800">
+              <svg className="w-8 h-4 overflow-visible" viewBox="0 0 32 16" fill="none">
+                <path
+                  d="M 0,8 L 8,8 L 11,2 L 15,14 L 19,4 L 22,8 L 32,8"
+                  stroke={isConnected ? "#0181FB" : "#475569"}
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={isConnected ? "pulse-anim" : ""}
+                />
+              </svg>
+              <span className="text-xs font-data text-slate-400">
+                {isConnected ? 'LIVE PULSE' : 'IDLE'}
+              </span>
+            </div>
+
+            <Badge status={connectionStatus} />
+          </div>
         </div>
       </div>
     </header>
