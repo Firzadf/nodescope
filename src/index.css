@@ -456,6 +456,45 @@ select {
   background: rgba(255, 255, 255, 0.03);
 }
 
+/* Full background layer: content sections sit above it. */
+.landing-root > section,
+.landing-root > footer {
+  position: relative;
+  z-index: 1;
+}
+
+.ribbon-orb {
+  animation: orb-drift 26s ease-in-out infinite alternate;
+}
+.ribbon-orb-2 {
+  animation-duration: 32s;
+  animation-delay: -8s;
+}
+.ribbon-orb-3 {
+  animation-duration: 22s;
+  animation-delay: -4s;
+}
+@keyframes orb-drift {
+  from { transform: translate(0, 0); }
+  to { transform: translate(60px, 40px); }
+}
+.ribbon-path {
+  animation: ribbon-drift 24s ease-in-out infinite alternate;
+}
+@keyframes ribbon-drift {
+  from { transform: translateX(-20px); }
+  to { transform: translateX(20px); }
+}
+.ribbon-streak {
+  animation: streak-sweep 18s linear infinite;
+}
+@keyframes streak-sweep {
+  0% { transform: translateX(-100%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* Reveals land in their final state immediately — content is never hidden. */
   .reveal {
@@ -521,5 +560,10 @@ select {
   .probe-bot {
     animation: none;
     display: none;
+  }
+  .ribbon-orb,
+  .ribbon-path,
+  .ribbon-streak {
+    animation: none;
   }
 }

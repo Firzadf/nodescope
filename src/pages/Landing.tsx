@@ -492,6 +492,64 @@ function PacketFlow() {
   );
 }
 
+
+/* --------------------------- full background ------------------------------- */
+
+/**
+ * Full-page background animation, Plinths-style but built from cheap parts:
+ * radial-gradient glow orbs (no filter blur, so moving them is just
+ * compositing), two SVG ribbon paths drifting on transform, and one light
+ * streak sweeping across. A rAF-throttled scroll listener only shifts the
+ * ribbon layer for parallax, it never polls and never fetches anything.
+ * It is decoration only, carries no data, and sits behind all content.
+ */
+function FullBackground() {
+  const [scroll, setScroll] = useState(0);
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        setScroll(window.scrollY);
+        ticking = false;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  return (
+    <div aria-hidden="true" className="ribbon-bg pointer-events-none fixed inset-0 z-0 overflow-hidden">
+      <div
+        className="ribbon-orb absolute -left-40 top-[10%] h-[560px] w-[560px] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(1, 129, 251, 0.16), transparent 70%)' }}
+      />
+      <div
+        className="ribbon-orb ribbon-orb-2 absolute -right-48 top-[45%] h-[640px] w-[640px] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(56, 189, 248, 0.12), transparent 70%)' }}
+      />
+      <div
+        className="ribbon-orb ribbon-orb-3 absolute left-[30%] top-[80%] h-[520px] w-[520px] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(30, 50, 90, 0.35), transparent 70%)' }}
+      />
+      <div className="absolute inset-x-0 top-[18%]" style={{ transform: `translateY(${scroll * 0.08}px)` }}>
+        <svg viewBox="0 0 1440 320" preserveAspectRatio="none" className="ribbon-path h-[320px] w-[110%] -translate-x-[5%]">
+          <defs>
+            <linearGradient id="ribbonGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#0181FB" stopOpacity="0" />
+              <stop offset="50%" stopColor="#0181FB" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d="M -100 160 Q 240 40 480 160 T 960 160 T 1540 160" fill="none" stroke="url(#ribbonGrad)" strokeWidth="1.5" />
+          <path d="M -100 210 Q 240 90 480 210 T 960 210 T 1540 210" fill="none" stroke="url(#ribbonGrad)" strokeWidth="1" strokeOpacity="0.5" />
+        </svg>
+      </div>
+      <div className="ribbon-streak absolute inset-x-0 top-[62%] h-px bg-gradient-to-r from-transparent via-slate-400/30 to-transparent" />
+    </div>
+  );
+}
+
 /* ---------------------------------- page ---------------------------------- */
 
 export function Landing() {
@@ -507,7 +565,8 @@ export function Landing() {
   }, [lightbox]);
 
   return (
-    <div className="min-h-screen bg-ink font-sans text-slate-200 antialiased selection:bg-[#8C1DEF]/40 selection:text-white">
+    <div className="landing-root min-h-screen bg-ink font-sans text-slate-200 antialiased selection:bg-[#8C1DEF]/40 selection:text-white">
+      <FullBackground />
       {/* -------------------------------- nav ------------------------------- */}
       <header className="fixed inset-x-0 top-0 z-40 border-b border-line bg-ink">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
