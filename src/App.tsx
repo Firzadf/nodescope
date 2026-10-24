@@ -207,16 +207,13 @@ function App() {
       <div className="flex">
         <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} onOpenPalette={() => setPaletteOpen(true)} />
         <main className="relative flex-1 p-6">
-          <div aria-hidden="true" className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 select-none font-data text-[10px] uppercase tracking-[0.3em] text-slate-700 [writing-mode:vertical-rl] 2xl:block">
-            NodeScope · Portaldot V3 EVM · Chain 420420777 · Read-only diagnostics
-          </div>
           <div className="relative max-w-7xl mx-auto space-y-6">
             {activeSection === 'overview' && (
               <div className="space-y-6 stagger">
-                <div className="flex flex-wrap items-end justify-between gap-3 pt-1">
+                <div className="relative z-10 flex flex-wrap items-end justify-between gap-3 bg-ink pt-1">
                   <div>
                     <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">NodeScope / Overview</p>
-                    <h2 className="text-3xl font-bold tracking-tight text-white mt-1.5">
+                    <h2 className="text-3xl font-bold tracking-tight text-white mt-1.5 [text-decoration:none]">
                       Node health, proven over time.
                     </h2>
                   </div>
