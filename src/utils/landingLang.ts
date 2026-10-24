@@ -229,7 +229,7 @@ const en: LandingCopy = {
   banner: 'Portaldot Hacker House 2026 · Check-in 22 Oct 2026 · Final / code freeze 6 Nov 2026, 11:00 WIB',
   stats: [
     { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · returned by eth_chainId' },
-    { value: '314', label: 'Tests passing', sub: '33 files · Vitest · suite verified 25 Oct 2026' },
+    { value: '317', label: 'Tests passing', sub: '34 files · Vitest · suite verified 25 Oct 2026' },
     {
       value: '38',
       label: 'RPC methods probed',
@@ -393,7 +393,7 @@ const en: LandingCopy = {
     { block: '147,639', label: 'QA session', delta: '+1 in 7s', when: '22 Oct 2026 · 22:16 WIB' },
   ],
   evidenceFootnote:
-    'Endpoint: test-evm-rpc-v3.portaldot.dev · Chain ID 420420777 · NodeScope deploys no contracts and sends no transactions — evidence is observed, never manufactured.',
+    'Endpoint: test-evm-rpc-v3.portaldot.dev · Chain ID 420420777 · Evidence is observed, never manufactured — the optional on-chain anchor stores only a report hash, never the report itself.',
   galleryLabel: 'NodeScope · screenshot',
   screenshots: [
     { src: '/screenshots/01-endpoint-config.png', caption: '01 — Endpoint configuration' },
@@ -462,7 +462,7 @@ const en: LandingCopy = {
     },
     {
       title: 'Anchor, optionally',
-      body: 'If a registry contract is deployed, anchor the report hash on chain with your own wallet tool, then verify the transaction in History, panel 04. Until then, the panel honestly reports that there is nothing to verify.',
+      body: 'The registry contract is deployed on the Portaldot V3 testnet. Anchor the report hash on chain with your own wallet tool, then verify the transaction in History, panel 04, or open the shareable verification link from the same panel.',
     },
   ],
   judgeFootnote:
@@ -556,7 +556,7 @@ const id: LandingCopy = {
   banner: 'Portaldot Hacker House 2026 · Check-in 22 Okt 2026 · Final / code freeze 6 Nov 2026, 11:00 WIB',
   stats: [
     { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · dikembalikan oleh eth_chainId' },
-    { value: '314', label: 'Test lolos', sub: '33 file · Vitest · suite terverifikasi 25 Okt 2026' },
+    { value: '317', label: 'Test lolos', sub: '34 file · Vitest · suite terverifikasi 25 Okt 2026' },
     {
       value: '38',
       label: 'Metode RPC diuji',
@@ -599,7 +599,7 @@ const id: LandingCopy = {
     },
     {
       title: 'Snapshot',
-      body: 'Snapshot adalah observasi bertimestamp, tinggi blok, chain ID, versi client, latensi, hasil per metode, yang disimpan selama sesi, sampai 20.',
+      body: 'Snapshot adalah observasi bertimestamp yang berisi tinggi blok, chain ID, versi client, latensi, dan hasil per metode, yang disimpan selama sesi, sampai 20.',
     },
     {
       title: 'Bandingkan & ekspor',
@@ -719,7 +719,7 @@ const id: LandingCopy = {
     { block: '147,639', label: 'Sesi QA', delta: '+1 in 7s', when: '22 Okt 2026 · 22:16 WIB' },
   ],
   evidenceFootnote:
-    'Endpoint: test-evm-rpc-v3.portaldot.dev · Chain ID 420420777 · NodeScope tidak men-deploy kontrak dan tidak mengirim transaksi — bukti diamati, bukan dibuat-buat.',
+    'Endpoint: test-evm-rpc-v3.portaldot.dev · Chain ID 420420777 · Bukti diamati, bukan dibuat-buat — anchor on-chain opsional hanya menyimpan hash laporan, bukan laporannya sendiri.',
   galleryLabel: 'NodeScope · screenshot',
   screenshots: [
     { src: '/screenshots/01-endpoint-config.png', caption: '01 — Konfigurasi endpoint' },
@@ -788,7 +788,7 @@ const id: LandingCopy = {
     },
     {
       title: 'Anchor, opsional',
-      body: 'Jika kontrak registry sudah di-deploy, anchor hash laporan on-chain dengan wallet tool-mu sendiri, lalu verifikasi transaksinya di History, panel 04. Sampai saat itu, panel dengan jujur melaporkan bahwa tidak ada yang bisa diverifikasi.',
+      body: 'Kontrak registry sudah di-deploy di testnet Portaldot V3. Anchor hash laporan on-chain dengan wallet tool-mu sendiri, lalu verifikasi transaksinya di History, panel 04, atau buka tautan verifikasi yang bisa dibagikan dari panel yang sama.',
     },
   ],
   judgeFootnote:

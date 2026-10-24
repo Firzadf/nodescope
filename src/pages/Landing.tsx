@@ -1137,8 +1137,8 @@ export function Landing() {
           >
             <X className="h-5 w-5" />
           </button>
-          <figure className="max-w-5xl" onClick={(e) => e.stopPropagation()}>
-            <img src={t.screenshots[lightbox].src} alt={t.screenshots[lightbox].caption} className="w-full rounded-xl border border-line" />
+          <figure className="w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
+            <img src={t.screenshots[lightbox].src} alt={t.screenshots[lightbox].caption} className="mx-auto block max-h-[82vh] w-auto max-w-full rounded-xl border border-line" />
             <figcaption className="mt-3 text-center font-data text-xs uppercase tracking-[0.16em] text-slate-400">
               {t.screenshots[lightbox].caption}
             </figcaption>
