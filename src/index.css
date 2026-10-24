@@ -441,4 +441,7 @@ select {
   .cursor-blink {
     animation: none;
   }
+  .hud-arc {
+    display: none;
+  }
 }

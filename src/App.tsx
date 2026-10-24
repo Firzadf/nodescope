@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Header } from './components/layout/Header';
 import { CommandPalette, type PaletteCommand } from './components/common/CommandPalette';
 import { Sidebar } from './components/layout/Sidebar';
+import { TerminalFeed } from './components/layout/TerminalFeed';
 import { Overview } from './components/dashboard/Overview';
 import { EndpointConfig } from './components/dashboard/EndpointConfig';
 import { RpcConsole } from './components/diagnostics/RpcConsole';
@@ -45,6 +46,24 @@ function App() {
   const [wsProbeResult, setWsProbeResult] = useState<SubstrateWsProbeResult | null>(null);
   const [isHealthChecking, setIsHealthChecking] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return sessionStorage.getItem('nodescope-sidebar-collapsed') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const toggleSidebar = () => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        sessionStorage.setItem('nodescope-sidebar-collapsed', next ? '1' : '0');
+      } catch {
+        // Session-only preference is best effort; the app still works without it.
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -206,7 +225,7 @@ function App() {
     <div className="min-h-screen bg-ink text-slate-200">
       <Header connectionStatus={connectionStatus} />
       <div className="flex">
-        <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} onOpenPalette={() => setPaletteOpen(true)} />
+        <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} onOpenPalette={() => setPaletteOpen(true)} collapsed={sidebarCollapsed} onToggleCollapse={toggleSidebar} />
         <main className="relative flex-1 p-6">
           <div className="relative max-w-7xl mx-auto space-y-6">
             {activeSection === 'overview' && (
@@ -334,6 +353,7 @@ function App() {
           </div>
         </main>
       </div>
+      <TerminalFeed history={history} />
       <footer className="border-t border-line">
         <div className="px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-2">
           <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">

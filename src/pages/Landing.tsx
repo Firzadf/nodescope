@@ -367,6 +367,30 @@ function EvidenceGrid() {
   );
 }
 
+/* ------------------------------ HUD hero arc ------------------------------ */
+
+/**
+ * Receipt HUD hero arc: one flat blue arc with a single dot travelling along
+ * it. It is ambient decoration only, it carries no data, and it never implies
+ * a live block height. The live number stays in the Live Readout card, which
+ * is fetched once when the page loads.
+ */
+function HudArc() {
+  return (
+    <svg
+      viewBox="0 0 1200 240"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+      className="hud-arc pointer-events-none absolute inset-x-0 top-0 h-56 w-full opacity-60"
+    >
+      <path d="M -40 240 Q 600 -40 1240 240" fill="none" stroke="#0181FB" strokeOpacity="0.35" strokeWidth="1" />
+      <circle r="3.5" fill="#0181FB">
+        <animateMotion dur="14s" repeatCount="indefinite" path="M -40 240 Q 600 -40 1240 240" />
+      </circle>
+    </svg>
+  );
+}
+
 /* ---------------------------------- page ---------------------------------- */
 
 export function Landing() {
@@ -408,8 +432,13 @@ export function Landing() {
 
       {/* -------------------------------- hero ------------------------------ */}
       <section className="relative overflow-hidden px-4 pb-20 pt-32 md:pt-36">
+        <HudArc />
         <div className="relative mx-auto grid max-w-6xl items-start gap-12 lg:grid-cols-12">
           <div className="stagger lg:col-span-7">
+            <p className="inline-flex items-center gap-2 rounded-full border border-line bg-black/30 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.22em] text-slate-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#0181FB]" />
+              HUD · Portaldot V3 EVM · Read-only by default
+            </p>
             <h1 className="mt-7 font-display text-[44px] font-semibold leading-[1.02] tracking-tight text-white md:text-7xl">
               Consoles interact.
               <br />
@@ -438,7 +467,9 @@ export function Landing() {
             </p>
           </div>
 
-          <div className="lg:col-span-5">
+          <div className="relative lg:col-span-5">
+            <span aria-hidden="true" className="absolute -left-2 -top-2 font-data text-sm text-[#0181FB]">+</span>
+            <span aria-hidden="true" className="absolute -right-2 -top-2 font-data text-sm text-[#0181FB]">+</span>
             <LiveReadout />
             <figure className="relative z-10 mx-3 -mt-3 rotate-[1.3deg] overflow-hidden rounded-xl border border-line bg-panel transition-transform duration-300 hover:rotate-0" style={{ transitionTimingFunction: 'var(--ease-out)' }}>
               <img src="/screenshots/03-snapshot-comparison.png" alt="NodeScope snapshot comparison in a real session" className="aspect-[16/9] w-full object-cover object-top" />
@@ -455,7 +486,7 @@ export function Landing() {
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-4">
           {[
             { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · returned by eth_chainId' },
-            { value: '296', label: 'Tests passing', sub: '26 files · Vitest · suite verified 25 Oct 2026' },
+            { value: '314', label: 'Tests passing', sub: '33 files · Vitest · suite verified 25 Oct 2026' },
             { value: '38', label: 'RPC methods probed', sub: '7 supported on this EVM profile · the rest answered method-not-found — reported, not hidden' },
             { value: '+12', label: 'Blocks between demo snapshots', sub: 'A 143,764 at 15:48:05 → B 143,776 at 15:49:21 WIB · 76 seconds apart' },
           ].map((s, i) => (
