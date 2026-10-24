@@ -1074,18 +1074,26 @@ export function Landing() {
               </div>
             ))}
           </div>
-          <div className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6 font-data text-[11px] uppercase tracking-[0.14em] text-slate-600">
-            <span>© 2026 NodeScope</span>
-            <span>Report schema · nodescope.diagnostic-report.v1</span>
-          </div>
         </div>
-        <p
-          aria-hidden="true"
-          className="pointer-events-none -mb-[0.28em] mt-8 select-none text-center font-display text-[18vw] font-bold leading-none tracking-tight text-transparent"
-          style={{ WebkitTextStroke: '1px rgba(148, 163, 184, 0.18)' }}
-        >
-          NODESCOPE
-        </p>
+        <div className="relative">
+          <p
+            aria-hidden="true"
+            className="pointer-events-none -mb-[0.28em] mt-8 select-none text-center font-display text-[18vw] font-bold leading-none tracking-tight"
+            style={{
+              background: 'linear-gradient(to bottom, rgba(51, 82, 130, 0.95) 0%, rgba(30, 50, 90, 0.55) 55%, rgba(8, 12, 24, 0.15) 100%)',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              color: 'transparent',
+            }}
+          >
+            NODESCOPE
+          </p>
+          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-[58%] h-px bg-gradient-to-r from-transparent via-slate-400/40 to-transparent blur-[1px]" />
+        </div>
+        <div className="relative mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-6 font-data text-[11px] uppercase tracking-[0.14em] text-slate-600">
+          <span>© 2026 NodeScope</span>
+          <span>Report schema · nodescope.diagnostic-report.v1</span>
+        </div>
       </footer>
 
       {/* ----------------------------- lightbox ----------------------------- */}
