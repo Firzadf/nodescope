@@ -570,21 +570,37 @@ export function Landing() {
     <div className="landing-root min-h-screen bg-ink font-sans text-slate-200 antialiased selection:bg-[#8C1DEF]/40 selection:text-white">
       <FullBackground />
       {/* -------------------------------- nav ------------------------------- */}
-      <header className="fixed inset-x-0 top-0 z-40 border-b border-line bg-ink">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
+      <header className="fixed inset-x-0 top-0 z-40 px-4 pt-3">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 rounded-[20px] border border-line bg-ink/80 px-4 py-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur">
           <a href="/" className="flex items-center gap-2.5">
-            <img src="/logo.png" alt="NodeScope logo" className="h-7 w-7 rounded-lg" />
-            <span className="font-display text-[17px] font-semibold tracking-tight text-white">NodeScope</span>
+            <img src="/logo.png" alt="NodeScope logo" className="h-7 w-7 rounded-lg shadow-[0_0_20px_rgba(1,129,251,0.35)] ring-1 ring-[#0181FB]/40" />
+            <span className="font-display text-[17px] font-semibold tracking-tight text-white">
+              Node<span className="text-[#0181FB]">Scope</span>
+            </span>
           </a>
           <nav className="mx-auto hidden items-center gap-7 text-sm text-slate-400 md:flex">
-            <a href="#problem" className="transition-colors hover:text-white">The Problem</a>
-            <a href="#how" className="transition-colors hover:text-white">How It Works</a>
-            <a href="#instrument" className="transition-colors hover:text-white">The Instrument</a>
-            <a href="#evidence" className="transition-colors hover:text-white">Evidence</a>
-            <a href="#roadmap" className="transition-colors hover:text-white">Roadmap</a>
-            <a href="/mainnet" className="transition-colors hover:text-white">Mainnet</a>
-            <a href="/verify" className="transition-colors hover:text-white">Verify</a>
+            {[
+              ['#problem', 'The Problem'],
+              ['#how', 'How It Works'],
+              ['#instrument', 'The Instrument'],
+              ['#evidence', 'Evidence'],
+              ['#roadmap', 'Roadmap'],
+              ['/mainnet', 'Mainnet'],
+              ['/verify', 'Verify'],
+            ].map(([href, label]) => (
+              <a key={href} href={href} className="group relative transition-colors hover:text-white">
+                {label}
+                <span aria-hidden="true" className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-[#0181FB] transition-transform duration-300 group-hover:scale-x-100" />
+              </a>
+            ))}
           </nav>
+          <span className="hidden items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-emerald-300 lg:flex">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            </span>
+            V3 Testnet
+          </span>
           <a href={APP_URL} className="btn-primary ml-auto inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold md:ml-0">
             Launch App
             <ArrowUpRight className="h-4 w-4" />
