@@ -16,7 +16,7 @@ A professional blockchain node health diagnostic dashboard for inspecting node c
 
 ---
 
-**Current Status:** Phase 1 (Health Check Snapshots) and Phase 2 (Snapshot Comparison) complete, plus Trends & Verdict, Multi-Endpoint Comparison, a V3 era marker (Pre-V3/Post-V3 against go-live 24 Oct 2026, 06:00 WIB), a Substrate WebSocket probe, a combined EVM + Substrate verdict, a public /verify page, and a Mainnet Profile info page that claims no mainnet EVM check. Portaldot V3.0 EVM endpoint verified and integrated. 296 passing tests across 26 test files, verified 25 Oct 2026.
+**Current Status:** Phase 1 (Health Check Snapshots) and Phase 2 (Snapshot Comparison) complete, plus Trends & Verdict, Multi-Endpoint Comparison, a V3 era marker (Pre-V3/Post-V3 against go-live 24 Oct 2026, 06:00 WIB), a Substrate WebSocket probe, a combined EVM + Substrate verdict, a public /verify page, a Mainnet Profile info page that claims no mainnet EVM check, and sidebar links to /verify and /mainnet plus a palette jump to the Combined Verdict. Portaldot V3.0 EVM endpoint verified and integrated. 296 passing tests across 26 test files, verified 25 Oct 2026.
 
 ## Project Overview
 
