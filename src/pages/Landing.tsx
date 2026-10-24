@@ -547,7 +547,7 @@ function FullBackground() {
           <path d="M -100 210 Q 240 90 480 210 T 960 210 T 1540 210" fill="none" stroke="url(#ribbonGrad)" strokeWidth="1" strokeOpacity="0.5" />
         </svg>
       </div>
-      <div className="ribbon-streak absolute inset-x-0 top-[62%] h-px bg-gradient-to-r from-transparent via-slate-400/30 to-transparent" />
+      <div className="ribbon-streak absolute left-0 top-[62%] h-[2px] w-1/3 bg-gradient-to-r from-transparent via-[#0181FB]/70 to-transparent" />
     </div>
   );
 }
