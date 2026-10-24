@@ -159,6 +159,22 @@ function App() {
     },
     { id: 'nav-diagnostics', label: 'Go to RPC Diagnostics', group: 'Navigate', hint: '02', keywords: 'console rpc run method', run: () => setActiveSection('diagnostics') },
     { id: 'nav-history', label: 'Go to History', group: 'Navigate', hint: '03', keywords: 'report export ledger records', run: () => setActiveSection('history') },
+    {
+      id: 'nav-combined',
+      label: 'Go to Combined Verdict',
+      group: 'Navigate',
+      hint: '07',
+      keywords: 'combined verdict evm substrate two transports',
+      run: () => {
+        setActiveSection('overview');
+        window.setTimeout(() => {
+          const el = document.getElementById('combined-verdict');
+          if (!el) return;
+          const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+        }, 60);
+      },
+    },
     ...(isConnected
       ? [{ id: 'act-disconnect', label: 'Disconnect from endpoint', group: 'Actions', keywords: 'stop close session', run: () => handleDisconnect() } as PaletteCommand]
       : [{ id: 'act-connect', label: 'Connect & Test endpoint', group: 'Actions', keywords: 'start connect test rpc url', run: () => { void handleConnect(); } } as PaletteCommand]),

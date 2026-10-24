@@ -1,4 +1,4 @@
-import { Activity, Terminal, Clock, Search } from 'lucide-react';
+import { Activity, Terminal, Clock, Search, ShieldCheck, Globe } from 'lucide-react';
 
 type NavItem = {
   id: string;
@@ -60,6 +60,26 @@ export function Sidebar({ activeSection, onSectionChange, onOpenPalette }: Sideb
             </button>
           );
         })}
+      </nav>
+
+      <div className="px-5 pt-6 pb-2">
+        <p className="font-data text-[10px] uppercase tracking-[0.24em] text-slate-600">Public pages</p>
+      </div>
+      <nav className="px-3 space-y-1.5">
+        <a
+          href="/verify"
+          className="flex w-full items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm text-slate-400 transition-colors hover:text-slate-200 hover:bg-white/[0.03]"
+        >
+          <ShieldCheck className="w-[18px] h-[18px] text-slate-500" />
+          Verify a Report
+        </a>
+        <a
+          href="/mainnet"
+          className="flex w-full items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm text-slate-400 transition-colors hover:text-slate-200 hover:bg-white/[0.03]"
+        >
+          <Globe className="w-[18px] h-[18px] text-slate-500" />
+          Mainnet Profile
+        </a>
       </nav>
 
       <div className="mt-auto p-4">

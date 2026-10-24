@@ -21,6 +21,7 @@ export function CombinedVerdictPanel({ latestHealthSnapshot, wsProbeResult }: Co
   const ws = verdict.substrate;
 
   return (
+    <div id="combined-verdict" className="scroll-mt-6">
     <Card ticks>
       <div className="space-y-4">
         <PanelLabel index="07" label="COMBINED VERDICT" />
@@ -77,5 +78,6 @@ export function CombinedVerdictPanel({ latestHealthSnapshot, wsProbeResult }: Co
         <p className="text-[11px] text-slate-500 leading-relaxed border-t border-line pt-3">{CROSS_TRANSPORT_NOTE}</p>
       </div>
     </Card>
+    </div>
   );
 }
