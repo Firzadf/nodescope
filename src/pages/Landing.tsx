@@ -111,7 +111,7 @@ function LiveReadout() {
   }, []);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-panel/90">
+    <div className="overflow-hidden rounded-[24px] border border-line bg-panel/90 shadow-[0_24px_70px_rgba(0,0,0,0.5)]">
       <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2.5">
         <span className="font-data text-[11px] text-slate-400">&gt;_ LIVE READOUT · PORTALDOT V3 EVM</span>
         <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">[ Fig. 00 — Now ]</span>
@@ -391,6 +391,72 @@ function HudArc() {
   );
 }
 
+
+/* --------------------------- scroll progress ------------------------------ */
+
+function ScrollProgress() {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const onScroll = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(max > 0 ? Math.min(100, Math.max(0, (window.scrollY / max) * 100)) : 0);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  return (
+    <div aria-hidden="true" className="fixed inset-x-0 top-0 z-50 h-[2px] bg-black/40">
+      <div className="h-full bg-[#0181FB]" style={{ width: `${progress}%` }} />
+    </div>
+  );
+}
+
+/* ------------------------------ word fill --------------------------------- */
+
+/**
+ * Scroll-scrubbed word fill for the problem statement. Pure presentation:
+ * the full sentence is also rendered sr-only, so the text itself never
+ * changes, only how brightly each word is lit as the reader scrolls.
+ */
+function WordFill({ sentence }: { sentence: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    if (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setProgress(1);
+      return;
+    }
+    const onScroll = () => {
+      const el = ref.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const p = (window.innerHeight * 0.85 - rect.top) / (rect.height + window.innerHeight * 0.3);
+      setProgress(Math.min(1, Math.max(0, p)));
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  const words = sentence.split(' ');
+  return (
+    <p ref={ref} aria-hidden="true" className="font-display text-3xl font-semibold leading-tight tracking-tight md:text-[40px]">
+      {words.map((w, i) => {
+        const lit = progress * words.length > i;
+        return (
+          <span
+            key={i}
+            style={{ transition: 'color 0.3s ease, filter 0.3s ease', filter: lit ? 'blur(0px)' : 'blur(1.5px)' }}
+            className={lit ? 'text-white' : 'text-slate-600'}
+          >
+            {w}{' '}
+          </span>
+        );
+      })}
+    </p>
+  );
+}
+
 /* ---------------------------------- page ---------------------------------- */
 
 export function Landing() {
@@ -431,20 +497,23 @@ export function Landing() {
       </header>
 
       {/* -------------------------------- hero ------------------------------ */}
-      <section className="relative overflow-hidden px-4 pb-20 pt-32 md:pt-36">
+      <section className="relative overflow-hidden px-4 pb-24 pt-32 md:pt-40">
         <HudArc />
+        <div aria-hidden="true" className="pointer-events-none absolute -top-32 right-[-10%] h-[480px] w-[480px] rounded-full bg-[#0181FB]/[0.14] blur-[120px]" />
+        <div aria-hidden="true" className="pointer-events-none absolute bottom-0 left-[-10%] h-[360px] w-[360px] rounded-full bg-[#0181FB]/[0.08] blur-[100px]" />
+        <ScrollProgress />
         <div className="relative mx-auto grid max-w-6xl items-start gap-12 lg:grid-cols-12">
           <div className="stagger lg:col-span-7">
             <p className="inline-flex items-center gap-2 rounded-full border border-line bg-black/30 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.22em] text-slate-300">
               <span className="h-1.5 w-1.5 rounded-full bg-[#0181FB]" />
               HUD · Portaldot V3 EVM · Read-only by default
             </p>
-            <h1 className="mt-7 font-display text-[44px] font-semibold leading-[1.02] tracking-tight text-white md:text-7xl">
+            <h1 className="mt-7 font-display text-[52px] font-semibold leading-[0.98] tracking-tight text-white md:text-[88px]">
               Consoles interact.
               <br />
               NodeScope{' '}
-              <span className="font-data font-medium tracking-tight">
-                proves.<span className="cursor-blink text-[#0181FB]">▊</span>
+              <span className="font-data font-medium tracking-tight text-[#0181FB]" style={{ textShadow: '0 0 32px rgba(1, 129, 251, 0.45)' }}>
+                proves.<span className="cursor-blink">▊</span>
               </span>
             </h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-400 md:text-lg">
@@ -465,18 +534,29 @@ export function Landing() {
             <p className="mt-6 font-data text-[11px] uppercase tracking-[0.16em] text-slate-600">
               Portaldot V3 EVM · Chain 420420777 · Testnet · Read-only by default · Optional on-chain anchor · Nothing polls
             </p>
+            <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-t border-line pt-4 font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">
+              <span>Chain 420420777</span>
+              <span>Testnet</span>
+              <span>No account</span>
+              <span>No wallet required</span>
+              <span>Nothing polls</span>
+            </div>
           </div>
 
           <div className="relative lg:col-span-5">
             <span aria-hidden="true" className="absolute -left-2 -top-2 font-data text-sm text-[#0181FB]">+</span>
             <span aria-hidden="true" className="absolute -right-2 -top-2 font-data text-sm text-[#0181FB]">+</span>
             <LiveReadout />
-            <figure className="relative z-10 mx-3 -mt-3 rotate-[1.3deg] overflow-hidden rounded-xl border border-line bg-panel transition-transform duration-300 hover:rotate-0" style={{ transitionTimingFunction: 'var(--ease-out)' }}>
-              <img src="/screenshots/03-snapshot-comparison.png" alt="NodeScope snapshot comparison in a real session" className="aspect-[16/9] w-full object-cover object-top" />
-              <figcaption className="border-t border-line bg-black/30 px-4 py-2.5 font-data text-[10px] uppercase tracking-[0.16em] text-slate-500">
-                The app — snapshot comparison, cropped from a real session
-              </figcaption>
-            </figure>
+            <div className="relative z-10 mx-3 -mt-3">
+              <figure className="hero-media overflow-hidden rounded-[24px] border border-line bg-panel shadow-[0_32px_90px_rgba(0,0,0,0.55),0_0_60px_rgba(1,129,251,0.12)] transition-transform duration-500 [transform:perspective(1200px)_rotateY(-6deg)_rotateX(1.5deg)] hover:[transform:perspective(1200px)_rotateY(0deg)_rotateX(0deg)]" style={{ transitionTimingFunction: 'var(--ease-out)' }}>
+                <img src="/screenshots/03-snapshot-comparison.png" alt="NodeScope snapshot comparison in a real session" className="aspect-[16/9] w-full object-cover object-top" />
+                <figcaption className="border-t border-line bg-black/30 px-4 py-2.5 font-data text-[10px] uppercase tracking-[0.16em] text-slate-500">
+                  The app — snapshot comparison, cropped from a real session
+                </figcaption>
+              </figure>
+              <span aria-hidden="true" className="absolute -left-4 top-6 rounded-full border border-line bg-black/80 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-slate-200 shadow-lg">Portaldot V3 EVM</span>
+              <span aria-hidden="true" className="absolute -right-3 bottom-12 rounded-full border border-line bg-black/80 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-slate-200 shadow-lg">Report schema v1</span>
+            </div>
           </div>
         </div>
       </section>
@@ -505,9 +585,8 @@ export function Landing() {
           <Reveal>
             <SectionHeading title="The Problem" right="Why NodeScope exists" />
             <div className="grid gap-10 md:grid-cols-2">
-              <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-white md:text-[40px]">
-                A green checkmark is not evidence.
-              </h2>
+              <h2 className="sr-only">A green checkmark is not evidence.</h2>
+              <WordFill sentence="A green checkmark is not evidence." />
               <div className="space-y-4 text-[15px] leading-relaxed text-slate-400">
                 <p>
                   Consoles and explorers tell you a node answered <span className="text-slate-200">once</span>. They
@@ -794,7 +873,7 @@ export function Landing() {
 
       {/* ------------------------------- CTA -------------------------------- */}
       <section className="relative overflow-hidden px-4 py-24">
-        <Reveal className="relative mx-auto max-w-3xl text-center">
+        <Reveal className="relative mx-auto max-w-3xl rounded-[32px] border border-line bg-panel/70 px-8 py-16 text-center shadow-[0_32px_90px_rgba(0,0,0,0.5)]">
           <Activity className="mx-auto h-8 w-8 text-slate-500" />
           <h2 className="mt-6 font-display text-4xl font-semibold leading-tight tracking-tight text-white md:text-5xl">
             Put your node <span className="font-data font-medium">under the scope.</span>

@@ -17,7 +17,7 @@ const TICK_POSITIONS = [
 export function Card({ children, className = '', ticks = false }: CardProps) {
   return (
     <div
-      className={`${ticks ? 'relative ' : ''}bg-panel border border-line rounded-xl p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${className}`}
+      className={`${ticks ? 'relative ' : ''}bg-panel border border-line rounded-[20px] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_20px_50px_rgba(0,0,0,0.35)] ${className}`}
     >
       {ticks &&
         TICK_POSITIONS.map((pos) => (

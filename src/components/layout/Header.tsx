@@ -9,7 +9,7 @@ export function Header({ connectionStatus }: HeaderProps) {
   const isConnected = connectionStatus === 'connected';
 
   return (
-    <header className="relative bg-deep/95 border-b border-line">
+    <header className="relative bg-deep/85 border-b border-line backdrop-blur">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
@@ -40,6 +40,9 @@ export function Header({ connectionStatus }: HeaderProps) {
               </span>
             </div>
 
+            <span className="hidden rounded-full border border-line bg-black/30 px-3 py-1.5 font-data text-[11px] uppercase tracking-[0.18em] text-slate-400 md:block">
+              V3 Testnet · 420420777
+            </span>
             <Badge status={connectionStatus} />
           </div>
         </div>
