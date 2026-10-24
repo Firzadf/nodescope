@@ -20,6 +20,7 @@ import { testPortaldotV3EvmConnection, testGenericHttpConnection } from './servi
 import { getDiagnosticHistory, saveDiagnosticHistory, clearDiagnosticHistory } from './services/historyStorage';
 import { getHealthSnapshots, saveHealthSnapshot } from './services/healthSnapshotStorage';
 import { runHealthCheck } from './services/healthCheckRunner';
+import type { SubstrateWsProbeResult } from './services/substrateWsProbe';
 
 const initialMetricsDetailed: NodeMetricsDetailed = {
   latency: { status: 'not_tested', value: null },
@@ -40,6 +41,7 @@ function App() {
   const [metricsDetailed, setMetricsDetailed] = useState<NodeMetricsDetailed>(initialMetricsDetailed);
   const [capabilitySnapshot, setCapabilitySnapshot] = useState<CapabilitySnapshot | null>(null); // Lift capability snapshot state
   const [healthSnapshots, setHealthSnapshots] = useState<HealthCheckSnapshot[]>(() => getHealthSnapshots());
+  const [wsProbeResult, setWsProbeResult] = useState<SubstrateWsProbeResult | null>(null);
   const [isHealthChecking, setIsHealthChecking] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
@@ -230,6 +232,8 @@ function App() {
                   healthSnapshots={healthSnapshots}
                   onRunHealthCheck={handleRunHealthCheck}
                   isHealthChecking={isHealthChecking}
+                  wsProbeResult={wsProbeResult}
+                  onWsProbeResultChange={setWsProbeResult}
                 />
               </div>
             )}
@@ -298,7 +302,7 @@ function App() {
                   </div>
                   <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500 pb-1">Session ledger · Exportable JSON</p>
                 </div>
-                <DiagnosticReport history={history} healthSnapshots={healthSnapshots} />
+                <DiagnosticReport history={history} healthSnapshots={healthSnapshots} wsProbeResult={wsProbeResult} />
                 <HistoryList
                   history={history}
                   onSelect={(item) => {

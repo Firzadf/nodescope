@@ -5,6 +5,8 @@ import { HealthCheckPanel } from './HealthCheckPanel';
 import { SnapshotComparison } from './SnapshotComparison';
 import { SessionTrendsPanel } from './SessionTrendsPanel';
 import { SubstrateWsProbePanel } from './SubstrateWsProbePanel';
+import { CombinedVerdictPanel } from './CombinedVerdictPanel';
+import type { SubstrateWsProbeResult } from '../../services/substrateWsProbe';
 import { CapabilityDiscoveryPanel } from '../diagnostics/CapabilityDiscoveryPanel';
 import type { NodeMetricsDetailed } from '../../types/node';
 import type { RpcDiagnosticResult } from '../../types/rpc';
@@ -27,6 +29,8 @@ interface OverviewProps {
   latestHealthSnapshot?: HealthCheckSnapshot | null;
   onRunHealthCheck?: () => Promise<void>;
   isHealthChecking?: boolean;
+  wsProbeResult?: SubstrateWsProbeResult | null;
+  onWsProbeResultChange?: (result: SubstrateWsProbeResult) => void;
 }
 
 export function Overview({
@@ -43,6 +47,8 @@ export function Overview({
   latestHealthSnapshot = null,
   onRunHealthCheck,
   isHealthChecking = false,
+  wsProbeResult = null,
+  onWsProbeResultChange,
 }: OverviewProps) {
   const isDisconnected = connectionStatus === 'disconnected';
 
@@ -111,7 +117,9 @@ export function Overview({
 
       <SessionTrendsPanel snapshots={healthSnapshots} />
 
-      <SubstrateWsProbePanel />
+      <SubstrateWsProbePanel onResult={onWsProbeResultChange} />
+
+      <CombinedVerdictPanel latestHealthSnapshot={latestHealthSnapshot} wsProbeResult={wsProbeResult} />
 
       <CapabilityDiscoveryPanel
         endpoint={endpoint}

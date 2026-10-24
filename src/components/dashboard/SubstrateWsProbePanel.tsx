@@ -13,7 +13,7 @@ import {
  * check in NodeScope: no polling, no background connection.
  * The transport matters: this endpoint speaks Substrate methods, not eth_*.
  */
-export function SubstrateWsProbePanel() {
+export function SubstrateWsProbePanel({ onResult }: { onResult?: (result: SubstrateWsProbeResult) => void } = {}) {
   const [url, setUrl] = useState(DEFAULT_SUBSTRATE_WS_URL);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<SubstrateWsProbeResult | null>(null);
@@ -21,7 +21,9 @@ export function SubstrateWsProbePanel() {
   const run = async () => {
     setRunning(true);
     try {
-      setResult(await probeSubstrateWs(url.trim() || DEFAULT_SUBSTRATE_WS_URL));
+      const probeResult = await probeSubstrateWs(url.trim() || DEFAULT_SUBSTRATE_WS_URL);
+      setResult(probeResult);
+      onResult?.(probeResult);
     } finally {
       setRunning(false);
     }

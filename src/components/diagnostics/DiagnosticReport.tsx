@@ -7,9 +7,11 @@ import type { Finding } from '../../types/diagnostic';
 import type { HealthCheckSnapshot } from '../../types/healthCheck';
 import {
   attachSessionTrends,
+  attachSubstrateWsProbe,
   buildDiagnosticReport,
   sanitizeEndpointOrigin,
 } from '../../utils/reportBuilder';
+import type { SubstrateWsProbeResult } from '../../services/substrateWsProbe';
 import { stampReportIntegrity } from '../../utils/reportIntegrity';
 import { computeSessionTrends } from '../../utils/sessionTrends';
 import { evaluateHistoryFindings } from '../../services/diagnosticRules';
@@ -18,9 +20,10 @@ interface DiagnosticReportProps {
   history: DiagnosticHistoryItem[];
   latencyThresholdMs?: number;
   healthSnapshots?: HealthCheckSnapshot[];
+  wsProbeResult?: SubstrateWsProbeResult | null;
 }
 
-export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots = [] }: DiagnosticReportProps) {
+export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots = [], wsProbeResult = null }: DiagnosticReportProps) {
   const sessionTrends = useMemo(() => computeSessionTrends(healthSnapshots), [healthSnapshots]);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -33,7 +36,10 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
       const exportRuleConfig = latencyThresholdMs !== undefined ? { latencyThresholdMs } : {};
       const exportFindings: Finding[] = evaluateHistoryFindings(history, exportRuleConfig);
       const report = await stampReportIntegrity(
-        attachSessionTrends(buildDiagnosticReport(history, exportFindings), healthSnapshots)
+        attachSubstrateWsProbe(
+          attachSessionTrends(buildDiagnosticReport(history, exportFindings), healthSnapshots),
+          wsProbeResult,
+        ),
       );
       const blob = new Blob([JSON.stringify(report, null, 2)], {
         type: 'application/json',
@@ -86,7 +92,10 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
             <p className="text-xs text-slate-400 mt-1">
               Summarize user-triggered diagnostics for export. No background requests or fabricated data.
               Every export is stamped with a SHA-256 integrity hash — anyone can check the file in the
-              Verify panel below.
+              Verify panel below, or at the public /verify page, with no account and no wallet.
+              {wsProbeResult
+                ? ' The latest Substrate probe result is included in this export, as its own block.'
+                : ' Run the Substrate WS probe in Overview first if you want that transport in the export too.'}
             </p>
           </div>
           <button

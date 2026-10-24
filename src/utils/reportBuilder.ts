@@ -2,6 +2,7 @@ import type { DiagnosticHistoryItem } from '../types/rpc';
 import type { MetricStatus } from '../types/node';
 import type { Finding } from '../types/diagnostic';
 import type { HealthCheckSnapshot } from '../types/healthCheck';
+import type { SubstrateWsProbeResult } from '../services/substrateWsProbe';
 import {
   parseLatency,
   parseClientVersion,
@@ -65,6 +66,13 @@ export interface DiagnosticReportExport {
   records: DiagnosticReportEntry[];
   findings?: Finding[];
   sessionTrends?: SessionTrendsExport;
+  /**
+   * Optional Substrate probe result, attached additively before the
+   * integrity stamp, so one export can carry both transports. The probe
+   * result is stored as observed, with its own URL and timestamps, and
+   * is never merged into an EVM record.
+   */
+  substrateWsProbe?: SubstrateWsProbeResult;
   integrity?: ReportIntegrity;
 }
 
@@ -190,6 +198,19 @@ export function buildDiagnosticReport(
  * trend (fewer than 2 for one endpoint), the report is returned unchanged —
  * the export never claims a trend that was not computed.
  */
+/**
+ * Attach the latest Substrate probe result to a report, additively.
+ * Returns a NEW report; when the result is null the report is returned
+ * unchanged, so an export without a probe never claims one.
+ */
+export function attachSubstrateWsProbe(
+  report: DiagnosticReportExport,
+  result: SubstrateWsProbeResult | null,
+): DiagnosticReportExport {
+  if (!result) return report;
+  return { ...report, substrateWsProbe: result };
+}
+
 export function attachSessionTrends(
   report: DiagnosticReportExport,
   snapshots: HealthCheckSnapshot[]

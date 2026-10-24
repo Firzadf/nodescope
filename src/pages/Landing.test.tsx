@@ -62,8 +62,12 @@ describe('Landing', () => {
 
   it('labels the roadmap honestly', () => {
     render(<Landing />);
-    expect(screen.getAllByText(/Planned — not shipped/i).length).toBe(1);
-    expect(screen.getAllByText(/Shipped — live in the app/i).length).toBe(2);
+    // The Mainnet Profile info page is now shipped, so no roadmap card is
+    // planned any more. Honesty is still guarded: the page must keep
+    // stating that no mainnet EVM check is claimed.
+    expect(screen.queryByText(/Planned — not shipped/i)).not.toBeInTheDocument();
+    expect(screen.getAllByText(/Shipped — live in the app/i).length).toBe(3);
+    expect(screen.getByText(/does not claim a mainnet EVM check/i)).toBeInTheDocument();
     expect(screen.getByText(/Check-in submitted/i)).toBeInTheDocument();
   });
 

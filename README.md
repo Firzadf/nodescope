@@ -16,7 +16,7 @@ A professional blockchain node health diagnostic dashboard for inspecting node c
 
 ---
 
-**Current Status:** Phase 1 (Health Check Snapshots) and Phase 2 (Snapshot Comparison) complete, plus Trends & Verdict, Multi-Endpoint Comparison, a V3 era marker (Pre-V3/Post-V3 against go-live 24 Oct 2026, 06:00 WIB), and a Substrate WebSocket probe. Portaldot V3.0 EVM endpoint verified and integrated. 290 passing tests across 25 test files, verified 25 Oct 2026.
+**Current Status:** Phase 1 (Health Check Snapshots) and Phase 2 (Snapshot Comparison) complete, plus Trends & Verdict, Multi-Endpoint Comparison, a V3 era marker (Pre-V3/Post-V3 against go-live 24 Oct 2026, 06:00 WIB), a Substrate WebSocket probe, a combined EVM + Substrate verdict, a public /verify page, and a Mainnet Profile info page that claims no mainnet EVM check. Portaldot V3.0 EVM endpoint verified and integrated. 296 passing tests across 26 test files, verified 25 Oct 2026.
 
 ## Project Overview
 
@@ -260,7 +260,7 @@ src/
 
 **Test Framework:** Vitest 5 with @testing-library/react  
 **Coverage Target:** 80%+  
-**Current Status:** 290 passing tests across 25 test files, verified 25 Oct 2026
+**Current Status:** 296 passing tests across 26 test files, verified 25 Oct 2026
 
 ### Test Files
 
@@ -286,7 +286,7 @@ src/
 | `SessionTrendsPanel.test.tsx` | Trends panel rendering, including the V3 era note |
 | `SnapshotStrip.test.tsx` | Session strip rendering, including era in tooltips |
 | 6 files not listed above | Component and utility tests added in later phases, including Landing and Command Palette |
-| **Total** | **290 passing tests, 25 test files** |
+| **Total** | **296 passing tests, 26 test files** |
 
 ### Running Tests
 
@@ -400,6 +400,6 @@ MIT (as per Portaldot Hacker House requirements).
 
 **Project Status:** Check-in submitted Oct 22, 2026. Repository public with 42 commits as of 25 Oct 2026, development records retained. Final sprint to the 6 Nov 2026 code freeze is in progress.
 
-- ✅ Phase 1 & Phase 2 complete, plus Trends & Verdict, Multi-Endpoint Comparison, V3 era marker, and Substrate WebSocket probe, 290 tests across 25 files
+- ✅ Phase 1 & Phase 2 complete, plus Trends & Verdict, Multi-Endpoint Comparison, V3 era marker, and Substrate WebSocket probe, 296 tests across 26 files
 - ✅ Portaldot V3.0 EVM integration verified, chain ID 420420777 validated, methods documented
 - ✅ Demo video, live deployment, and screenshots published

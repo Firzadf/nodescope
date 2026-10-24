@@ -128,6 +128,19 @@ function ReportContents({ report, attested }: { report: DiagnosticReportExport; 
         </div>
       </div>
 
+      {report.substrateWsProbe && (
+        <div className="pt-3 border-t border-line text-xs space-y-1">
+          <p className="text-slate-400">
+            Substrate probe included: {report.substrateWsProbe.chain ?? '—'} · header{' '}
+            {report.substrateWsProbe.headerNumberDecimal ?? '—'} · peers {report.substrateWsProbe.peers ?? '—'} ·{' '}
+            {report.substrateWsProbe.status === 'ok' ? 'answered' : `failed: ${report.substrateWsProbe.error ?? 'unknown'}`}
+          </p>
+          <p className="text-slate-500">
+            This header is a Substrate counter, not an EVM block height, and is not compared against one.
+          </p>
+        </div>
+      )}
+
       {trends && (
         <div className="pt-3 border-t border-line text-xs space-y-1">
           <p className="text-slate-400">
