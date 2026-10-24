@@ -42,7 +42,7 @@ function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; 
     <div
       ref={ref}
       style={{ transitionDelay: `${delay}ms`, transitionTimingFunction: 'var(--ease-out)' }}
-      className={`reveal ${className} transition-all duration-700 ${inView ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}
+      className={`reveal ${className} transition-transform transition-opacity duration-500 ${inView ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}
     >
       {children}
     </div>
@@ -462,7 +462,7 @@ export function Landing() {
 
           <div className="lg:col-span-5">
             <LiveReadout />
-            <figure className="relative z-10 mx-3 -mt-3 rotate-[1.3deg] overflow-hidden rounded-xl border border-line bg-panel shadow-[0_30px_60px_-25px_rgba(0,0,0,0.85)] transition-transform duration-500 hover:rotate-0" style={{ transitionTimingFunction: 'var(--ease-out)' }}>
+            <figure className="relative z-10 mx-3 -mt-3 rotate-[1.3deg] overflow-hidden rounded-xl border border-line bg-panel shadow-[0_30px_60px_-25px_rgba(0,0,0,0.85)] transition-transform duration-300 hover:rotate-0" style={{ transitionTimingFunction: 'var(--ease-out)' }}>
               <img src="/screenshots/03-snapshot-comparison.png" alt="NodeScope snapshot comparison in a real session" className="aspect-[16/9] w-full object-cover object-top" />
               <figcaption className="border-t border-line bg-black/30 px-4 py-2.5 font-data text-[10px] uppercase tracking-[0.16em] text-slate-500">
                 The app — snapshot comparison, cropped from a real session

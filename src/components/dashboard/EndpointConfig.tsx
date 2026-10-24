@@ -93,7 +93,7 @@ export function EndpointConfig({
                 onChange={() => onProfileChange('portaldot_v3_evm')}
                 className="peer sr-only"
               />
-              <span className="inline-flex items-center rounded-full border border-line px-3 py-1.5 text-xs text-slate-400 transition-all hover:border-slate-500 hover:text-slate-200 peer-checked:border-transparent peer-checked:text-white peer-checked:font-medium peer-checked:bg-[linear-gradient(135deg,#8C1DEF,#0181FB)] peer-focus-visible:ring-2 peer-focus-visible:ring-[#0181FB]/70">
+              <span className="inline-flex items-center rounded-full border border-line px-3 py-1.5 text-xs text-slate-400 transition-colors hover:border-slate-500 hover:text-slate-200 peer-checked:border-transparent peer-checked:text-white peer-checked:font-medium peer-checked:bg-[linear-gradient(135deg,#8C1DEF,#0181FB)] peer-focus-visible:ring-2 peer-focus-visible:ring-[#0181FB]/70">
                 Portaldot V3 EVM (HTTP JSON-RPC)
               </span>
             </label>
@@ -105,7 +105,7 @@ export function EndpointConfig({
                 onChange={() => onProfileChange('generic_http')}
                 className="peer sr-only"
               />
-              <span className="inline-flex items-center rounded-full border border-line px-3 py-1.5 text-xs text-slate-400 transition-all hover:border-slate-500 hover:text-slate-200 peer-checked:border-transparent peer-checked:text-white peer-checked:font-medium peer-checked:bg-[linear-gradient(135deg,#8C1DEF,#0181FB)] peer-focus-visible:ring-2 peer-focus-visible:ring-[#0181FB]/70">
+              <span className="inline-flex items-center rounded-full border border-line px-3 py-1.5 text-xs text-slate-400 transition-colors hover:border-slate-500 hover:text-slate-200 peer-checked:border-transparent peer-checked:text-white peer-checked:font-medium peer-checked:bg-[linear-gradient(135deg,#8C1DEF,#0181FB)] peer-focus-visible:ring-2 peer-focus-visible:ring-[#0181FB]/70">
                 Generic / Substrate HTTP JSON-RPC
               </span>
             </label>
