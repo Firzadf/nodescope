@@ -4,6 +4,10 @@
 
 A professional blockchain node health diagnostic dashboard for inspecting node connectivity, JSON-RPC responses, block height, latency, and node errors. **NodeScope proves node health over time** through timestamped snapshots, before/after comparison, and exportable diagnostic reports.
 
+## Reproduce the evidence
+
+Judges and operators do not need to trust any number in this README. `docs/REPRODUCE.md` gives the exact curl commands for the live testnet, the 60-second path through the app, and the report verification steps at /verify, plus what NodeScope deliberately does not do.
+
 ## Demo Materials
 
 - **Demo video:** [Watch on YouTube](https://www.youtube.com/watch?v=qne3_eZdcKA)

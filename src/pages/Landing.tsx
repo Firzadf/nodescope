@@ -730,6 +730,36 @@ export function Landing() {
         </div>
       </section>
 
+      {/* --------------------------- judge quickstart ------------------------ */}
+      <section id="judge" className="scroll-mt-28 px-4 py-16">
+        <div className="mx-auto max-w-6xl">
+          <Reveal>
+            <SectionHeading title="For judges: 60 seconds to verify" right="No account · No wallet · No setup" />
+            <p className="max-w-3xl text-sm leading-relaxed text-slate-400">
+              Do not take any number on this page on trust. Every claim below is a button you can
+              press yourself, in the live app, against the live testnet.
+            </p>
+            <div className="mt-6 overflow-hidden rounded-xl border border-line">
+              {[
+                { step: 'Launch the app', body: 'Open /app. The Portaldot V3 EVM endpoint is already filled in. Nothing to configure, nothing to sign.' },
+                { step: 'Connect and check', body: 'Press Connect & Test, then Run Health Check. Four methods run and the result is saved as a timestamped snapshot.' },
+                { step: 'Probe the second transport', body: 'In Overview, panel 06, press Probe WSS Node. Panel 07 then reads the EVM snapshot and the Substrate probe together, with each number carrying its own timestamp.' },
+                { step: 'Export and verify', body: 'In History, export the diagnostic report, then drop the same file at /verify. The SHA-256 stamp covers everything except the stamp itself, so changing any value in the file breaks it.' },
+              ].map((s) => (
+                <div key={s.step} className="grid gap-2 border-b border-line bg-panel px-6 py-6 last:border-b-0 md:grid-cols-12">
+                  <h3 className="font-display text-lg font-semibold text-white md:col-span-4">{s.step}</h3>
+                  <p className="text-sm leading-relaxed text-slate-400 md:col-span-8">{s.body}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-sm text-slate-500">
+              If any step fails, that failure is itself the result: NodeScope reports a node that did
+              not answer, it does not dress it up as success.
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ------------------------------- CTA -------------------------------- */}
       <section className="relative overflow-hidden px-4 py-24">
         <Reveal className="relative mx-auto max-w-3xl text-center">

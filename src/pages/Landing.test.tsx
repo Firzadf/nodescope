@@ -71,6 +71,13 @@ describe('Landing', () => {
     expect(screen.getByText(/Check-in submitted/i)).toBeInTheDocument();
   });
 
+  it('shows a judge quickstart that points at real actions, not claims', () => {
+    render(<Landing />);
+    expect(screen.getByText(/60 seconds to verify/i)).toBeInTheDocument();
+    expect(screen.getByText(/Probe WSS Node/i)).toBeInTheDocument();
+    expect(screen.getByText(/drop the same file at \/verify/i)).toBeInTheDocument();
+  });
+
   it('lists Trends & Verdict as a shipped capability, not a promise', () => {
     render(<Landing />);
     expect(screen.getByText('Trends & Verdict')).toBeInTheDocument();
