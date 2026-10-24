@@ -2,11 +2,10 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Activity, ArrowRight, ArrowUpRight, Pause, Play, X } from 'lucide-react';
 import { sendJsonRpcRequest } from '../services/rpcClient';
 import { DEFAULT_PORTALDOT_V3_EVM_RPC } from '../types/endpoint';
+import { landingCopy, readStoredLang, storeLang, type Lang } from '../utils/landingLang';
 
 const APP_URL = '/app';
 const DEMO_URL = 'https://www.youtube.com/watch?v=qne3_eZdcKA';
-const GITHUB_URL = 'https://github.com/Firzadf/nodescope';
-const BUIDL_URL = 'https://dorahacks.io/build/50146';
 const DOCUMENTED_CHAIN_ID = 420420777;
 
 /* ---------------------------------- hooks --------------------------------- */
@@ -80,7 +79,8 @@ type ReadoutState =
   | { kind: 'live'; block: number; chainOk: boolean; latencyMs: number | null; at: Date }
   | { kind: 'unreachable'; at: Date };
 
-function LiveReadout() {
+function LiveReadout({ lang }: { lang: Lang }) {
+  const lr = landingCopy[lang];
   const [state, setState] = useState<ReadoutState>({ kind: 'probing' });
 
   useEffect(() => {
@@ -113,11 +113,11 @@ function LiveReadout() {
   return (
     <div className="overflow-hidden rounded-[24px] border border-line bg-panel/90 shadow-[0_24px_70px_rgba(0,0,0,0.5)]">
       <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2.5">
-        <span className="font-data text-[11px] text-slate-400">&gt;_ LIVE READOUT · PORTALDOT V3 EVM</span>
+        <span className="font-data text-[11px] text-slate-400">{lr.liveReadoutHeader}</span>
         <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">[ Fig. 00 — Now ]</span>
       </div>
       <div className="px-5 py-5">
-        <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">Latest block — observed by this page</p>
+        <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">{lr.liveReadoutLatest}</p>
         <div className="mt-2 font-data text-[44px] font-semibold leading-none text-white md:text-[54px]">
           {state.kind === 'live' ? (
             <Odometer value={state.block.toLocaleString('en-US')} />
@@ -132,7 +132,7 @@ function LiveReadout() {
         <div className="mt-4 space-y-1.5 border-t border-line pt-3.5 font-data text-[11.5px] leading-relaxed">
           {state.kind === 'probing' && (
             <p key="probing" className="state-swap text-slate-400">
-              STATUS <span className="text-slate-200">PROBING THE ENDPOINT…</span>
+              STATUS <span className="text-slate-200">{lr.liveReadoutProbing}</span>
             </p>
           )}
           {state.kind === 'live' && (
@@ -140,27 +140,27 @@ function LiveReadout() {
               <p className="text-slate-400">
                 CHAIN ID <span className="text-slate-100">0x190F1CA9</span>{' '}
                 {state.chainOk ? (
-                  <span className="text-emerald-400">— MATCHES THE DOCUMENTED CHAIN</span>
+                  <span className="text-emerald-400">{lr.liveReadoutMatch}</span>
                 ) : (
-                  <span className="text-amber-300">— DID NOT MATCH 420420777</span>
+                  <span className="text-amber-300">{lr.liveReadoutMismatch}</span>
                 )}
               </p>
               <p className="text-slate-400">
-                ANSWERED IN <span className="text-slate-100">{state.latencyMs !== null ? `${state.latencyMs} MS` : '—'}</span>
-                {' · '}AT{' '}
+                {lr.liveReadoutAnsweredIn} <span className="text-slate-100">{state.latencyMs !== null ? `${state.latencyMs} MS` : '—'}</span>
+                {' · '}{lr.liveReadoutAt}{' '}
                 <span className="text-slate-100">
                   {state.at.toLocaleTimeString('en-GB', { hour12: false })} WIB
                 </span>
               </p>
-              <p className="text-slate-500">Fetched once, when this page loaded. Not a poll — reload to re-observe.</p>
+              <p className="text-slate-500">{lr.liveReadoutFetchedOnce}</p>
             </div>
           )}
           {state.kind === 'unreachable' && (
             <div key="unreachable" className="state-swap space-y-1.5">
-              <p className="text-amber-300">THE ENDPOINT DID NOT ANSWER WHILE THIS PAGE LOADED.</p>
+              <p className="text-amber-300">{lr.liveReadoutUnreachable}</p>
               <p className="text-slate-400">
-                NodeScope reports that too — it&apos;s the whole point. Last documented observation:{' '}
-                <span className="text-slate-100">block 147,639 · 22 Oct 2026</span>.
+                {lr.liveReadoutUnreachableBody}
+                <span className="text-slate-100">{lr.liveReadoutLastObserved}</span>.
               </p>
             </div>
           )}
@@ -194,43 +194,35 @@ function SectionHeading({ title, right, accent = 'blue' }: { title: string; righ
   );
 }
 
-const SCREENSHOTS = [
-  { src: '/screenshots/01-endpoint-config.png', caption: '01 — Endpoint configuration' },
-  { src: '/screenshots/02-health-check-results.png', caption: '02 — Health check results' },
-  { src: '/screenshots/03-snapshot-comparison.png', caption: '03 — Snapshot comparison' },
-  { src: '/screenshots/04-findings-categorized.png', caption: '04 — Findings, categorized' },
-  { src: '/screenshots/05-report-export.png', caption: '05 — Report export' },
-];
-
 /* ------------------------------ step player ------------------------------- */
 
-const CHECK_STEPS = [
-  { method: 'eth_chainId', observed: '0x190f1ca9 — chain 420420777', latency: 562 },
-  { method: 'eth_blockNumber', observed: 'block 147,638', latency: 258 },
-  { method: 'web3_clientVersion', observed: 'client string, recorded in snapshot', latency: 257 },
-  { method: 'net_version', observed: '420420777', latency: 274 },
-];
-
-function CheckTranscript() {
+function CheckTranscript({ lang }: { lang: Lang }) {
+  const ct = landingCopy[lang];
+  const steps = [
+    { method: 'eth_chainId', observed: '0x190f1ca9 — chain 420420777', latency: 562 },
+    { method: 'eth_blockNumber', observed: 'block 147,638', latency: 258 },
+    { method: 'web3_clientVersion', observed: ct.checkObservedClient, latency: 257 },
+    { method: 'net_version', observed: '420420777', latency: 274 },
+  ];
   const [active, setActive] = useState(0);
   const [playing, setPlaying] = useState(true);
 
   useEffect(() => {
     if (!playing) return;
-    const t = setInterval(() => setActive((a) => (a + 1) % CHECK_STEPS.length), 1900);
+    const t = setInterval(() => setActive((a) => (a + 1) % steps.length), 1900);
     return () => clearInterval(t);
-  }, [playing]);
+  }, [playing, steps.length]);
 
-  const step = CHECK_STEPS[active];
+  const step = steps[active];
 
   return (
     <div className="overflow-hidden rounded-xl border border-line bg-panel">
       <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2.5">
-        <span className="font-data text-[11px] text-slate-400">&gt;_ HEALTH CHECK — RECORDED RUN</span>
+        <span className="font-data text-[11px] text-slate-400">{ct.transcriptHeader}</span>
         <button
           type="button"
           onClick={() => setPlaying((p) => !p)}
-          aria-label={playing ? 'Pause transcript' : 'Play transcript'}
+          aria-label={playing ? ct.transcriptPause : ct.transcriptPlay}
           className="btn-ghost flex h-7 w-7 items-center justify-center rounded-full"
         >
           {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
@@ -238,7 +230,7 @@ function CheckTranscript() {
       </div>
       <div className="grid md:grid-cols-2">
         <ol className="divide-y divide-line border-b border-line md:border-b-0 md:border-r">
-          {CHECK_STEPS.map((s, i) => (
+          {steps.map((s, i) => (
             <li key={s.method}>
               <button
                 type="button"
@@ -256,7 +248,7 @@ function CheckTranscript() {
                 <span className="font-data text-xs text-slate-600">{String(i + 1).padStart(2, '0')}</span>
                 <span className={`font-data text-sm ${i === active ? 'text-white' : 'text-slate-400'}`}>{s.method}</span>
                 <span className={`ml-auto font-data text-xs ${i < active || !playing ? 'text-emerald-400' : 'text-slate-600'}`}>
-                  {i === active && playing ? 'RUNNING' : 'PASS'}
+                  {i === active && playing ? ct.transcriptRunning : ct.transcriptPass}
                 </span>
                 {i === active && playing && (
                   <span
@@ -271,14 +263,14 @@ function CheckTranscript() {
         </ol>
         <div className="px-5 py-5" key={active}>
           <div className="state-swap">
-            <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">Observed value</p>
+            <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">{ct.transcriptObserved}</p>
             <p className="mt-2 font-data text-lg leading-snug text-white">{step.observed}</p>
             <p className="mt-4 font-data text-[11.5px] text-slate-400">
-              LATENCY <span className="text-slate-100">{step.latency} MS</span> · OUTCOME{' '}
-              <span className="text-emerald-400">SUCCESS</span>
+              {ct.transcriptLatency} <span className="text-slate-100">{step.latency} MS</span> · {ct.transcriptOutcome}{' '}
+              <span className="text-emerald-400">{ct.transcriptSuccess}</span>
             </p>
             <p className="mt-5 border-t border-line pt-3.5 text-[13px] leading-relaxed text-slate-500">
-              One step of a real check recorded 22 Oct 2026. Four methods, four receipts — saved as snapshot{' '}
+              {ct.transcriptNote}
               <span className="font-data text-slate-300">nodescope.health-snapshot.v1</span>.
             </p>
           </div>
@@ -296,18 +288,19 @@ function CheckTranscript() {
  * snapshots and a diff. All values are the real demo pair (22 Oct 2026).
  * Pure SVG/CSS — paths draw in when the visual scrolls into view.
  */
-function FlowVisual() {
+function FlowVisual({ lang }: { lang: Lang }) {
+  const fv = landingCopy[lang];
   const { ref, inView } = useInView<HTMLDivElement>(0.3);
   return (
     <div ref={ref} className={`mt-12 overflow-hidden rounded-xl border border-line bg-panel ${inView ? 'flow-in' : ''}`}>
       <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2.5">
-        <span className="font-data text-[11px] text-slate-400">ONE QUESTION — eth_blockNumber — TWO ANSWERS</span>
-        <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">Demo data · 22 Oct 2026</span>
+        <span className="font-data text-[11px] text-slate-400">{fv.flowHeader}</span>
+        <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">{fv.flowRight}</span>
       </div>
       <div className="grid divide-y divide-line md:grid-cols-2 md:divide-x md:divide-y-0">
         {/* Console lane: one call, one answer, nothing kept. */}
         <div className="px-5 py-5">
-          <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">Console — asks once</p>
+          <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">{fv.flowConsoleLane}</p>
           <svg viewBox="0 0 320 44" className="mt-4 w-full" aria-hidden="true">
             <path pathLength={100} className="flow-draw" d="M8 22 H104" fill="none" stroke="#64748b" strokeWidth="1.6" />
             <line x1="128" y1="22" x2="312" y2="22" stroke="#475569" strokeWidth="1.2" strokeDasharray="3 6" opacity="0.5" />
@@ -315,12 +308,12 @@ function FlowVisual() {
           </svg>
           <p className="mt-3 font-data text-[12.5px] leading-relaxed text-slate-400">
             eth_blockNumber → <span className="text-slate-200">143,764</span>
-            <span className="text-slate-600"> — answered, then gone. Nothing is kept, nothing can be shown later.</span>
+            <span className="text-slate-600">{fv.flowConsoleBody}</span>
           </p>
         </div>
         {/* NodeScope lane: same call, kept twice, diffed, exported. */}
         <div className="px-5 py-5">
-          <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-300">NodeScope — proves over time</p>
+          <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-300">{fv.flowNodescopeLane}</p>
           <svg viewBox="0 0 320 44" className="mt-4 w-full" aria-hidden="true">
             <path pathLength={100} className="flow-draw" d="M8 22 H312" fill="none" stroke="#0181FB" strokeWidth="1.6" />
             <circle className="flow-node" style={{ transitionDelay: '150ms' }} cx="8" cy="22" r="5" fill="#0a1226" stroke="#0181FB" strokeWidth="1.8" />
@@ -331,11 +324,11 @@ function FlowVisual() {
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 font-data text-[11px] text-slate-500">
             <span>A · <span className="text-slate-200">143,764</span></span>
             <span>B · <span className="text-slate-200">143,776</span></span>
-            <span className="text-emerald-400">Δ +12 · 76 s</span>
-            <span className="text-slate-300">report exported</span>
+            <span className="text-emerald-400">{fv.flowDelta}</span>
+            <span className="text-slate-300">{fv.flowReportExported}</span>
           </div>
           <p className="mt-2 text-[12.5px] leading-relaxed text-slate-500">
-            The same answers, kept as snapshots — so the change between them is a fact, not a memory.
+            {fv.flowNodescopeBody}
           </p>
         </div>
       </div>
@@ -345,14 +338,14 @@ function FlowVisual() {
 
 /* ------------------------------ evidence grid ----------------------------- */
 
-function EvidenceGrid() {
+function EvidenceGrid({ lang }: { lang: Lang }) {
   const { ref, inView } = useInView<HTMLDivElement>(0.35);
   return (
     <div
       ref={ref}
       className={`grid grid-cols-12 gap-1.5 ${inView ? 'cells-in' : ''}`}
       role="img"
-      aria-label="48 consecutive blocks observed during one session, from 147,592 to 147,639"
+      aria-label={landingCopy[lang].evidenceGridAria}
     >
       {Array.from({ length: 48 }).map((_, i) => (
         <span
@@ -467,7 +460,8 @@ function WordFill({ sentence }: { sentence: string }) {
  * line, labelled with real method names. Pure decoration: it carries no live
  * data, no block height, and no result, and the caption says so.
  */
-function PacketFlow() {
+function PacketFlow({ lang }: { lang: Lang }) {
+  const pk = landingCopy[lang];
   return (
     <div aria-hidden="true" className="mb-6 overflow-hidden rounded-[20px] border border-line bg-panel/70 px-6 py-5">
       <svg viewBox="0 0 600 60" preserveAspectRatio="none" className="h-[60px] w-full">
@@ -483,12 +477,12 @@ function PacketFlow() {
         </circle>
       </svg>
       <div className="flex justify-between font-data text-[10px] uppercase tracking-[0.2em] text-slate-500">
-        <span>You</span>
+        <span>{pk.packetYou}</span>
         <span className="text-slate-400">eth_chainId · eth_blockNumber · net_version</span>
-        <span>Receipt</span>
+        <span>{pk.packetReceipt}</span>
       </div>
       <p className="mt-2 text-center font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">
-        Decorative flow · carries no live data
+        {pk.packetNote}
       </p>
     </div>
   );
@@ -556,6 +550,12 @@ function FullBackground() {
 
 export function Landing() {
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const [lang, setLangState] = useState<Lang>(() => readStoredLang());
+  const setLang = (l: Lang) => {
+    setLangState(l);
+    storeLang(l);
+  };
+  const t = landingCopy[lang];
 
   useEffect(() => {
     if (lightbox === null) return;
@@ -579,21 +579,27 @@ export function Landing() {
             </span>
           </a>
           <nav className="mx-auto hidden items-center gap-7 text-sm text-slate-400 md:flex">
-            {[
-              ['#problem', 'The Problem'],
-              ['#how', 'How It Works'],
-              ['#instrument', 'The Instrument'],
-              ['#evidence', 'Evidence'],
-              ['#roadmap', 'Roadmap'],
-              ['/mainnet', 'Mainnet'],
-              ['/verify', 'Verify'],
-            ].map(([href, label]) => (
+            {t.nav.map(({ href, label }) => (
               <a key={href} href={href} className="group relative transition-colors hover:text-white">
                 {label}
                 <span aria-hidden="true" className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-[#0181FB] transition-transform duration-300 group-hover:scale-x-100" />
               </a>
             ))}
           </nav>
+          <span className="flex shrink-0 items-center gap-1 rounded-full border border-line bg-black/30 p-1" role="group" aria-label="Language">
+            {(['en', 'id'] as Lang[]).map((l) => (
+              <button
+                key={l}
+                type="button"
+                aria-label={l === 'en' ? 'English' : 'Bahasa Indonesia'}
+                aria-pressed={lang === l}
+                onClick={() => setLang(l)}
+                className={`rounded-full px-2.5 py-1 font-data text-[10px] uppercase tracking-[0.14em] transition-colors ${lang === l ? 'bg-[#0181FB] text-white' : 'text-slate-400 hover:text-white'}`}
+              >
+                {l.toUpperCase()}
+              </button>
+            ))}
+          </span>
           <span className="hidden items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-emerald-300 lg:flex">
             <span className="relative flex h-1.5 w-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
@@ -602,7 +608,7 @@ export function Landing() {
             V3 Testnet
           </span>
           <a href={APP_URL} className="btn-primary ml-auto inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold md:ml-0">
-            Launch App
+            {t.launchApp}
             <ArrowUpRight className="h-4 w-4" />
           </a>
         </div>
@@ -618,57 +624,54 @@ export function Landing() {
           <div className="stagger lg:col-span-7">
             <p className="inline-flex items-center gap-2 rounded-full border border-line bg-black/30 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.22em] text-slate-300">
               <span className="h-1.5 w-1.5 rounded-full bg-[#0181FB]" />
-              HUD · Portaldot V3 EVM · Read-only by default
+              {t.heroPill}
             </p>
             <h1 className="mt-7 font-display text-[52px] font-semibold leading-[0.98] tracking-tight text-white md:text-[88px]">
-              Consoles interact.
+              {t.heroLine1}
               <br />
               NodeScope{' '}
               <span className="font-data font-medium tracking-tight text-[#0181FB]" style={{ textShadow: '0 0 32px rgba(1, 129, 251, 0.45)' }}>
-                proves.<span className="cursor-blink">▊</span>
+                {t.heroAccent}<span className="cursor-blink">▊</span>
               </span>
             </h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-400 md:text-lg">
-              A read-only diagnostics toolkit for Portaldot nodes. It records health checks as snapshots, diffs
-              them deterministically, and exports the report — so a node&apos;s health is something you can{' '}
-              <span className="text-slate-100">show</span>, not something you assert.
+              {t.heroParagraph}
+              <span className="text-slate-100">{t.heroParagraphEmphasis}</span>{t.heroParagraphTail}
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3.5">
               <a href={APP_URL} className="btn-primary inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-[15px] font-semibold">
-                Launch App
+                {t.launchApp}
                 <ArrowRight className="h-4.5 w-4.5" />
               </a>
               <a href={DEMO_URL} target="_blank" rel="noreferrer" className="btn-ghost inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-[15px] font-medium">
-                Watch the demo
+                {t.watchDemo}
                 <ArrowUpRight className="h-4.5 w-4.5" />
               </a>
             </div>
             <p className="mt-6 font-data text-[11px] uppercase tracking-[0.16em] text-slate-600">
-              Portaldot V3 EVM · Chain 420420777 · Testnet · Read-only by default · Optional on-chain anchor · Nothing polls
+              {t.heroFactLine}
             </p>
             <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-t border-line pt-4 font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">
-              <span>Chain 420420777</span>
-              <span>Testnet</span>
-              <span>No account</span>
-              <span>No wallet required</span>
-              <span>Nothing polls</span>
+              {t.heroMeta.map((m) => (
+                <span key={m}>{m}</span>
+              ))}
             </div>
           </div>
 
           <div className="stagger relative lg:col-span-5">
             <span aria-hidden="true" className="absolute -left-2 -top-2 font-data text-sm text-[#0181FB]">+</span>
             <span aria-hidden="true" className="absolute -right-2 -top-2 font-data text-sm text-[#0181FB]">+</span>
-            <LiveReadout />
+            <LiveReadout lang={lang} />
             <div className="relative z-10 mx-3 -mt-3">
               <figure className="hero-media relative overflow-hidden rounded-[24px] border border-line bg-panel shadow-[0_32px_90px_rgba(0,0,0,0.55),0_0_60px_rgba(1,129,251,0.12)] transition-transform duration-500 [transform:perspective(1200px)_rotateY(-6deg)_rotateX(1.5deg)] hover:[transform:perspective(1200px)_rotateY(0deg)_rotateX(0deg)]" style={{ transitionTimingFunction: 'var(--ease-out)' }}>
-                <img src="/screenshots/03-snapshot-comparison.png" alt="NodeScope snapshot comparison in a real session" className="aspect-[16/9] w-full object-cover object-top" />
+                <img src="/screenshots/03-snapshot-comparison.png" alt={t.heroFigureCaption} className="aspect-[16/9] w-full object-cover object-top" />
                 <div aria-hidden="true" className="scan-line pointer-events-none absolute inset-x-0 top-0 z-20 h-20" />
                 <figcaption className="border-t border-line bg-black/30 px-4 py-2.5 font-data text-[10px] uppercase tracking-[0.16em] text-slate-500">
-                  The app — snapshot comparison, cropped from a real session
+                  {t.heroFigureCaption}
                 </figcaption>
               </figure>
-              <span aria-hidden="true" className="absolute -left-4 top-6 rounded-full border border-line bg-black/80 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-slate-200 shadow-lg">Portaldot V3 EVM</span>
-              <span aria-hidden="true" className="absolute -right-3 bottom-12 rounded-full border border-line bg-black/80 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-slate-200 shadow-lg">Report schema v1</span>
+              <span aria-hidden="true" className="absolute -left-4 top-6 rounded-full border border-line bg-black/80 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-slate-200 shadow-lg">{t.heroChipEvm}</span>
+              <span aria-hidden="true" className="absolute -right-3 bottom-12 rounded-full border border-line bg-black/80 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-slate-200 shadow-lg">{t.heroChipSchema}</span>
             </div>
           </div>
         </div>
@@ -681,19 +684,14 @@ export function Landing() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
           </span>
-          Portaldot Hacker House 2026 · Check-in 22 Oct 2026 · Final / code freeze 6 Nov 2026, 11:00 WIB
+          {t.banner}
         </p>
       </div>
 
       {/* ------------------------------- stats ------------------------------ */}
       <section className="border-y border-line bg-deep/60 px-4 py-14">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-4">
-          {[
-            { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · returned by eth_chainId' },
-            { value: '314', label: 'Tests passing', sub: '33 files · Vitest · suite verified 25 Oct 2026' },
-            { value: '38', label: 'RPC methods probed', sub: '7 supported on this EVM profile · the rest answered method-not-found — reported, not hidden' },
-            { value: '+12', label: 'Blocks between demo snapshots', sub: 'A 143,764 at 15:48:05 → B 143,776 at 15:49:21 WIB · 76 seconds apart' },
-          ].map((s, i) => (
+          {t.stats.map((s, i) => (
             <Reveal key={s.label} delay={i * 80}>
               <p className="font-data text-3xl font-semibold text-white md:text-4xl">{s.value}</p>
               <p className="mt-2 font-data text-[11px] uppercase tracking-[0.2em] text-slate-300">{s.label}</p>
@@ -707,27 +705,24 @@ export function Landing() {
       <section id="problem" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading title="The Problem" right="Why NodeScope exists" />
+            <SectionHeading title={t.problemTitle} right={t.problemRight} />
             <div className="grid gap-10 md:grid-cols-2">
-              <h2 className="sr-only">A green checkmark is not evidence.</h2>
-              <WordFill sentence="A green checkmark is not evidence." />
+              <h2 className="sr-only">{t.problemStatement}</h2>
+              <WordFill sentence={t.problemStatement} />
               <div className="space-y-4 text-base leading-[1.85] text-slate-400">
                 <p>
-                  Consoles and explorers tell you a node answered <span className="text-slate-200">once</span>. They
-                  don&apos;t show drift, silent regressions, or whether the same check still passes an hour later —
-                  and they leave you nothing you can hand to anyone as proof.
+                  {t.problemPara1a}<span className="text-slate-200">{t.problemPara1Emphasis}</span>{t.problemPara1b}
                 </p>
                 <p>
-                  NodeScope treats every check as an observation worth keeping: timestamped, structured, and
-                  comparable. When something changes, the diff says exactly what — method by method.
+                  {t.problemPara2}
                 </p>
                 <div className="space-y-2.5 pt-2 font-data text-[13px]">
-                  <p className="flex gap-3"><span className="shrink-0 text-slate-600">CONSOLE —</span> <span>&ldquo;Reachable right now.&rdquo;</span></p>
-                  <p className="flex gap-3"><span className="shrink-0 font-semibold text-slate-100">NODESCOPE —</span> <span className="text-slate-200">&ldquo;Healthy at 15:48 and 15:49 — 76 seconds apart — +12 blocks, zero regressions. Here&apos;s the report.&rdquo;</span></p>
+                  <p className="flex gap-3"><span className="shrink-0 text-slate-600">{t.consoleLabel}</span> <span>{t.consoleQuote}</span></p>
+                  <p className="flex gap-3"><span className="shrink-0 font-semibold text-slate-100">{t.nodescopeLabel}</span> <span className="text-slate-200">{t.nodescopeQuote}</span></p>
                 </div>
               </div>
             </div>
-            <FlowVisual />
+            <FlowVisual lang={lang} />
           </Reveal>
         </div>
       </section>
@@ -736,15 +731,11 @@ export function Landing() {
       <section id="how" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading title="How It Works" right="Three steps, no setup" />
-            <PacketFlow />
+            <SectionHeading title={t.howTitle} right={t.howRight} />
+            <PacketFlow lang={lang} />
             <div className="overflow-hidden rounded-xl border border-line">
-              {[
-                { n: '01', title: 'Connect & check', body: 'Point NodeScope at any Portaldot V3 EVM endpoint. A health check runs the core JSON-RPC methods and records the result as a structured snapshot.' },
-                { n: '02', title: 'Snapshot', body: 'Snapshots are timestamped observations — block height, chain ID, client version, latency, per-method outcomes — stored for the session, up to 20.' },
-                { n: '03', title: 'Compare & export', body: 'Pick any two snapshots — or read the whole session. NodeScope diffs snapshots deterministically, trends latency and block progression across all of them, and ends in a verdict whose rules are printed, not hidden. Everything folds into an exportable diagnostic report (schema v1) you can share — stamped with a SHA-256 integrity hash, so anyone can verify the file was not altered after export.' },
-              ].map((s) => (
-                <div key={s.n} className="grid gap-2 border-b border-line bg-panel px-6 py-6 last:border-b-0 md:grid-cols-12">
+              {t.howSteps.map((s) => (
+                <div key={s.title} className="grid gap-2 border-b border-line bg-panel px-6 py-6 last:border-b-0 md:grid-cols-12">
                   <h3 className="font-display text-lg font-semibold text-white md:col-span-4">{s.title}</h3>
                   <p className="text-sm leading-relaxed text-slate-400 md:col-span-8">{s.body}</p>
                 </div>
@@ -754,8 +745,8 @@ export function Landing() {
           <Reveal delay={120}>
             <div className="mt-6 overflow-hidden rounded-xl border border-line bg-panel">
               <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2.5">
-                <span className="font-data text-[11px] text-slate-400">nodescope — diagnostic-report.v1</span>
-                <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">Trimmed sample of a real export</span>
+                <span className="font-data text-[11px] text-slate-400">{t.reportSampleLabel}</span>
+                <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">{t.reportSampleRight}</span>
               </div>
               <pre className="overflow-x-auto p-5 font-mono text-[12.5px] leading-relaxed text-slate-400">
                 <code>
@@ -777,20 +768,12 @@ export function Landing() {
       <section id="tutorial" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading title="Tutorial" right="Five steps, no setup" />
+            <SectionHeading title={t.tutorialTitle} right={t.tutorialRight} />
             <p className="max-w-3xl text-[15px] leading-[1.85] text-slate-400">
-              Baru pertama kali buka NodeScope? Ikuti lima langkah ini, semuanya memakai tombol
-              yang sudah ada di app, tanpa akun, tanpa wallet, dan tanpa konfigurasi. Bagian
-              For judges di bawah adalah versi verifikasi yang sama, ditulis untuk juri.
+              {t.tutorialIntro}
             </p>
             <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {[
-                { n: '01', title: 'Buka app, endpoint sudah terisi', body: 'Buka /app. Endpoint Portaldot V3 EVM sudah terisi, tidak ada yang perlu dikonfigurasi dan tidak ada yang perlu ditandatangani.' },
-                { n: '02', title: 'Connect & Test', body: 'Tekan Connect & Test. App menguji koneksi ke endpoint dan menampilkan statusnya apa adanya, termasuk kalau endpoint tidak menjawab.' },
-                { n: '03', title: 'Run Health Check', body: 'Tekan Run Health Check. Empat metode inti berjalan dan hasilnya disimpan sebagai snapshot bertimestamp di sesi ini, sampai 20 snapshot.' },
-                { n: '04', title: 'Bandingkan dan baca verdict', body: 'Pilih dua snapshot untuk dibandingkan, atau baca Trends & Verdict untuk seluruh sesi. Verdict-nya deterministik dan aturannya dicetak bersama buktinya, tanpa skor.' },
-                { n: '05', title: 'Export, verifikasi, anchor opsional', body: 'Export laporan JSON dari History, lalu jatuhkan file yang sama di /verify untuk memeriksa stempel SHA-256-nya. Kalau mau, anchor hash laporan itu on-chain dari panel 04, lalu verifikasi transaksinya di tempat yang sama.' },
-              ].map((s) => (
+              {t.tutorialSteps.map((s) => (
                 <div key={s.n} className="rounded-[20px] border border-line bg-panel/70 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.35)] transition-all duration-300 hover:-translate-y-1 hover:border-slate-500/40">
                   <p className="font-data text-[11px] uppercase tracking-[0.2em] text-[#0181FB]">{s.n}</p>
                   <h3 className="mt-3 font-display text-lg font-semibold text-white">{s.title}</h3>
@@ -798,17 +781,17 @@ export function Landing() {
                 </div>
               ))}
               <div className="flex flex-col justify-center rounded-[20px] border border-[#0181FB]/40 bg-[#0181FB]/10 p-6">
-                <p className="font-display text-lg font-semibold text-white">Siap mencoba?</p>
+                <p className="font-display text-lg font-semibold text-white">{t.tutorialCtaTitle}</p>
                 <p className="mt-2 text-[15px] leading-[1.85] text-slate-300">
-                  Satu klik ke app, dan lima langkah di atas bisa langsung dipraktikkan.
+                  {t.tutorialCtaBody}
                 </p>
                 <div className="mt-5 flex flex-wrap gap-3">
                   <a href={APP_URL} className="btn-primary inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold">
-                    Mulai di app
+                    {t.tutorialCtaPrimary}
                     <ArrowRight className="h-4 w-4" />
                   </a>
                   <a href="/verify" className="btn-ghost inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-medium">
-                    Ke halaman Verify
+                    {t.tutorialCtaSecondary}
                   </a>
                 </div>
               </div>
@@ -821,27 +804,27 @@ export function Landing() {
       <section id="instrument" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading title="The Instrument" right="Real output, not mockups" />
+            <SectionHeading title={t.instrumentTitle} right={t.instrumentRight} />
             <div className="grid items-start gap-6 lg:grid-cols-2">
-              <CheckTranscript />
+              <CheckTranscript lang={lang} />
               {/* snapshot diff artifact */}
               <div className="overflow-hidden rounded-xl border border-line bg-panel">
                 <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2.5">
-                  <span className="font-data text-[11px] text-slate-400">&gt;_ SNAPSHOT COMPARISON — REAL OUTPUT</span>
-                  <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">Demo · 22 Oct 2026</span>
+                  <span className="font-data text-[11px] text-slate-400">{t.diffHeader}</span>
+                  <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">{t.diffRight}</span>
                 </div>
                 <div className="px-5 py-5 font-data text-[12.5px] leading-[1.9]">
                   <p><span className="mr-4 text-slate-600">01</span><span className="text-slate-500"># nodescope.health-snapshot.v1 — diff A → B</span></p>
                   <p><span className="mr-4 text-slate-600">02</span><span className="text-slate-400">A · block 143,764 · 15:48:05 WIB</span></p>
                   <p><span className="mr-4 text-slate-600">03</span><span className="text-slate-400">B · block 143,776 · 15:49:21 WIB</span></p>
-                  <p><span className="mr-4 text-slate-600">04</span><span className="text-slate-500">eth_chainId&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0x190f1ca9 → 0x190f1ca9&nbsp;&nbsp;<span className="text-slate-500">UNCHANGED</span></span></p>
+                  <p><span className="mr-4 text-slate-600">04</span><span className="text-slate-500">eth_chainId&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0x190f1ca9 → 0x190f1ca9&nbsp;&nbsp;<span className="text-slate-500">{t.diffUnchanged}</span></span></p>
                   <p className="-mx-5 bg-red-400/[0.06] px-5"><span className="mr-4 text-slate-600">05</span><span className="text-red-300">− eth_blockNumber&nbsp;&nbsp;&nbsp;143,764</span></p>
                   <p className="-mx-5 bg-emerald-400/[0.07] px-5"><span className="mr-4 text-slate-600">06</span><span className="text-emerald-300">+ eth_blockNumber&nbsp;&nbsp;&nbsp;143,776&nbsp;&nbsp;Δ +12</span></p>
-                  <p><span className="mr-4 text-slate-600">07</span><span className="text-slate-500">net_version&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;420420777 → 420420777&nbsp;&nbsp;UNCHANGED</span></p>
-                  <p><span className="mr-4 text-slate-600">08</span><span className="text-slate-500">findings&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 new · 0 resolved · 0 regressions</span></p>
+                  <p><span className="mr-4 text-slate-600">07</span><span className="text-slate-500">net_version&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;420420777 → 420420777&nbsp;&nbsp;{t.diffUnchanged}</span></p>
+                  <p><span className="mr-4 text-slate-600">08</span><span className="text-slate-500">findings&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{t.diffFindings}</span></p>
                 </div>
                 <p className="border-t border-line px-5 py-3 font-data text-[10.5px] uppercase tracking-[0.14em] text-slate-600">
-                  Deterministic — same two snapshots, same diff, every time
+                  {t.diffFooter}
                 </p>
               </div>
             </div>
@@ -851,21 +834,13 @@ export function Landing() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-sky-500/25 bg-sky-500/[0.06] font-data text-[11px] uppercase tracking-[0.18em] text-sky-300">
-                    <th className="px-5 py-3.5 font-medium">Capability</th>
-                    <th className="hidden px-5 py-3.5 font-medium md:table-cell">What it does</th>
-                    <th className="px-5 py-3.5 font-medium">Proof</th>
+                    <th className="px-5 py-3.5 font-medium">{t.capabilityHeaders[0]}</th>
+                    <th className="hidden px-5 py-3.5 font-medium md:table-cell">{t.capabilityHeaders[1]}</th>
+                    <th className="px-5 py-3.5 font-medium">{t.capabilityHeaders[2]}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line bg-panel/60 text-sm">
-                  {[
-                    { cap: 'Trends & verdict', tone: 'amber', what: 'Across a session of snapshots: per-method latency trends, block progression with stall and regression findings, and a deterministic verdict whose rules are printed with their evidence.', proof: 'Needs ≥2 health checks · rules shown, no score' },
-                    { cap: 'Capability discovery', tone: 'sky', what: 'Probes 38 JSON-RPC methods; an unsupported answer is reported as data, never dressed up as success.', proof: '7 supported on Portaldot V3 EVM' },
-                    { cap: 'RPC console', tone: 'slate', what: 'Run any method by hand — presets, custom params, and evidence badges drawn from your own run history.', proof: 'User-triggered only · nothing polls' },
-                    { cap: 'Diagnostic reports', tone: 'sky', what: 'Every run folds into one shareable JSON report with categorized findings and recommendations.', proof: 'Schema nodescope.diagnostic-report.v1' },
-                    { cap: 'Combined verdict', tone: 'emerald', what: 'The latest EVM health snapshot and the Substrate WebSocket probe, read together in one panel — with each number shown with its own timestamp, and the two counters never subtracted from each other.', proof: 'Panel 07 in Overview · both transports, no score' },
-                    { cap: 'Report verification', tone: 'emerald', what: 'Exports are stamped with SHA-256 over a canonical form of the report. Anyone can drop the file back into NodeScope and check the stamp — changing any value in the file breaks it.', proof: 'Verify in History, or at /verify · no server, no account, no wallet' },
-                    { cap: 'Command palette', tone: 'slate', what: '⌘K drives navigation, connection, health checks, diagnostics, and copying evidence — keyboard first.', proof: 'Press ⌘K inside the app' },
-                  ].map((r, i) => (
+                  {t.capabilities.map((r, i) => (
                     <tr key={r.cap} className="group transition-colors hover:bg-white/[0.03]">
                       <td className="relative px-5 py-4 font-data text-[13px] font-medium text-white">
                         <span aria-hidden="true" className="absolute left-0 top-0 h-full w-[3px] bg-[#0181FB] opacity-0 transition-opacity group-hover:opacity-100" />
@@ -901,30 +876,24 @@ export function Landing() {
       <section id="evidence" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading title="Live Evidence" right="Observed on the real testnet" accent="emerald" />
+            <SectionHeading title={t.evidenceTitle} right={t.evidenceRight} accent="emerald" />
             <div className="rounded-xl border border-line bg-panel px-5 py-5">
-              <EvidenceGrid />
+              <EvidenceGrid lang={lang} />
               <p className="mt-3.5 font-data text-[11px] leading-relaxed text-slate-500">
-                BLOCKS 147,592 → 147,639 · ONE CELL PER BLOCK · SHADE = POSITION IN RANGE · THE RANGE WAS OBSERVED
-                END-TO-END IN ONE SESSION — THE CHAIN DIDN&apos;T PAUSE FOR US
+                {t.evidenceGridCaption}
               </p>
             </div>
             <div className="mt-6 overflow-hidden rounded-[20px] border border-emerald-500/25 shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-emerald-500/25 bg-emerald-500/[0.06] font-data text-[11px] uppercase tracking-[0.18em] text-emerald-300">
-                    <th className="px-5 py-3.5 font-medium">Block height</th>
-                    <th className="px-5 py-3.5 font-medium">Observation</th>
-                    <th className="hidden px-5 py-3.5 font-medium md:table-cell">When</th>
+                    <th className="px-5 py-3.5 font-medium">{t.evidenceHeaders[0]}</th>
+                    <th className="px-5 py-3.5 font-medium">{t.evidenceHeaders[1]}</th>
+                    <th className="hidden px-5 py-3.5 font-medium md:table-cell">{t.evidenceHeaders[2]}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line bg-panel/60 font-data text-[13px]">
-                  {[
-                    { block: '133,242', label: 'First recorded observation', when: 'Oct 2026' },
-                    { block: '143,764', label: 'Demo Snapshot A', when: '22 Oct 2026 · 15:48 WIB' },
-                    { block: '143,776', label: 'Demo Snapshot B', delta: '+12', when: '22 Oct 2026 · 15:49 WIB' },
-                    { block: '147,639', label: 'QA session', delta: '+1 in 7s', when: '22 Oct 2026 · 22:16 WIB' },
-                  ].map((r) => (
+                  {t.evidenceRows.map((r) => (
                     <tr key={r.block} className="group transition-colors hover:bg-white/[0.03]">
                       <td className="relative px-5 py-3.5 font-semibold text-white">
                         <span aria-hidden="true" className="absolute left-0 top-0 h-full w-[3px] bg-emerald-400 opacity-0 transition-opacity group-hover:opacity-100" />
@@ -945,13 +914,12 @@ export function Landing() {
               </table>
             </div>
             <p className="mt-3 font-data text-[11px] leading-relaxed text-slate-600">
-              Endpoint: test-evm-rpc-v3.portaldot.dev · Chain ID 420420777 · NodeScope deploys no contracts and sends
-              no transactions — evidence is observed, never manufactured.
+              {t.evidenceFootnote}
             </p>
           </Reveal>
           <Reveal delay={100}>
             <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-3">
-              {SCREENSHOTS.map((s, i) => (
+              {t.screenshots.map((s, i) => (
                 <button
                   key={s.src}
                   type="button"
@@ -963,7 +931,7 @@ export function Landing() {
                       <span className="h-2.5 w-2.5 rounded-full bg-slate-600" />
                       <span className="h-2.5 w-2.5 rounded-full bg-slate-500" />
                       <span className="h-2.5 w-2.5 rounded-full bg-[#0181FB]" />
-                      <span className="ml-2 font-data text-[10px] uppercase tracking-[0.16em] text-slate-600">NodeScope · screenshot</span>
+                      <span className="ml-2 font-data text-[10px] uppercase tracking-[0.16em] text-slate-600">{t.galleryLabel}</span>
                     </span>
                     <span className="relative block overflow-hidden">
                       <img src={s.src} alt={s.caption} className="aspect-[16/10] w-full object-cover object-top opacity-90 transition-all duration-500 group-hover:scale-[1.04] group-hover:opacity-100" loading="lazy" />
@@ -985,23 +953,12 @@ export function Landing() {
       <section id="v3" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading title="Portaldot V3, as published" right="Official references, not guesses" />
+            <SectionHeading title={t.v3Title} right={t.v3Right} />
             <p className="mt-3 max-w-3xl text-[15px] leading-[1.85] text-slate-400">
-              Portaldot V3.0 rolled out 23 Oct 2026, 23:00 UTC (24 Oct 2026, 06:00 WIB), per the
-              official @PortaldotL0 and @Portaldot_Dev posts. NodeScope tags every health snapshot
-              Pre-V3 or Post-V3 against that instant, so evidence from before and after the upgrade
-              is never silently mixed. The testnet EVM RPC below is the endpoint NodeScope checks;
-              the WebSocket node is probed separately in the app with Substrate methods.
+              {t.v3Intro}
             </p>
             <div className="mt-6 grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-2 lg:grid-cols-3">
-              {[
-                { label: 'Mainnet · Node Console', href: 'https://node-console.portaldot.dev/', note: 'Official mainnet access point' },
-                { label: 'Mainnet · Block Explorer', href: 'https://scanner-live-v3.portaldot.dev/', note: 'Substrate explorer, not an EVM explorer' },
-                { label: 'Mainnet · Cross-Chain Bridge', href: 'https://bridge.portaldot.dev/', note: 'Official bridge' },
-                { label: 'Testnet · EVM RPC', href: 'https://test-evm-rpc-v3.portaldot.dev', note: 'Checked by NodeScope · chain 420420777' },
-                { label: 'Testnet · WebSocket Node', href: 'https://x.com/Portaldot_Dev/status/2113571130527318088', note: 'Probed by NodeScope as wss://test-node-v3.portaldot.dev · endpoint list by @Portaldot_Dev' },
-                { label: 'Testnet · Block Explorer', href: 'https://scanner-testnet-v3.portaldot.dev/', note: 'Substrate testnet explorer' },
-              ].map((link) => (
+              {t.v3Cards.map((link) => (
                 <a key={link.label} href={link.href} target="_blank" rel="noreferrer" className="group relative block bg-panel/70 p-6 transition-colors hover:bg-panel">
                   <span aria-hidden="true" className="absolute left-0 top-0 h-[2px] w-full bg-[#0181FB] opacity-0 transition-opacity group-hover:opacity-100" />
                   <p className="flex items-center justify-between font-data text-[11px] uppercase tracking-[0.16em] text-sky-300">
@@ -1014,8 +971,7 @@ export function Landing() {
               ))}
             </div>
             <p className="mt-4 text-sm text-slate-500">
-              No public mainnet EVM RPC is published in those references, so NodeScope does not
-              claim a mainnet EVM check. That absence is stated here on purpose.
+              {t.v3Footnote}
             </p>
           </Reveal>
         </div>
@@ -1025,7 +981,7 @@ export function Landing() {
       <section id="roadmap" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading title="Roadmap" right="Honestly labeled" accent="sky" />
+            <SectionHeading title={t.roadmapTitle} right={t.roadmapRight} accent="sky" />
             <div className="relative overflow-hidden rounded-[20px] border border-line">
               <div aria-hidden="true" className="absolute bottom-6 left-[27px] top-6 w-px bg-line" />
               <div aria-hidden="true" className="probe-bot absolute left-[14px] top-0 z-10">
@@ -1037,30 +993,20 @@ export function Landing() {
                   <path d="M14 2 V0" stroke="#0181FB" strokeWidth="1.5" />
                 </svg>
               </div>
-              {[
-                { title: 'Trends & Verdict', status: 'shipped' as const, body: 'Per-method latency trends and block progression across a whole session of snapshots, ending in a deterministic verdict — HEALTHY, DEGRADED, or UNSTABLE — with every rule that fired printed next to it. No score, no black box.' },
-                { title: 'Multi-Endpoint Comparison', status: 'shipped' as const, body: 'Health snapshots from different endpoints, compared side by side — with comparability discipline: matching chain IDs earn a caveated block delta, different chains are declared not comparable instead of subtracted, and method-support and client differences surface as findings. (Not a watchlist — nothing is monitored in the background; you bring the snapshots.)' },
-                { title: 'Portaldot Mainnet Profile', status: 'shipped' as const, body: 'Mainnet V3 is live since 24 Oct 2026, 06:00 WIB, but no public mainnet EVM RPC is published yet, so NodeScope does not fake a mainnet check. The Mainnet Profile page at /mainnet links the official console, explorer, and bridge and states that absence plainly, and the same snapshot and evidence engine is ready the day a mainnet RPC is published.' },
-              ].map((r) => (
+              {t.roadmapItems.map((r) => (
                 <div key={r.title} className="relative bg-panel/70 p-6 pl-16">
                   <span aria-hidden="true" className="absolute left-[20px] top-7 h-[14px] w-[14px] rounded-full border-2 border-[#0181FB] bg-deep" />
-                  {r.status === 'shipped' ? (
-                    <span className="inline-flex items-center gap-2 font-data text-[11px] uppercase tracking-[0.16em] text-emerald-300">
-                      <span className="h-2 w-2 bg-emerald-400" />
-                      Shipped — live in the app
-                    </span>
-                  ) : (
-                    <span className="inline-block rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 font-data text-[10px] uppercase tracking-[0.16em] text-amber-300">
-                      Planned — not shipped
-                    </span>
-                  )}
+                  <span className="inline-flex items-center gap-2 font-data text-[11px] uppercase tracking-[0.16em] text-emerald-300">
+                    <span className="h-2 w-2 bg-emerald-400" />
+                    {t.roadmapShipped}
+                  </span>
                   <h3 className="mt-4 font-display text-lg font-semibold text-white">{r.title}</h3>
                   <p className="mt-2 text-[15px] leading-[1.85] text-slate-400">{r.body}</p>
                 </div>
               ))}
             </div>
             <p className="mt-5 text-sm text-slate-500">
-              NodeScope&apos;s whole point is evidence — so planned work is labeled planned. Nothing on this page claims to exist before it does.
+              {t.roadmapFootnote}
             </p>
           </Reveal>
         </div>
@@ -1070,28 +1016,20 @@ export function Landing() {
       <section id="judge" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading title="For judges: 60 seconds to verify" right="No account · No wallet · No setup" />
+            <SectionHeading title={t.judgeTitle} right={t.judgeRight} />
             <p className="max-w-3xl text-[15px] leading-[1.85] text-slate-400">
-              Do not take any number on this page on trust. Every claim below is a button you can
-              press yourself, in the live app, against the live testnet.
+              {t.judgeIntro}
             </p>
             <div className="mt-6 overflow-hidden rounded-xl border border-line">
-              {[
-                { step: 'Launch the app', body: 'Open /app. The Portaldot V3 EVM endpoint is already filled in. Nothing to configure, nothing to sign.' },
-                { step: 'Connect and check', body: 'Press Connect & Test, then Run Health Check. Four methods run and the result is saved as a timestamped snapshot.' },
-                { step: 'Probe the second transport', body: 'In Overview, panel 06, press Probe WSS Node. Panel 07 then reads the EVM snapshot and the Substrate probe together, with each number carrying its own timestamp.' },
-                { step: 'Export and verify', body: 'In History, export the diagnostic report, then drop the same file at /verify. The SHA-256 stamp covers everything except the stamp itself, so changing any value in the file breaks it.' },
-                { step: 'Anchor, optionally', body: 'If a registry contract is deployed, anchor the report hash on chain with your own wallet tool, then verify the transaction in History, panel 04. Until then, the panel honestly reports that there is nothing to verify.' },
-              ].map((s) => (
-                <div key={s.step} className="grid gap-2 border-b border-line bg-panel px-6 py-6 last:border-b-0 md:grid-cols-12">
-                  <h3 className="font-display text-lg font-semibold text-white md:col-span-4">{s.step}</h3>
+              {t.judgeSteps.map((s) => (
+                <div key={s.title} className="grid gap-2 border-b border-line bg-panel px-6 py-6 last:border-b-0 md:grid-cols-12">
+                  <h3 className="font-display text-lg font-semibold text-white md:col-span-4">{s.title}</h3>
                   <p className="text-sm leading-relaxed text-slate-400 md:col-span-8">{s.body}</p>
                 </div>
               ))}
             </div>
             <p className="mt-4 text-sm text-slate-500">
-              If any step fails, that failure is itself the result: NodeScope reports a node that did
-              not answer, it does not dress it up as success.
+              {t.judgeFootnote}
             </p>
           </Reveal>
         </div>
@@ -1102,13 +1040,13 @@ export function Landing() {
         <Reveal className="relative mx-auto max-w-3xl rounded-[32px] border border-line bg-panel/70 px-8 py-16 text-center shadow-[0_32px_90px_rgba(0,0,0,0.5)]">
           <Activity className="mx-auto h-8 w-8 text-slate-500" />
           <h2 className="mt-6 font-display text-4xl font-semibold leading-tight tracking-tight text-white md:text-5xl">
-            Put your node <span className="font-data font-medium">under the scope.</span>
+            {t.ctaTitleA}<span className="font-data font-medium">{t.ctaTitleB}</span>
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-slate-400">
-            Open the live toolkit, run a health check against the Portaldot V3 testnet, and keep the receipt.
+            {t.ctaBody}
           </p>
           <a href={APP_URL} className="btn-primary mt-9 inline-flex items-center gap-2 rounded-xl px-7 py-4 text-base font-semibold">
-            Launch App
+            {t.launchApp}
             <ArrowRight className="h-5 w-5" />
           </a>
         </Reveal>
@@ -1122,7 +1060,7 @@ export function Landing() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
             </span>
-            Live · Chain 420420777 · Portaldot V3 EVM Testnet · Status: Check-in submitted
+            {t.footerLive}
           </p>
           <div className="mt-10 grid gap-10 md:grid-cols-2 lg:grid-cols-5">
             <div className="lg:col-span-2">
@@ -1131,22 +1069,17 @@ export function Landing() {
                 <span className="font-display text-base font-semibold text-white">NodeScope</span>
               </div>
               <p className="mt-3 max-w-xs text-[15px] leading-[1.85] text-slate-500">
-                The Portaldot diagnostics toolkit. Consoles interact — NodeScope proves, with a
-                receipt you can hand to anyone.
+                {t.footerDescription}
               </p>
               <p className="mt-4 font-data text-[11px] uppercase tracking-[0.18em] text-slate-600">
-                Independent Hacker House build · Not an official Portaldot product · Testnet only
+                {t.footerDisclaimer}
               </p>
             </div>
-            {[
-              { h: 'Product', links: [['Launch App', APP_URL], ['How It Works', '#how'], ['The Instrument', '#instrument'], ['Live Evidence', '#evidence'], ['Verify a Report', '/verify'], ['Mainnet Profile', '/mainnet']] },
-              { h: 'Resources', links: [['DoraHacks BUIDL', BUIDL_URL], ['GitHub Repository', GITHUB_URL], ['Node Console', 'https://node-console.portaldot.dev/'], ['Block Explorer', 'https://scanner-live-v3.portaldot.dev/'], ['Cross-Chain Bridge', 'https://bridge.portaldot.dev/']] },
-              { h: 'Community', links: [['Portaldot on X', 'https://x.com/PortaldotL0'], ['Portaldot Dev on X', 'https://x.com/Portaldot_Dev'], ['X — @dutzozan', 'https://x.com/dutzozan'], ['Telegram — @inidutaa', 'https://t.me/inidutaa'], ['Discord · dutzozan', null], ['Demo video', DEMO_URL], ['Built solo by Firza Duta Fauzan', GITHUB_URL]] },
-            ].map((col) => (
-              <div key={col.h}>
-                <p className="font-data text-[11px] uppercase tracking-[0.2em] text-slate-500">{col.h}</p>
+            {t.footerColumns.map((col) => (
+              <div key={col.header}>
+                <p className="font-data text-[11px] uppercase tracking-[0.2em] text-slate-500">{col.header}</p>
                 <ul className="mt-3.5 space-y-2.5 text-sm">
-                  {col.links.map(([label, href]) => (
+                  {col.links.map(({ label, href }) => (
                     <li key={label}>
                       {href ? (
                         <a
@@ -1182,8 +1115,8 @@ export function Landing() {
           <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-[58%] h-px bg-gradient-to-r from-transparent via-slate-400/40 to-transparent blur-[1px]" />
         </div>
         <div className="relative mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-6 font-data text-[11px] uppercase tracking-[0.14em] text-slate-600">
-          <span>© 2026 NodeScope</span>
-          <span>Report schema · nodescope.diagnostic-report.v1</span>
+          <span>{t.footerCopyright}</span>
+          <span>{t.footerSchema}</span>
         </div>
       </footer>
 
@@ -1194,20 +1127,20 @@ export function Landing() {
           onClick={() => setLightbox(null)}
           role="dialog"
           aria-modal="true"
-          aria-label={SCREENSHOTS[lightbox].caption}
+          aria-label={t.screenshots[lightbox].caption}
         >
           <button
             type="button"
-            aria-label="Close"
+            aria-label={t.lightboxClose}
             className="btn-ghost absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full"
             onClick={() => setLightbox(null)}
           >
             <X className="h-5 w-5" />
           </button>
           <figure className="max-w-5xl" onClick={(e) => e.stopPropagation()}>
-            <img src={SCREENSHOTS[lightbox].src} alt={SCREENSHOTS[lightbox].caption} className="w-full rounded-xl border border-line" />
+            <img src={t.screenshots[lightbox].src} alt={t.screenshots[lightbox].caption} className="w-full rounded-xl border border-line" />
             <figcaption className="mt-3 text-center font-data text-xs uppercase tracking-[0.16em] text-slate-400">
-              {SCREENSHOTS[lightbox].caption}
+              {t.screenshots[lightbox].caption}
             </figcaption>
           </figure>
         </div>
