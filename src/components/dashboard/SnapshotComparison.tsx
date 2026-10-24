@@ -465,7 +465,7 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
               <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">[ Fig. 01 — Method diff ]</span>
             </div>
             <div className="overflow-x-auto border border-line rounded-lg">
-              <table className="premium-table w-full text-left text-xs border-collapse">
+              <table className="premium-table premium-table-emerald w-full text-left text-xs border-collapse">
                 <thead className="bg-slate-900 border-b border-line text-slate-400 uppercase text-[10px]">
                   <tr>
                     <th className="p-2.5">Method</th>

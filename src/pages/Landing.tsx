@@ -183,11 +183,13 @@ function LiveReadout() {
 
 /* ----------------------------- section heading ---------------------------- */
 
-function SectionHeading({ title, right }: { title: string; right?: string }) {
+function SectionHeading({ title, right, accent = 'blue' }: { title: string; right?: string; accent?: 'blue' | 'sky' | 'emerald' }) {
+  const border = accent === 'emerald' ? 'border-emerald-500/30' : accent === 'sky' ? 'border-sky-500/30' : 'border-[#0181FB]/30';
+  const label = accent === 'emerald' ? 'text-emerald-400/80' : accent === 'sky' ? 'text-sky-300/80' : 'text-slate-600';
   return (
-    <div className="mb-10 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-5">
+    <div className={`mb-10 flex flex-wrap items-end justify-between gap-3 border-b ${border} pb-5`}>
       <p className="font-display text-2xl font-semibold tracking-tight text-white">{title}</p>
-      {right && <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-600">{right}</p>}
+      {right && <p className={`font-data text-[11px] uppercase tracking-[0.18em] ${label}`}>{right}</p>}
     </div>
   );
 }
@@ -829,10 +831,10 @@ export function Landing() {
             </div>
           </Reveal>
           <Reveal delay={100}>
-            <div className="mt-6 overflow-hidden rounded-[20px] border border-line shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
+            <div className="mt-6 overflow-hidden rounded-[20px] border border-sky-500/25 shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-line bg-panel font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                  <tr className="border-b border-sky-500/25 bg-sky-500/[0.06] font-data text-[11px] uppercase tracking-[0.18em] text-sky-300">
                     <th className="px-5 py-3.5 font-medium">Capability</th>
                     <th className="hidden px-5 py-3.5 font-medium md:table-cell">What it does</th>
                     <th className="px-5 py-3.5 font-medium">Proof</th>
@@ -883,7 +885,7 @@ export function Landing() {
       <section id="evidence" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading title="Live Evidence" right="Observed on the real testnet" />
+            <SectionHeading title="Live Evidence" right="Observed on the real testnet" accent="emerald" />
             <div className="rounded-xl border border-line bg-panel px-5 py-5">
               <EvidenceGrid />
               <p className="mt-3.5 font-data text-[11px] leading-relaxed text-slate-500">
@@ -891,10 +893,10 @@ export function Landing() {
                 END-TO-END IN ONE SESSION — THE CHAIN DIDN&apos;T PAUSE FOR US
               </p>
             </div>
-            <div className="mt-6 overflow-hidden rounded-[20px] border border-line shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
+            <div className="mt-6 overflow-hidden rounded-[20px] border border-emerald-500/25 shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-line bg-panel font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                  <tr className="border-b border-emerald-500/25 bg-emerald-500/[0.06] font-data text-[11px] uppercase tracking-[0.18em] text-emerald-300">
                     <th className="px-5 py-3.5 font-medium">Block height</th>
                     <th className="px-5 py-3.5 font-medium">Observation</th>
                     <th className="hidden px-5 py-3.5 font-medium md:table-cell">When</th>
@@ -909,7 +911,7 @@ export function Landing() {
                   ].map((r) => (
                     <tr key={r.block} className="group transition-colors hover:bg-white/[0.03]">
                       <td className="relative px-5 py-3.5 font-semibold text-white">
-                        <span aria-hidden="true" className="absolute left-0 top-0 h-full w-[3px] bg-[#0181FB] opacity-0 transition-opacity group-hover:opacity-100" />
+                        <span aria-hidden="true" className="absolute left-0 top-0 h-full w-[3px] bg-emerald-400 opacity-0 transition-opacity group-hover:opacity-100" />
                         {r.block}
                       </td>
                       <td className="px-5 py-3.5 text-slate-300">
@@ -938,10 +940,24 @@ export function Landing() {
                   key={s.src}
                   type="button"
                   onClick={() => setLightbox(i)}
-                  className={`group overflow-hidden rounded-[20px] border border-line bg-panel text-left shadow-[0_20px_50px_rgba(0,0,0,0.35)] transition-all duration-300 hover:-translate-y-1 hover:border-slate-500/40 hover:shadow-[0_28px_70px_rgba(0,0,0,0.5)] ${i === 0 ? 'col-span-2 lg:col-span-1' : ''}`}
+                  className={`group relative overflow-hidden rounded-[21px] bg-gradient-to-br from-[#0181FB]/60 via-slate-500/20 to-transparent p-px text-left shadow-[0_20px_50px_rgba(0,0,0,0.35)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(0,0,0,0.5)] ${i === 0 ? 'col-span-2 lg:col-span-1' : ''}`}
                 >
-                  <img src={s.src} alt={s.caption} className="aspect-[16/10] w-full object-cover object-top opacity-90 transition-all duration-500 group-hover:scale-[1.03] group-hover:opacity-100" loading="lazy" />
-                  <span className="block px-4 py-3 font-data text-[11px] uppercase tracking-[0.14em] text-slate-400">{s.caption}</span>
+                  <span className="block rounded-[20px] bg-panel">
+                    <span className="flex items-center gap-1.5 border-b border-line bg-black/30 px-4 py-2.5">
+                      <span className="h-2.5 w-2.5 rounded-full bg-slate-600" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-slate-500" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#0181FB]" />
+                      <span className="ml-2 font-data text-[10px] uppercase tracking-[0.16em] text-slate-600">NodeScope · screenshot</span>
+                    </span>
+                    <span className="relative block overflow-hidden">
+                      <img src={s.src} alt={s.caption} className="aspect-[16/10] w-full object-cover object-top opacity-90 transition-all duration-500 group-hover:scale-[1.04] group-hover:opacity-100" loading="lazy" />
+                      <span aria-hidden="true" className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                    </span>
+                    <span className="flex items-center justify-between px-4 py-3 font-data text-[11px] uppercase tracking-[0.14em] text-slate-400">
+                      {s.caption}
+                      <span aria-hidden="true" className="opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100">↗</span>
+                    </span>
+                  </span>
                 </button>
               ))}
             </div>
@@ -993,7 +1009,7 @@ export function Landing() {
       <section id="roadmap" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading title="Roadmap" right="Honestly labeled" />
+            <SectionHeading title="Roadmap" right="Honestly labeled" accent="sky" />
             <div className="relative overflow-hidden rounded-[20px] border border-line">
               <div aria-hidden="true" className="absolute bottom-6 left-[27px] top-6 w-px bg-line" />
               <div aria-hidden="true" className="probe-bot absolute left-[14px] top-0 z-10">

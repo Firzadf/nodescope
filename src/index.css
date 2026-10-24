@@ -455,6 +455,12 @@ select {
 .premium-table tbody tr:hover {
   background: rgba(255, 255, 255, 0.03);
 }
+.premium-table-sky thead th {
+  color: #7dd3fc;
+}
+.premium-table-emerald thead th {
+  color: #6ee7b7;
+}
 
 /* Full background layer: content sections sit above it. */
 .landing-root > section,
