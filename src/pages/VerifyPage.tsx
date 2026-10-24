@@ -26,7 +26,7 @@ export function VerifyPage() {
       <main className="mx-auto max-w-4xl px-4 py-10">
         <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">NodeScope / Verify</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">
-          Check a report, <span className="text-gradient">without an account.</span>
+          Check a report, without an account.
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
           Drop a NodeScope diagnostic report JSON file below. Its SHA-256 integrity stamp is

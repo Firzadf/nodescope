@@ -44,7 +44,7 @@ export function Header({ connectionStatus }: HeaderProps) {
           </div>
         </div>
       </div>
-      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#0181FB]/50 to-transparent" />
+      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-px bg-[#0181FB]/30" />
     </header>
   );
 }

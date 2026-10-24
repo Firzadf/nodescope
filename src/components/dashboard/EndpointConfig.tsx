@@ -57,7 +57,7 @@ export function EndpointConfig({
 
   return (
     <Card className="relative overflow-hidden">
-      <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#8C1DEF] via-[#5B6CF0] to-[#0181FB]" />
+      <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[2px] bg-[#0181FB]" />
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3 border-b border-line pb-3 mb-4">
           <div className="flex items-center gap-3">
@@ -93,7 +93,7 @@ export function EndpointConfig({
                 onChange={() => onProfileChange('portaldot_v3_evm')}
                 className="peer sr-only"
               />
-              <span className="inline-flex items-center rounded-full border border-line px-3 py-1.5 text-xs text-slate-400 transition-colors hover:border-slate-500 hover:text-slate-200 peer-checked:border-transparent peer-checked:text-white peer-checked:font-medium peer-checked:bg-[linear-gradient(135deg,#8C1DEF,#0181FB)] peer-focus-visible:ring-2 peer-focus-visible:ring-[#0181FB]/70">
+              <span className="inline-flex items-center rounded-full border border-line px-3 py-1.5 text-xs text-slate-400 transition-colors hover:border-slate-500 hover:text-slate-200 peer-checked:border-transparent peer-checked:text-white peer-checked:font-medium peer-checked:bg-[#0181FB] peer-focus-visible:ring-2 peer-focus-visible:ring-[#0181FB]/70">
                 Portaldot V3 EVM (HTTP JSON-RPC)
               </span>
             </label>
@@ -105,7 +105,7 @@ export function EndpointConfig({
                 onChange={() => onProfileChange('generic_http')}
                 className="peer sr-only"
               />
-              <span className="inline-flex items-center rounded-full border border-line px-3 py-1.5 text-xs text-slate-400 transition-colors hover:border-slate-500 hover:text-slate-200 peer-checked:border-transparent peer-checked:text-white peer-checked:font-medium peer-checked:bg-[linear-gradient(135deg,#8C1DEF,#0181FB)] peer-focus-visible:ring-2 peer-focus-visible:ring-[#0181FB]/70">
+              <span className="inline-flex items-center rounded-full border border-line px-3 py-1.5 text-xs text-slate-400 transition-colors hover:border-slate-500 hover:text-slate-200 peer-checked:border-transparent peer-checked:text-white peer-checked:font-medium peer-checked:bg-[#0181FB] peer-focus-visible:ring-2 peer-focus-visible:ring-[#0181FB]/70">
                 Generic / Substrate HTTP JSON-RPC
               </span>
             </label>

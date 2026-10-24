@@ -62,7 +62,7 @@ export function Overview({
 
   return (
     <div className="space-y-6 stagger">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-line border border-line rounded-xl overflow-hidden shadow-[0_16px_40px_-24px_rgba(0,0,0,0.7)]">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-line border border-line rounded-xl overflow-hidden ">
         <MetricCard
           title="Connection Status"
           value={connectionStatus.toUpperCase()}
@@ -131,7 +131,7 @@ export function Overview({
       {connectionStatus !== 'connected' && (
         <div className="bg-panel border border-line rounded-xl p-4">
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-[#8C1DEF] to-[#0181FB] flex items-center justify-center">
+            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-[#0181FB] flex items-center justify-center">
               <span className="text-white text-sm font-bold">i</span>
             </div>
             <div>

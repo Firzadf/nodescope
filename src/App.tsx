@@ -206,8 +206,7 @@ function App() {
       <Header connectionStatus={connectionStatus} />
       <div className="flex">
         <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} onOpenPalette={() => setPaletteOpen(true)} />
-        <main className="relative flex-1 p-6 bg-blueprint">
-          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(640px_260px_at_28%_0%,rgba(140,29,239,0.08),transparent_70%)]" />
+        <main className="relative flex-1 p-6">
           <div aria-hidden="true" className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 select-none font-data text-[10px] uppercase tracking-[0.3em] text-slate-700 [writing-mode:vertical-rl] 2xl:block">
             NodeScope · Portaldot V3 EVM · Chain 420420777 · Read-only diagnostics
           </div>
@@ -218,7 +217,7 @@ function App() {
                   <div>
                     <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">NodeScope / Overview</p>
                     <h2 className="text-3xl font-bold tracking-tight text-white mt-1.5">
-                      Node health, <span className="text-gradient">proven over time.</span>
+                      Node health, proven over time.
                     </h2>
                   </div>
                   <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500 pb-1">Portaldot V3 EVM · Chain 420420777</p>
@@ -259,7 +258,7 @@ function App() {
                   <div>
                     <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">NodeScope / RPC Diagnostics</p>
                     <h2 className="text-3xl font-bold tracking-tight text-white mt-1.5">
-                      Ask the node. <span className="text-gradient">Keep the receipt.</span>
+                      Ask the node. Keep the receipt.
                     </h2>
                   </div>
                   <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500 pb-1">Manual JSON-RPC · User-triggered only</p>
@@ -313,7 +312,7 @@ function App() {
                   <div>
                     <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">NodeScope / History</p>
                     <h2 className="text-3xl font-bold tracking-tight text-white mt-1.5">
-                      Every check, <span className="text-gradient">on record.</span>
+                      Every check, on record.
                     </h2>
                   </div>
                   <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500 pb-1">Session ledger · Exportable JSON</p>

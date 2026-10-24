@@ -111,7 +111,7 @@ function LiveReadout() {
   }, []);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-panel/90 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.8)]">
+    <div className="overflow-hidden rounded-xl border border-line bg-panel/90">
       <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2.5">
         <span className="font-data text-[11px] text-slate-400">&gt;_ LIVE READOUT · PORTALDOT V3 EVM</span>
         <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">[ Fig. 00 — Now ]</span>
@@ -167,17 +167,11 @@ function LiveReadout() {
         </div>
       </div>
       <svg viewBox="0 0 600 40" className="h-9 w-full border-t border-line bg-black/20" aria-hidden="true">
-        <defs>
-          <linearGradient id="ecg-grad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#8C1DEF" />
-            <stop offset="100%" stopColor="#0181FB" />
-          </linearGradient>
-        </defs>
         <path
           className="ecg-path"
           d="M0 20 H180 L192 20 L200 6 L210 34 L220 20 H330 L342 12 L352 28 L360 20 H600"
           fill="none"
-          stroke="url(#ecg-grad)"
+          stroke="#0181FB"
           strokeWidth="1.6"
           strokeLinejoin="round"
           strokeLinecap="round"
@@ -189,12 +183,10 @@ function LiveReadout() {
 
 /* ----------------------------- section heading ---------------------------- */
 
-function SectionHeading({ index, title, right }: { index: string; title: string; right?: string }) {
+function SectionHeading({ title, right }: { title: string; right?: string }) {
   return (
     <div className="mb-10 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-5">
-      <p className="font-data text-[11px] uppercase tracking-[0.24em] text-slate-500">
-        <span className="font-semibold text-slate-200">{index}</span> / {title}
-      </p>
+      <p className="font-display text-xl font-semibold tracking-tight text-white">{title}</p>
       {right && <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-600">{right}</p>}
     </div>
   );
@@ -257,7 +249,7 @@ function CheckTranscript() {
                 }`}
               >
                 {i === active && (
-                  <span className="absolute left-0 top-0 h-full w-[3px] bg-gradient-to-b from-[#8C1DEF] to-[#0181FB]" />
+                  <span className="absolute left-0 top-0 h-full w-[3px] bg-[#0181FB]" />
                 )}
                 <span className="font-data text-xs text-slate-600">{String(i + 1).padStart(2, '0')}</span>
                 <span className={`font-data text-sm ${i === active ? 'text-white' : 'text-slate-400'}`}>{s.method}</span>
@@ -268,7 +260,7 @@ function CheckTranscript() {
                   <span
                     key={active}
                     aria-hidden="true"
-                    className="step-progress absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-[#8C1DEF] to-[#0181FB]"
+                    className="step-progress absolute bottom-0 left-0 h-[2px] w-full bg-[#0181FB]"
                   />
                 )}
               </button>
@@ -328,14 +320,8 @@ function FlowVisual() {
         <div className="px-5 py-5">
           <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-300">NodeScope — proves over time</p>
           <svg viewBox="0 0 320 44" className="mt-4 w-full" aria-hidden="true">
-            <defs>
-              <linearGradient id="flow-grad" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#8C1DEF" />
-                <stop offset="100%" stopColor="#0181FB" />
-              </linearGradient>
-            </defs>
-            <path pathLength={100} className="flow-draw" d="M8 22 H312" fill="none" stroke="url(#flow-grad)" strokeWidth="1.6" />
-            <circle className="flow-node" style={{ transitionDelay: '150ms' }} cx="8" cy="22" r="5" fill="#0a1226" stroke="#8C1DEF" strokeWidth="1.8" />
+            <path pathLength={100} className="flow-draw" d="M8 22 H312" fill="none" stroke="#0181FB" strokeWidth="1.6" />
+            <circle className="flow-node" style={{ transitionDelay: '150ms' }} cx="8" cy="22" r="5" fill="#0a1226" stroke="#0181FB" strokeWidth="1.8" />
             <circle className="flow-node" style={{ transitionDelay: '600ms' }} cx="140" cy="22" r="5" fill="#0a1226" stroke="#0181FB" strokeWidth="1.8" />
             <circle className="flow-node" style={{ transitionDelay: '1000ms' }} cx="238" cy="22" r="5" fill="#0a1226" stroke="#34d399" strokeWidth="1.8" />
             <circle className="flow-node" style={{ transitionDelay: '1350ms' }} cx="312" cy="22" r="5" fill="#0a1226" stroke="#e2e8f0" strokeWidth="1.8" />
@@ -398,8 +384,8 @@ export function Landing() {
   return (
     <div className="min-h-screen bg-ink font-sans text-slate-200 antialiased selection:bg-[#8C1DEF]/40 selection:text-white">
       {/* -------------------------------- nav ------------------------------- */}
-      <header className="fixed inset-x-0 top-0 z-40 px-4 pt-4">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 rounded-full border border-line bg-deep/85 py-2 pl-4 pr-2 shadow-[0_18px_40px_-20px_rgba(0,0,0,0.8)] backdrop-blur-md">
+      <header className="fixed inset-x-0 top-0 z-40 border-b border-line bg-ink">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
           <a href="/" className="flex items-center gap-2.5">
             <img src="/logo.png" alt="NodeScope logo" className="h-7 w-7 rounded-lg" />
             <span className="font-display text-[17px] font-semibold tracking-tight text-white">NodeScope</span>
@@ -413,7 +399,7 @@ export function Landing() {
             <a href="/mainnet" className="transition-colors hover:text-white">Mainnet</a>
             <a href="/verify" className="transition-colors hover:text-white">Verify</a>
           </nav>
-          <a href={APP_URL} className="btn-primary ml-auto inline-flex items-center gap-2 rounded-full px-4.5 py-2 text-sm font-semibold md:ml-0">
+          <a href={APP_URL} className="btn-primary ml-auto inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold md:ml-0">
             Launch App
             <ArrowUpRight className="h-4 w-4" />
           </a>
@@ -421,17 +407,9 @@ export function Landing() {
       </header>
 
       {/* -------------------------------- hero ------------------------------ */}
-      <section className="bg-blueprint relative overflow-hidden px-4 pb-20 pt-36 md:pt-44">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 h-[480px] bg-[radial-gradient(720px_300px_at_30%_0%,rgba(140,29,239,0.11),transparent_70%)]"
-        />
+      <section className="relative overflow-hidden px-4 pb-20 pt-32 md:pt-36">
         <div className="relative mx-auto grid max-w-6xl items-start gap-12 lg:grid-cols-12">
           <div className="stagger lg:col-span-7">
-            <p className="flex items-center gap-2.5 font-data text-[11px] uppercase tracking-[0.24em] text-slate-400">
-              <span className="h-2 w-2 shrink-0 bg-gradient-to-br from-[#8C1DEF] to-[#0181FB]" />
-              Portaldot V3 EVM — Chain 420420777 — Testnet
-            </p>
             <h1 className="mt-7 font-display text-[44px] font-semibold leading-[1.02] tracking-tight text-white md:text-7xl">
               Consoles interact.
               <br />
@@ -456,13 +434,13 @@ export function Landing() {
               </a>
             </div>
             <p className="mt-6 font-data text-[11px] uppercase tracking-[0.16em] text-slate-600">
-              Read-only · No keys · No transactions · Nothing polls
+              Portaldot V3 EVM · Chain 420420777 · Testnet · Read-only · No keys · No transactions · Nothing polls
             </p>
           </div>
 
           <div className="lg:col-span-5">
             <LiveReadout />
-            <figure className="relative z-10 mx-3 -mt-3 rotate-[1.3deg] overflow-hidden rounded-xl border border-line bg-panel shadow-[0_30px_60px_-25px_rgba(0,0,0,0.85)] transition-transform duration-300 hover:rotate-0" style={{ transitionTimingFunction: 'var(--ease-out)' }}>
+            <figure className="relative z-10 mx-3 -mt-3 rotate-[1.3deg] overflow-hidden rounded-xl border border-line bg-panel transition-transform duration-300 hover:rotate-0" style={{ transitionTimingFunction: 'var(--ease-out)' }}>
               <img src="/screenshots/03-snapshot-comparison.png" alt="NodeScope snapshot comparison in a real session" className="aspect-[16/9] w-full object-cover object-top" />
               <figcaption className="border-t border-line bg-black/30 px-4 py-2.5 font-data text-[10px] uppercase tracking-[0.16em] text-slate-500">
                 The app — snapshot comparison, cropped from a real session
@@ -494,7 +472,7 @@ export function Landing() {
       <section id="problem" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading index="01" title="The Problem" right="Why NodeScope exists" />
+            <SectionHeading title="The Problem" right="Why NodeScope exists" />
             <div className="grid gap-10 md:grid-cols-2">
               <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-white md:text-[40px]">
                 A green checkmark is not evidence.
@@ -524,17 +502,16 @@ export function Landing() {
       <section id="how" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading index="02" title="How It Works" right="Three steps, no setup" />
-            <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-3">
+            <SectionHeading title="How It Works" right="Three steps, no setup" />
+            <div className="overflow-hidden rounded-xl border border-line">
               {[
                 { n: '01', title: 'Connect & check', body: 'Point NodeScope at any Portaldot V3 EVM endpoint. A health check runs the core JSON-RPC methods and records the result as a structured snapshot.' },
                 { n: '02', title: 'Snapshot', body: 'Snapshots are timestamped observations — block height, chain ID, client version, latency, per-method outcomes — stored for the session, up to 20.' },
                 { n: '03', title: 'Compare & export', body: 'Pick any two snapshots — or read the whole session. NodeScope diffs snapshots deterministically, trends latency and block progression across all of them, and ends in a verdict whose rules are printed, not hidden. Everything folds into an exportable diagnostic report (schema v1) you can share — stamped with a SHA-256 integrity hash, so anyone can verify the file was not altered after export.' },
               ].map((s) => (
-                <div key={s.n} className="bg-panel p-6">
-                  <p className="font-data text-sm text-slate-500">{s.n}</p>
-                  <h3 className="mt-3 font-display text-lg font-semibold text-white">{s.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-400">{s.body}</p>
+                <div key={s.n} className="grid gap-2 border-b border-line bg-panel px-6 py-6 last:border-b-0 md:grid-cols-12">
+                  <h3 className="font-display text-lg font-semibold text-white md:col-span-4">{s.title}</h3>
+                  <p className="text-sm leading-relaxed text-slate-400 md:col-span-8">{s.body}</p>
                 </div>
               ))}
             </div>
@@ -565,7 +542,7 @@ export function Landing() {
       <section id="instrument" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading index="03" title="The Instrument" right="Real output, not mockups" />
+            <SectionHeading title="The Instrument" right="Real output, not mockups" />
             <div className="grid items-start gap-6 lg:grid-cols-2">
               <CheckTranscript />
               {/* snapshot diff artifact */}
@@ -627,7 +604,7 @@ export function Landing() {
       <section id="evidence" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading index="04" title="Live Evidence" right="Observed on the real testnet" />
+            <SectionHeading title="Live Evidence" right="Observed on the real testnet" />
             <div className="rounded-xl border border-line bg-panel px-5 py-5">
               <EvidenceGrid />
               <p className="mt-3.5 font-data text-[11px] leading-relaxed text-slate-500">
@@ -687,7 +664,7 @@ export function Landing() {
       <section id="v3" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading index="05" title="Portaldot V3, as published" right="Official references, not guesses" />
+            <SectionHeading title="Portaldot V3, as published" right="Official references, not guesses" />
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
               Portaldot V3.0 rolled out 23 Oct 2026, 23:00 UTC (24 Oct 2026, 06:00 WIB), per the
               official @PortaldotL0 and @Portaldot_Dev posts. NodeScope tags every health snapshot
@@ -723,8 +700,8 @@ export function Landing() {
       <section id="roadmap" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading index="06" title="Roadmap" right="Honestly labeled" />
-            <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-3">
+            <SectionHeading title="Roadmap" right="Honestly labeled" />
+            <div className="overflow-hidden rounded-xl border border-line">
               {[
                 { title: 'Trends & Verdict', status: 'shipped' as const, body: 'Per-method latency trends and block progression across a whole session of snapshots, ending in a deterministic verdict — HEALTHY, DEGRADED, or UNSTABLE — with every rule that fired printed next to it. No score, no black box.' },
                 { title: 'Multi-Endpoint Comparison', status: 'shipped' as const, body: 'Health snapshots from different endpoints, compared side by side — with comparability discipline: matching chain IDs earn a caveated block delta, different chains are declared not comparable instead of subtracted, and method-support and client differences surface as findings. (Not a watchlist — nothing is monitored in the background; you bring the snapshots.)' },
@@ -732,7 +709,8 @@ export function Landing() {
               ].map((r) => (
                 <div key={r.title} className="bg-panel/70 p-6">
                   {r.status === 'shipped' ? (
-                    <span className="inline-block rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 font-data text-[10px] uppercase tracking-[0.16em] text-emerald-300">
+                    <span className="inline-flex items-center gap-2 font-data text-[11px] uppercase tracking-[0.16em] text-emerald-300">
+                      <span className="h-2 w-2 bg-emerald-400" />
                       Shipped — live in the app
                     </span>
                   ) : (
@@ -754,10 +732,6 @@ export function Landing() {
 
       {/* ------------------------------- CTA -------------------------------- */}
       <section className="relative overflow-hidden px-4 py-24">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-[380px] bg-[radial-gradient(680px_280px_at_50%_100%,rgba(1,129,251,0.12),transparent_70%)]"
-        />
         <Reveal className="relative mx-auto max-w-3xl text-center">
           <Activity className="mx-auto h-8 w-8 text-slate-500" />
           <h2 className="mt-6 font-display text-4xl font-semibold leading-tight tracking-tight text-white md:text-5xl">

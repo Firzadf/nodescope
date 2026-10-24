@@ -115,7 +115,7 @@ export function CommandPalette({ open, commands, onClose }: CommandPaletteProps)
                   }`}
                 >
                   {isActive && (
-                    <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-gradient-to-b from-[#8C1DEF] to-[#0181FB]" />
+                    <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-[#0181FB]" />
                   )}
                   <span className="truncate">{cmd.label}</span>
                   {cmd.hint && <span className="ml-auto shrink-0 font-data text-[11px] text-slate-500">{cmd.hint}</span>}

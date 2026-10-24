@@ -22,7 +22,7 @@
     font-family: "Space Grotesk", sans-serif;
   }
   ::selection {
-    background-color: #8c1def;
+    background-color: #0181fb;
     color: #fff;
   }
   * {
@@ -48,9 +48,9 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Primary action: Portaldot gradient, reserved for the one action that matters per panel. */
+  /* Primary action: one flat accent, reserved for the one action that matters per panel. */
   .btn-primary {
-    background-image: linear-gradient(135deg, #8c1def 0%, #0181fb 100%);
+    background-color: #0181fb;
     color: #fff;
     /* Chamfered corners (ChainGPT-style cut) — clip-path removes the outer
        glow, so the button carries an inset highlight instead. */
@@ -103,10 +103,9 @@
   }
 
   .text-gradient {
-    background-image: linear-gradient(92deg, #8c1def 0%, #0181fb 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    /* Former gradient text, now one flat accent. Used only for data figures,
+       never for a styled word inside a headline. */
+    color: #0181fb;
   }
 }
 

@@ -35,7 +35,7 @@ export function MainnetProfile() {
       <main className="mx-auto max-w-4xl px-4 py-10">
         <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">NodeScope / Mainnet Profile</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">
-          Portaldot Mainnet V3, <span className="text-gradient">as published.</span>
+          Portaldot Mainnet V3, as published.
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
           Mainnet V3 went live 24 Oct 2026, 06:00 WIB (23 Oct 2026, 23:00 UTC), per the official
