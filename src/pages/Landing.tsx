@@ -186,7 +186,7 @@ function LiveReadout() {
 function SectionHeading({ title, right }: { title: string; right?: string }) {
   return (
     <div className="mb-10 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-5">
-      <p className="font-display text-xl font-semibold tracking-tight text-white">{title}</p>
+      <p className="font-display text-2xl font-semibold tracking-tight text-white">{title}</p>
       {right && <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-600">{right}</p>}
     </div>
   );
@@ -578,7 +578,7 @@ export function Landing() {
             </div>
           </div>
 
-          <div className="relative lg:col-span-5">
+          <div className="stagger relative lg:col-span-5">
             <span aria-hidden="true" className="absolute -left-2 -top-2 font-data text-sm text-[#0181FB]">+</span>
             <span aria-hidden="true" className="absolute -right-2 -top-2 font-data text-sm text-[#0181FB]">+</span>
             <LiveReadout />
@@ -596,6 +596,17 @@ export function Landing() {
           </div>
         </div>
       </section>
+
+      {/* --------------------------- announcement banner ----------------------- */}
+      <div className="border-y border-line bg-black/30 px-4 py-3">
+        <p className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center font-data text-[11px] uppercase tracking-[0.18em] text-slate-400">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+          </span>
+          Portaldot Hacker House 2026 · Check-in 22 Oct 2026 · Final / code freeze 6 Nov 2026, 11:00 WIB
+        </p>
+      </div>
 
       {/* ------------------------------- stats ------------------------------ */}
       <section className="border-y border-line bg-deep/60 px-4 py-14">
@@ -623,7 +634,7 @@ export function Landing() {
             <div className="grid gap-10 md:grid-cols-2">
               <h2 className="sr-only">A green checkmark is not evidence.</h2>
               <WordFill sentence="A green checkmark is not evidence." />
-              <div className="space-y-4 text-[15px] leading-relaxed text-slate-400">
+              <div className="space-y-4 text-base leading-[1.85] text-slate-400">
                 <p>
                   Consoles and explorers tell you a node answered <span className="text-slate-200">once</span>. They
                   don&apos;t show drift, silent regressions, or whether the same check still passes an hour later —
@@ -680,6 +691,50 @@ export function Landing() {
                   <span className="text-slate-500">{'}'}</span>
                 </code>
               </pre>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ------------------------------ tutorial ------------------------------ */}
+      <section id="tutorial" className="scroll-mt-28 px-4 py-16">
+        <div className="mx-auto max-w-6xl">
+          <Reveal>
+            <SectionHeading title="Tutorial" right="Five steps, no setup" />
+            <p className="max-w-3xl text-[15px] leading-[1.85] text-slate-400">
+              Baru pertama kali buka NodeScope? Ikuti lima langkah ini, semuanya memakai tombol
+              yang sudah ada di app, tanpa akun, tanpa wallet, dan tanpa konfigurasi. Bagian
+              For judges di bawah adalah versi verifikasi yang sama, ditulis untuk juri.
+            </p>
+            <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {[
+                { n: '01', title: 'Buka app, endpoint sudah terisi', body: 'Buka /app. Endpoint Portaldot V3 EVM sudah terisi, tidak ada yang perlu dikonfigurasi dan tidak ada yang perlu ditandatangani.' },
+                { n: '02', title: 'Connect & Test', body: 'Tekan Connect & Test. App menguji koneksi ke endpoint dan menampilkan statusnya apa adanya, termasuk kalau endpoint tidak menjawab.' },
+                { n: '03', title: 'Run Health Check', body: 'Tekan Run Health Check. Empat metode inti berjalan dan hasilnya disimpan sebagai snapshot bertimestamp di sesi ini, sampai 20 snapshot.' },
+                { n: '04', title: 'Bandingkan dan baca verdict', body: 'Pilih dua snapshot untuk dibandingkan, atau baca Trends & Verdict untuk seluruh sesi. Verdict-nya deterministik dan aturannya dicetak bersama buktinya, tanpa skor.' },
+                { n: '05', title: 'Export, verifikasi, anchor opsional', body: 'Export laporan JSON dari History, lalu jatuhkan file yang sama di /verify untuk memeriksa stempel SHA-256-nya. Kalau mau, anchor hash laporan itu on-chain dari panel 04, lalu verifikasi transaksinya di tempat yang sama.' },
+              ].map((s) => (
+                <div key={s.n} className="rounded-[20px] border border-line bg-panel/70 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.35)] transition-all duration-300 hover:-translate-y-1 hover:border-slate-500/40">
+                  <p className="font-data text-[11px] uppercase tracking-[0.2em] text-[#0181FB]">{s.n}</p>
+                  <h3 className="mt-3 font-display text-lg font-semibold text-white">{s.title}</h3>
+                  <p className="mt-2 text-[15px] leading-[1.85] text-slate-400">{s.body}</p>
+                </div>
+              ))}
+              <div className="flex flex-col justify-center rounded-[20px] border border-[#0181FB]/40 bg-[#0181FB]/10 p-6">
+                <p className="font-display text-lg font-semibold text-white">Siap mencoba?</p>
+                <p className="mt-2 text-[15px] leading-[1.85] text-slate-300">
+                  Satu klik ke app, dan lima langkah di atas bisa langsung dipraktikkan.
+                </p>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <a href={APP_URL} className="btn-primary inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold">
+                    Mulai di app
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                  <a href="/verify" className="btn-ghost inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-medium">
+                    Ke halaman Verify
+                  </a>
+                </div>
+              </div>
             </div>
           </Reveal>
         </div>
@@ -840,7 +895,7 @@ export function Landing() {
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading title="Portaldot V3, as published" right="Official references, not guesses" />
-            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
+            <p className="mt-3 max-w-3xl text-[15px] leading-[1.85] text-slate-400">
               Portaldot V3.0 rolled out 23 Oct 2026, 23:00 UTC (24 Oct 2026, 06:00 WIB), per the
               official @PortaldotL0 and @Portaldot_Dev posts. NodeScope tags every health snapshot
               Pre-V3 or Post-V3 against that instant, so evidence from before and after the upgrade
@@ -909,7 +964,7 @@ export function Landing() {
                     </span>
                   )}
                   <h3 className="mt-4 font-display text-lg font-semibold text-white">{r.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-400">{r.body}</p>
+                  <p className="mt-2 text-[15px] leading-[1.85] text-slate-400">{r.body}</p>
                 </div>
               ))}
             </div>
@@ -925,7 +980,7 @@ export function Landing() {
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading title="For judges: 60 seconds to verify" right="No account · No wallet · No setup" />
-            <p className="max-w-3xl text-sm leading-relaxed text-slate-400">
+            <p className="max-w-3xl text-[15px] leading-[1.85] text-slate-400">
               Do not take any number on this page on trust. Every claim below is a button you can
               press yourself, in the live app, against the live testnet.
             </p>
@@ -969,8 +1024,8 @@ export function Landing() {
       </section>
 
       {/* ------------------------------ footer ------------------------------ */}
-      <footer className="border-t border-line bg-deep px-4 pb-10 pt-12">
-        <div className="mx-auto max-w-6xl">
+      <footer className="relative overflow-hidden border-t border-line bg-deep px-4 pb-0 pt-12">
+        <div className="relative mx-auto max-w-6xl">
           <p className="flex flex-wrap items-center gap-2.5 font-data text-[11px] uppercase tracking-[0.18em] text-slate-400">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
@@ -978,33 +1033,41 @@ export function Landing() {
             </span>
             Live · Chain 420420777 · Portaldot V3 EVM Testnet · Status: Check-in submitted
           </p>
-          <div className="mt-10 grid gap-10 md:grid-cols-4">
-            <div>
+          <div className="mt-10 grid gap-10 md:grid-cols-2 lg:grid-cols-5">
+            <div className="lg:col-span-2">
               <div className="flex items-center gap-2.5">
                 <img src="/logo.png" alt="" className="h-7 w-7 rounded-lg" />
                 <span className="font-display text-base font-semibold text-white">NodeScope</span>
               </div>
-              <p className="mt-3 max-w-xs text-sm leading-relaxed text-slate-500">
-                The Portaldot diagnostics toolkit. Consoles interact — NodeScope proves.
+              <p className="mt-3 max-w-xs text-[15px] leading-[1.85] text-slate-500">
+                The Portaldot diagnostics toolkit. Consoles interact — NodeScope proves, with a
+                receipt you can hand to anyone.
+              </p>
+              <p className="mt-4 font-data text-[11px] uppercase tracking-[0.18em] text-slate-600">
+                Independent Hacker House build · Not an official Portaldot product · Testnet only
               </p>
             </div>
             {[
-              { h: 'Product/', links: [['Launch App', APP_URL], ['Demo video', DEMO_URL], ['GitHub', GITHUB_URL]] },
-              { h: 'Resources/', links: [['DoraHacks BUIDL', BUIDL_URL], ['Repository README', `${GITHUB_URL}#readme`], ['Screenshots & docs', `${GITHUB_URL}/tree/main/docs`]] },
-              { h: 'Project/', links: [['Portaldot Hacker House 2026', BUIDL_URL], ['X — @dutzozan', 'https://x.com/dutzozan'], ['Built solo by Firza Duta Fauzan', GITHUB_URL]] },
+              { h: 'Product', links: [['Launch App', APP_URL], ['How It Works', '#how'], ['The Instrument', '#instrument'], ['Live Evidence', '#evidence'], ['Verify a Report', '/verify'], ['Mainnet Profile', '/mainnet']] },
+              { h: 'Resources', links: [['DoraHacks BUIDL', BUIDL_URL], ['GitHub Repository', GITHUB_URL], ['Node Console', 'https://node-console.portaldot.dev/'], ['Block Explorer', 'https://scanner-live-v3.portaldot.dev/'], ['Cross-Chain Bridge', 'https://bridge.portaldot.dev/']] },
+              { h: 'Community', links: [['Portaldot on X', 'https://x.com/PortaldotL0'], ['Portaldot Dev on X', 'https://x.com/Portaldot_Dev'], ['X — @dutzozan', 'https://x.com/dutzozan'], ['Telegram — @inidutaa', 'https://t.me/inidutaa'], ['Discord · dutzozan', null], ['Demo video', DEMO_URL], ['Built solo by Firza Duta Fauzan', GITHUB_URL]] },
             ].map((col) => (
               <div key={col.h}>
                 <p className="font-data text-[11px] uppercase tracking-[0.2em] text-slate-500">{col.h}</p>
                 <ul className="mt-3.5 space-y-2.5 text-sm">
                   {col.links.map(([label, href]) => (
                     <li key={label}>
-                      <a
-                        href={href}
-                        {...(href.startsWith('http') ? { target: '_blank', rel: 'noreferrer' } : {})}
-                        className="text-slate-400 transition-colors hover:text-white"
-                      >
-                        {label}
-                      </a>
+                      {href ? (
+                        <a
+                          href={href}
+                          {...(href.startsWith('http') ? { target: '_blank', rel: 'noreferrer' } : {})}
+                          className="inline-block text-slate-400 transition-all hover:translate-x-0.5 hover:text-white"
+                        >
+                          {label}
+                        </a>
+                      ) : (
+                        <span className="text-slate-400">{label}</span>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -1016,6 +1079,13 @@ export function Landing() {
             <span>Report schema · nodescope.diagnostic-report.v1</span>
           </div>
         </div>
+        <p
+          aria-hidden="true"
+          className="pointer-events-none -mb-[0.28em] mt-8 select-none text-center font-display text-[18vw] font-bold leading-none tracking-tight text-transparent"
+          style={{ WebkitTextStroke: '1px rgba(148, 163, 184, 0.18)' }}
+        >
+          NODESCOPE
+        </p>
       </footer>
 
       {/* ----------------------------- lightbox ----------------------------- */}
