@@ -9,6 +9,7 @@ import { ResponseViewer } from './components/diagnostics/ResponseViewer';
 import { HistoryList } from './components/diagnostics/HistoryList';
 import { DiagnosticReport } from './components/diagnostics/DiagnosticReport';
 import { ReportVerifier } from './components/diagnostics/ReportVerifier';
+import { AttestationPanel } from './components/diagnostics/AttestationPanel';
 import type { ConnectionStatus, NodeMetricsDetailed } from './types/node';
 import type { RpcDiagnosticResult, DiagnosticHistoryItem } from './types/rpc';
 import type { EvmConnectionDetails, EndpointProfile } from './types/endpoint';
@@ -327,6 +328,7 @@ function App() {
                   }}
                 />
                 <ReportVerifier />
+                <AttestationPanel endpoint={endpoint} />
               </div>
             )}
           </div>

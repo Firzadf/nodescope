@@ -93,6 +93,8 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
               Summarize user-triggered diagnostics for export. No background requests or fabricated data.
               Every export is stamped with a SHA-256 integrity hash — anyone can check the file in the
               Verify panel below, or at the public /verify page, with no account and no wallet.
+              On-chain anchoring is a separate, optional step in panel 04; verification there is
+              read-only and NodeScope never signs anything.
               {wsProbeResult
                 ? ' The latest Substrate probe result is included in this export, as its own block.'
                 : ' Run the Substrate WS probe in Overview first if you want that transport in the export too.'}

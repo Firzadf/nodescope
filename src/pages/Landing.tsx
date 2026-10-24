@@ -434,7 +434,7 @@ export function Landing() {
               </a>
             </div>
             <p className="mt-6 font-data text-[11px] uppercase tracking-[0.16em] text-slate-600">
-              Portaldot V3 EVM · Chain 420420777 · Testnet · Read-only · No keys · No transactions · Nothing polls
+              Portaldot V3 EVM · Chain 420420777 · Testnet · Read-only by default · Optional on-chain anchor · Nothing polls
             </p>
           </div>
 
@@ -745,6 +745,7 @@ export function Landing() {
                 { step: 'Connect and check', body: 'Press Connect & Test, then Run Health Check. Four methods run and the result is saved as a timestamped snapshot.' },
                 { step: 'Probe the second transport', body: 'In Overview, panel 06, press Probe WSS Node. Panel 07 then reads the EVM snapshot and the Substrate probe together, with each number carrying its own timestamp.' },
                 { step: 'Export and verify', body: 'In History, export the diagnostic report, then drop the same file at /verify. The SHA-256 stamp covers everything except the stamp itself, so changing any value in the file breaks it.' },
+                { step: 'Anchor, optionally', body: 'If a registry contract is deployed, anchor the report hash on chain with your own wallet tool, then verify the transaction in History, panel 04. Until then, the panel honestly reports that there is nothing to verify.' },
               ].map((s) => (
                 <div key={s.step} className="grid gap-2 border-b border-line bg-panel px-6 py-6 last:border-b-0 md:grid-cols-12">
                   <h3 className="font-display text-lg font-semibold text-white md:col-span-4">{s.step}</h3>

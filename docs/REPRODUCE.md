@@ -56,9 +56,13 @@ forward over time, never backward in a single session.
 
 ## 4. What NodeScope deliberately does not do
 
-- It sends no transactions and deploys no contracts, so there is no on-chain
-  attestation to verify yet. That absence is stated on the landing page and on
-  the Mainnet Profile page, not hidden.
+- By default it sends no transactions and deploys no contracts. On-chain
+  attestation is an optional extra step, documented in docs/ATTESTATION.md:
+  the user deploys the registry contract and anchors a report hash with their
+  own testnet wallet, and the app only verifies the anchoring transaction
+  read-only. Until a contract is deployed, the attestation panel honestly
+  reports that there is nothing to verify, and no transaction hash is
+  invented to fill that state.
 - It does not poll or monitor in the background. Every observation above is
   triggered by a person pressing a button, and the landing page's Live Readout
   fetches once on load.
