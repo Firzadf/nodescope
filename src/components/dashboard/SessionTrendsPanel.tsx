@@ -3,6 +3,7 @@ import { TrendingUp, CheckCircle2, AlertTriangle, XCircle, PauseCircle, GitBranc
 import { Card } from '../common/Card';
 import { PanelLabel } from '../common/PanelLabel';
 import { SnapshotStrip } from './SnapshotStrip';
+import { TimelineChart } from './TimelineChart';
 import type { HealthCheckSnapshot } from '../../types/healthCheck';
 import { describeV3Eras } from '../../utils/v3Era';
 import {
@@ -301,6 +302,17 @@ export function SessionTrendsPanel({ snapshots }: SessionTrendsPanelProps) {
               unsupported block check contributes no point and is never treated as height 0.
             </p>
           )}
+        </div>
+
+        {/* Timeline charts — same snapshots, same numbers, drawn */}
+        <div className="space-y-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <h4 className="text-sm font-semibold text-slate-300">Timeline</h4>
+            <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">
+              [ Fig. 01b — Session over time ]
+            </span>
+          </div>
+          <TimelineChart snapshots={groupSnapshots} />
         </div>
 
         {/* Latency trends */}

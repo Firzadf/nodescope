@@ -1,4 +1,7 @@
 import { ReportVerifier } from '../components/diagnostics/ReportVerifier';
+import { AttestationPanel } from '../components/diagnostics/AttestationPanel';
+import { parseShareParams } from '../utils/shareableVerification';
+import { DEFAULT_PORTALDOT_V3_EVM_RPC } from '../types/endpoint';
 
 /**
  * Public report verification page, at /verify.
@@ -8,6 +11,7 @@ import { ReportVerifier } from '../components/diagnostics/ReportVerifier';
  * without opening the full toolkit first.
  */
 export function VerifyPage() {
+  const share = typeof window !== 'undefined' ? parseShareParams(window.location.search) : {};
   return (
     <div className="min-h-screen bg-ink text-slate-200">
       <header className="border-b border-line px-4 py-4">
@@ -36,6 +40,14 @@ export function VerifyPage() {
         </p>
         <div className="mt-8">
           <ReportVerifier />
+        </div>
+        <div className="mt-8">
+          <AttestationPanel
+            endpoint={DEFAULT_PORTALDOT_V3_EVM_RPC}
+            initialHash={share.hash}
+            initialContract={share.contract}
+            initialTx={share.tx}
+          />
         </div>
       </main>
     </div>

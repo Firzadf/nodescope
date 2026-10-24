@@ -11,6 +11,10 @@ import {
   verifyAttestationReceipt,
   type AttestationVerification,
 } from '../../utils/attestation';
+import {
+  buildAttestationShareLink,
+  DEPLOYED_REGISTRY_ADDRESS,
+} from '../../utils/shareableVerification';
 
 /**
  * Optional on-chain attestation, verified read-only.
@@ -21,19 +25,48 @@ import {
  * anchored, this panel honestly reports that there is nothing to verify.
  * See contracts/NodeScopeAttestation.sol and docs/ATTESTATION.md.
  */
-export function AttestationPanel({ endpoint }: { endpoint: string }) {
+export function AttestationPanel({
+  endpoint,
+  initialHash,
+  initialContract,
+  initialTx,
+}: {
+  endpoint: string;
+  initialHash?: string;
+  initialContract?: string;
+  initialTx?: string;
+}) {
   const [reportText, setReportText] = useState('');
-  const [reportHash, setReportHash] = useState('');
-  const [contractAddress, setContractAddress] = useState('');
-  const [txHash, setTxHash] = useState('');
+  const [reportHash, setReportHash] = useState(initialHash ?? '');
+  const [contractAddress, setContractAddress] = useState(initialContract ?? DEPLOYED_REGISTRY_ADDRESS);
+  const [txHash, setTxHash] = useState(initialTx ?? '');
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AttestationVerification | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const extracted = parseReportHashFromJson(reportText);
   const effectiveHash = reportHash.trim() || extracted || '';
   const canCheck =
     isAddress(contractAddress) && isReportHash(effectiveHash) && /^0x[0-9a-fA-F]{64}$/.test(txHash.trim());
+  const shareLink =
+    canCheck && typeof window !== 'undefined'
+      ? buildAttestationShareLink(window.location.origin, {
+          hash: effectiveHash,
+          contract: contractAddress.trim(),
+          tx: txHash.trim(),
+        })
+      : null;
+
+  async function copyShareLink() {
+    if (!shareLink) return;
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   async function checkOnChain() {
     setChecking(true);
@@ -142,6 +175,22 @@ export function AttestationPanel({ endpoint }: { endpoint: string }) {
           <Anchor className="h-4 w-4" />
           {checking ? 'Checking on chain…' : 'Verify anchor on chain'}
         </button>
+        {shareLink && (
+          <button
+            type="button"
+            onClick={() => void copyShareLink()}
+            className="ml-2 inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:text-white"
+          >
+            {copied ? 'Share link copied' : 'Copy shareable verification link'}
+          </button>
+        )}
+        {shareLink && (
+          <p className="text-[11px] leading-relaxed text-slate-500">
+            Share link: <span className="break-all font-data text-slate-400">{shareLink}</span> — opening it
+            pre-fills these three fields on the public /verify page. The link proves nothing by itself;
+            the panel still checks the receipt on chain.
+          </p>
+        )}
         {error && (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-400">{error}</div>
         )}
@@ -171,8 +220,10 @@ export function AttestationPanel({ endpoint }: { endpoint: string }) {
         )}
         {!result && !error && (
           <p className="text-xs text-slate-500">
-            No registry contract is deployed yet, so there is currently nothing to verify. That
-            state is reported here plainly, not filled with a placeholder transaction.
+            Registry deployed on the Portaldot V3 testnet (chain 420420777) at{' '}
+            <span className="break-all font-data text-slate-400">{DEPLOYED_REGISTRY_ADDRESS}</span>. Enter a
+            report hash and its anchoring transaction above, or open a shareable verification link
+            that pre-fills them.
           </p>
         )}
       </div>
