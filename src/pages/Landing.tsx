@@ -583,9 +583,9 @@ export function Landing() {
             <span aria-hidden="true" className="absolute -right-2 -top-2 font-data text-sm text-[#0181FB]">+</span>
             <LiveReadout />
             <div className="relative z-10 mx-3 -mt-3">
-              <div aria-hidden="true" className="scan-line pointer-events-none absolute inset-x-0 top-0 z-20 h-16" />
-              <figure className="hero-media overflow-hidden rounded-[24px] border border-line bg-panel shadow-[0_32px_90px_rgba(0,0,0,0.55),0_0_60px_rgba(1,129,251,0.12)] transition-transform duration-500 [transform:perspective(1200px)_rotateY(-6deg)_rotateX(1.5deg)] hover:[transform:perspective(1200px)_rotateY(0deg)_rotateX(0deg)]" style={{ transitionTimingFunction: 'var(--ease-out)' }}>
+              <figure className="hero-media relative overflow-hidden rounded-[24px] border border-line bg-panel shadow-[0_32px_90px_rgba(0,0,0,0.55),0_0_60px_rgba(1,129,251,0.12)] transition-transform duration-500 [transform:perspective(1200px)_rotateY(-6deg)_rotateX(1.5deg)] hover:[transform:perspective(1200px)_rotateY(0deg)_rotateX(0deg)]" style={{ transitionTimingFunction: 'var(--ease-out)' }}>
                 <img src="/screenshots/03-snapshot-comparison.png" alt="NodeScope snapshot comparison in a real session" className="aspect-[16/9] w-full object-cover object-top" />
+                <div aria-hidden="true" className="scan-line pointer-events-none absolute inset-x-0 top-0 z-20 h-20" />
                 <figcaption className="border-t border-line bg-black/30 px-4 py-2.5 font-data text-[10px] uppercase tracking-[0.16em] text-slate-500">
                   The app — snapshot comparison, cropped from a real session
                 </figcaption>
@@ -650,17 +650,7 @@ export function Landing() {
           <Reveal>
             <SectionHeading title="How It Works" right="Three steps, no setup" />
             <PacketFlow />
-            <div className="relative overflow-hidden rounded-[20px] border border-line">
-              <div aria-hidden="true" className="absolute bottom-6 left-[27px] top-6 w-px bg-line" />
-              <div aria-hidden="true" className="probe-bot absolute left-[14px] top-0 z-10">
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                  <path d="M14 2 L25 8.5 V19.5 L14 26 L3 19.5 V8.5 Z" fill="#0b1220" stroke="#0181FB" strokeWidth="1.5" />
-                  <circle cx="14" cy="14" r="3" fill="#0181FB">
-                    <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" />
-                  </circle>
-                  <path d="M14 2 V0" stroke="#0181FB" strokeWidth="1.5" />
-                </svg>
-              </div>
+            <div className="overflow-hidden rounded-xl border border-line">
               {[
                 { n: '01', title: 'Connect & check', body: 'Point NodeScope at any Portaldot V3 EVM endpoint. A health check runs the core JSON-RPC methods and records the result as a structured snapshot.' },
                 { n: '02', title: 'Snapshot', body: 'Snapshots are timestamped observations — block height, chain ID, client version, latency, per-method outcomes — stored for the session, up to 20.' },
@@ -890,7 +880,17 @@ export function Landing() {
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading title="Roadmap" right="Honestly labeled" />
-            <div className="overflow-hidden rounded-xl border border-line">
+            <div className="relative overflow-hidden rounded-[20px] border border-line">
+              <div aria-hidden="true" className="absolute bottom-6 left-[27px] top-6 w-px bg-line" />
+              <div aria-hidden="true" className="probe-bot absolute left-[14px] top-0 z-10">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                  <path d="M14 2 L25 8.5 V19.5 L14 26 L3 19.5 V8.5 Z" fill="#0b1220" stroke="#0181FB" strokeWidth="1.5" />
+                  <circle cx="14" cy="14" r="3" fill="#0181FB">
+                    <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" />
+                  </circle>
+                  <path d="M14 2 V0" stroke="#0181FB" strokeWidth="1.5" />
+                </svg>
+              </div>
               {[
                 { title: 'Trends & Verdict', status: 'shipped' as const, body: 'Per-method latency trends and block progression across a whole session of snapshots, ending in a deterministic verdict — HEALTHY, DEGRADED, or UNSTABLE — with every rule that fired printed next to it. No score, no black box.' },
                 { title: 'Multi-Endpoint Comparison', status: 'shipped' as const, body: 'Health snapshots from different endpoints, compared side by side — with comparability discipline: matching chain IDs earn a caveated block delta, different chains are declared not comparable instead of subtracted, and method-support and client differences surface as findings. (Not a watchlist — nothing is monitored in the background; you bring the snapshots.)' },

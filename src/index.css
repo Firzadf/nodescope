@@ -401,8 +401,10 @@ select {
 }
 
 .scan-line {
-  background: linear-gradient(to bottom, transparent, rgba(1, 129, 251, 0.28), transparent);
-  animation: scan-sweep 7s ease-in-out infinite;
+  background: linear-gradient(to bottom, transparent, rgba(1, 129, 251, 0.55) 55%, rgba(1, 129, 251, 0.9) 98%, transparent);
+  border-bottom: 2px solid #0181FB;
+  box-shadow: 0 0 24px rgba(1, 129, 251, 0.6);
+  animation: scan-sweep 6s ease-in-out infinite;
 }
 @keyframes scan-sweep {
   0% { transform: translateY(0); opacity: 0; }
