@@ -573,3 +573,9 @@ select {
     animation: none;
   }
 }
+
+.motion-poster { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .motion-video { display: none; }
+  .motion-poster { display: block; }
+}

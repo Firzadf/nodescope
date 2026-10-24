@@ -199,6 +199,8 @@ export interface LandingCopy {
   liveReadoutUnreachableBody: string;
   liveReadoutLastObserved: string;
   lightboxClose: string;
+  motionCaption: string;
+  motionNote: string;
 }
 
 const en: LandingCopy = {
@@ -526,6 +528,8 @@ const en: LandingCopy = {
   liveReadoutUnreachableBody: "NodeScope reports that too — it's the whole point. Last documented observation: ",
   liveReadoutLastObserved: 'block 147,639 · 22 Oct 2026',
   lightboxClose: 'Close',
+  motionCaption: 'Watch the flow — five real screens, animated',
+  motionNote: 'Screenshots from a real session on 25 Oct 2026, animated with a slow zoom and crossfade. This is not a live recording and it carries no live data — the stills below are the same screens.',
 };
 
 const id: LandingCopy = {
@@ -852,6 +856,8 @@ const id: LandingCopy = {
   liveReadoutUnreachableBody: 'NodeScope juga melaporkan itu — memang itulah intinya. Observasi terakhir yang didokumentasikan: ',
   liveReadoutLastObserved: 'blok 147,639 · 22 Okt 2026',
   lightboxClose: 'Tutup',
+  motionCaption: 'Lihat alurnya — lima layar nyata, dianimasikan',
+  motionNote: 'Screenshot dari sesi nyata pada 25 Okt 2026, dianimasikan dengan zoom pelan dan crossfade. Ini bukan rekaman live dan tidak membawa data live — gambar diam di bawah adalah layar yang sama.',
 };
 
 export const landingCopy: Record<Lang, LandingCopy> = { en, id };

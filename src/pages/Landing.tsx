@@ -916,6 +916,27 @@ export function Landing() {
             <p className="mt-3 font-data text-[11px] leading-relaxed text-slate-600">
               {t.evidenceFootnote}
             </p>
+            <figure className="mt-8 overflow-hidden rounded-[20px] border border-line bg-panel shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
+              <video
+                className="motion-video aspect-[16/10] w-full"
+                src="/motion/nodescope-flow.mp4"
+                poster="/screenshots/01-endpoint-config.png"
+                autoPlay
+                muted
+                loop
+                playsInline
+                aria-label={t.motionCaption}
+              />
+              <img
+                src="/screenshots/01-endpoint-config.png"
+                alt={t.motionCaption}
+                className="motion-poster aspect-[16/10] w-full object-cover object-top"
+              />
+              <figcaption className="px-5 py-3.5">
+                <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-300">{t.motionCaption}</p>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">{t.motionNote}</p>
+              </figcaption>
+            </figure>
           </Reveal>
           <Reveal delay={100}>
             <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-3">
