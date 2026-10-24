@@ -16,7 +16,7 @@ A professional blockchain node health diagnostic dashboard for inspecting node c
 
 ---
 
-**Current Status:** Phase 1 (Health Check Snapshots) and Phase 2 (Snapshot Comparison) complete. Portaldot V3.0 EVM endpoint verified and integrated. 197 passing tests across 15 test files.
+**Current Status:** Phase 1 (Health Check Snapshots) and Phase 2 (Snapshot Comparison) complete, plus Trends & Verdict, Multi-Endpoint Comparison, a V3 era marker (Pre-V3/Post-V3 against go-live 24 Oct 2026, 06:00 WIB), and a Substrate WebSocket probe. Portaldot V3.0 EVM endpoint verified and integrated. 290 passing tests across 25 test files, verified 25 Oct 2026.
 
 ## Project Overview
 
@@ -209,7 +209,7 @@ When endpoint profile is set to `portaldot_v3_evm`:
 
 ### Honest Limitations
 
-- **HTTP JSON-RPC only** — WebSocket transport not implemented; Substrate WebSocket endpoint `wss://test-node-v3.portaldot.dev` is not reachable by this client
+- **HTTP JSON-RPC plus one WebSocket probe** — the EVM checks run over HTTP, and a separate user-triggered probe covers the Substrate WebSocket endpoint `wss://test-node-v3.portaldot.dev` (system_health, system_chain, system_version, chain_getHeader). No polling and no background WebSocket connection
 - **Browser CORS dependency** — cross-origin requests must be permitted by the RPC endpoint for direct browser fetch() to work. A private or firewalled endpoint may require a local proxy (not provided)
 - **SessionStorage-only snapshots** — stored in browser sessionStorage, limited to ~5MB per domain, max 20 snapshots cached per session. Snapshots lost on tab close or browser restart; export them to JSON for long-term retention
 - **No contract deployment** — NodeScope is a diagnostic and monitoring tool, not a contract IDE or wallet. No smart contract development, deployment, or signing features
@@ -260,7 +260,7 @@ src/
 
 **Test Framework:** Vitest 5 with @testing-library/react  
 **Coverage Target:** 80%+  
-**Current Status:** 197 passing tests across 15 test files
+**Current Status:** 290 passing tests across 25 test files, verified 25 Oct 2026
 
 ### Test Files
 
@@ -281,7 +281,12 @@ src/
 | `EndpointConfig.test.tsx` | Connect & Test button mount/state agreement (regression) |
 | `NodeMetricsInspector.test.ts` | Metrics display and formatting |
 | `metricParsers.test.ts` | RPC response parsing |
-| **Total** | **197 passing tests, 15 test files** |
+| `v3Era.test.ts` | V3 go-live instant, era tagging, boundary crossing |
+| `substrateWsProbe.test.ts` | Substrate WebSocket probe, header hex to decimal, error reporting |
+| `SessionTrendsPanel.test.tsx` | Trends panel rendering, including the V3 era note |
+| `SnapshotStrip.test.tsx` | Session strip rendering, including era in tooltips |
+| 6 files not listed above | Component and utility tests added in later phases, including Landing and Command Palette |
+| **Total** | **290 passing tests, 25 test files** |
 
 ### Running Tests
 
@@ -393,8 +398,8 @@ MIT (as per Portaldot Hacker House requirements).
 
 ---
 
-**Project Status:** Check-in submitted Oct 22, 2026. Repository public with 7 commits, development records retained.
+**Project Status:** Check-in submitted Oct 22, 2026. Repository public with 42 commits as of 25 Oct 2026, development records retained. Final sprint to the 6 Nov 2026 code freeze is in progress.
 
-- ✅ Phase 1 & Phase 2 complete, 197 tests across 15 files
+- ✅ Phase 1 & Phase 2 complete, plus Trends & Verdict, Multi-Endpoint Comparison, V3 era marker, and Substrate WebSocket probe, 290 tests across 25 files
 - ✅ Portaldot V3.0 EVM integration verified, chain ID 420420777 validated, methods documented
 - ✅ Demo video, live deployment, and screenshots published

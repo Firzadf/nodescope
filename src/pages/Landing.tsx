@@ -475,7 +475,7 @@ export function Landing() {
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-4">
           {[
             { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · returned by eth_chainId' },
-            { value: '283', label: 'Tests passing', sub: '23 files · Vitest · suite verified 23 Oct 2026' },
+            { value: '290', label: 'Tests passing', sub: '25 files · Vitest · suite verified 25 Oct 2026' },
             { value: '38', label: 'RPC methods probed', sub: '7 supported on this EVM profile · the rest answered method-not-found — reported, not hidden' },
             { value: '+12', label: 'Blocks between demo snapshots', sub: 'A 143,764 at 15:48:05 → B 143,776 at 15:49:21 WIB · 76 seconds apart' },
           ].map((s, i) => (
@@ -680,11 +680,47 @@ export function Landing() {
         </div>
       </section>
 
+      {/* ----------------------------- V3 references ------------------------------ */}
+      <section id="v3" className="scroll-mt-28 px-4 py-16">
+        <div className="mx-auto max-w-6xl">
+          <Reveal>
+            <SectionHeading index="05" title="Portaldot V3, as published" right="Official references, not guesses" />
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
+              Portaldot V3.0 rolled out 23 Oct 2026, 23:00 UTC (24 Oct 2026, 06:00 WIB), per the
+              official @PortaldotL0 and @Portaldot_Dev posts. NodeScope tags every health snapshot
+              Pre-V3 or Post-V3 against that instant, so evidence from before and after the upgrade
+              is never silently mixed. The testnet EVM RPC below is the endpoint NodeScope checks;
+              the WebSocket node is probed separately in the app with Substrate methods.
+            </p>
+            <div className="mt-6 grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-2 lg:grid-cols-3">
+              {[
+                { label: 'Mainnet · Node Console', href: 'https://node-console.portaldot.dev/', note: 'Official mainnet access point' },
+                { label: 'Mainnet · Block Explorer', href: 'https://scanner-live-v3.portaldot.dev/', note: 'Substrate explorer, not an EVM explorer' },
+                { label: 'Mainnet · Cross-Chain Bridge', href: 'https://bridge.portaldot.dev/', note: 'Official bridge' },
+                { label: 'Testnet · EVM RPC', href: 'https://test-evm-rpc-v3.portaldot.dev', note: 'Checked by NodeScope · chain 420420777' },
+                { label: 'Testnet · WebSocket Node', href: 'https://x.com/Portaldot_Dev/status/2113571130527318088', note: 'Probed by NodeScope as wss://test-node-v3.portaldot.dev · endpoint list by @Portaldot_Dev' },
+                { label: 'Testnet · Block Explorer', href: 'https://scanner-testnet-v3.portaldot.dev/', note: 'Substrate testnet explorer' },
+              ].map((link) => (
+                <a key={link.label} href={link.href} target="_blank" rel="noreferrer" className="block bg-panel/70 p-6 transition-colors hover:bg-panel">
+                  <p className="font-data text-[11px] uppercase tracking-[0.16em] text-sky-300">{link.label}</p>
+                  <p className="mt-2 break-all font-data text-xs text-slate-300">{link.href}</p>
+                  <p className="mt-1.5 text-xs text-slate-500">{link.note}</p>
+                </a>
+              ))}
+            </div>
+            <p className="mt-4 text-sm text-slate-500">
+              No public mainnet EVM RPC is published in those references, so NodeScope does not
+              claim a mainnet EVM check. That absence is stated here on purpose.
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ----------------------------- roadmap ------------------------------ */}
       <section id="roadmap" className="scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <SectionHeading index="05" title="Roadmap" right="Honestly labeled" />
+            <SectionHeading index="06" title="Roadmap" right="Honestly labeled" />
             <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-3">
               {[
                 { title: 'Trends & Verdict', status: 'shipped' as const, body: 'Per-method latency trends and block progression across a whole session of snapshots, ending in a deterministic verdict — HEALTHY, DEGRADED, or UNSTABLE — with every rule that fired printed next to it. No score, no black box.' },
