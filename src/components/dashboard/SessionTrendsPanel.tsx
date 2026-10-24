@@ -4,6 +4,7 @@ import { Card } from '../common/Card';
 import { PanelLabel } from '../common/PanelLabel';
 import { SnapshotStrip } from './SnapshotStrip';
 import type { HealthCheckSnapshot } from '../../types/healthCheck';
+import { describeV3Eras } from '../../utils/v3Era';
 import {
   BLOCK_INTERVAL_NOTE,
   computeSessionTrends,
@@ -94,6 +95,12 @@ export function SessionTrendsPanel({ snapshots }: SessionTrendsPanelProps) {
         <div id="session-trends" className="space-y-4 scroll-mt-6">
           <PanelHeader />
           {groupSnapshots.length > 0 && <SnapshotStrip snapshots={groupSnapshots} />}
+          {groupSnapshots.length > 0 && (
+            <p className="text-xs text-slate-400 flex items-start gap-2">
+              <GitBranch className="w-4 h-4 flex-shrink-0 mt-0.5 text-slate-500" />
+              {describeV3Eras(groupSnapshots)}
+            </p>
+          )}
           <div className="empty-shell px-5 py-6 flex items-start gap-4">
             <TrendingUp className="w-5 h-5 text-slate-600 mt-0.5 shrink-0" />
             <div>
@@ -126,6 +133,11 @@ export function SessionTrendsPanel({ snapshots }: SessionTrendsPanelProps) {
     <Card ticks>
       <div id="session-trends" className="space-y-6 scroll-mt-6">
         <PanelHeader />
+
+        <div className="bg-sky-500/10 border border-sky-500/30 rounded-lg p-3 text-xs text-sky-300 flex items-start gap-2">
+          <GitBranch className="w-4 h-4 flex-shrink-0 mt-0.5 text-sky-400" />
+          <p>{describeV3Eras(groupSnapshots)}</p>
+        </div>
 
         {trends.excludedSnapshotCount > 0 && (
           <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-xs text-amber-300 flex items-start gap-2">

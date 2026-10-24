@@ -4,6 +4,7 @@ import { NodeMetricsInspector } from './NodeMetricsInspector';
 import { HealthCheckPanel } from './HealthCheckPanel';
 import { SnapshotComparison } from './SnapshotComparison';
 import { SessionTrendsPanel } from './SessionTrendsPanel';
+import { SubstrateWsProbePanel } from './SubstrateWsProbePanel';
 import { CapabilityDiscoveryPanel } from '../diagnostics/CapabilityDiscoveryPanel';
 import type { NodeMetricsDetailed } from '../../types/node';
 import type { RpcDiagnosticResult } from '../../types/rpc';
@@ -109,6 +110,8 @@ export function Overview({
       <SnapshotComparison snapshots={healthSnapshots} />
 
       <SessionTrendsPanel snapshots={healthSnapshots} />
+
+      <SubstrateWsProbePanel />
 
       <CapabilityDiscoveryPanel
         endpoint={endpoint}

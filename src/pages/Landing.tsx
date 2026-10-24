@@ -689,7 +689,7 @@ export function Landing() {
               {[
                 { title: 'Trends & Verdict', status: 'shipped' as const, body: 'Per-method latency trends and block progression across a whole session of snapshots, ending in a deterministic verdict — HEALTHY, DEGRADED, or UNSTABLE — with every rule that fired printed next to it. No score, no black box.' },
                 { title: 'Multi-Endpoint Comparison', status: 'shipped' as const, body: 'Health snapshots from different endpoints, compared side by side — with comparability discipline: matching chain IDs earn a caveated block delta, different chains are declared not comparable instead of subtracted, and method-support and client differences surface as findings. (Not a watchlist — nothing is monitored in the background; you bring the snapshots.)' },
-                { title: 'Portaldot Mainnet Profile', status: 'planned' as const, body: 'A first-class profile for Portaldot V3 mainnet the day it opens, reusing the same snapshot and evidence engine.' },
+                { title: 'Portaldot Mainnet Profile', status: 'planned' as const, body: 'Mainnet V3 is live since 24 Oct 2026, 06:00 WIB, but no public mainnet EVM RPC is published yet, so NodeScope does not fake a mainnet check. Every snapshot is now tagged Pre-V3 or Post-V3 in the app, and the same snapshot and evidence engine is ready the day a mainnet RPC is published.' },
               ].map((r) => (
                 <div key={r.title} className="bg-panel/70 p-6">
                   {r.status === 'shipped' ? (

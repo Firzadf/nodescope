@@ -1,4 +1,5 @@
 import type { HealthCheckSnapshot } from '../../types/healthCheck';
+import { getV3Era, v3EraLabel } from '../../utils/v3Era';
 
 interface SnapshotStripProps {
   snapshots: HealthCheckSnapshot[];
@@ -38,7 +39,7 @@ export function SnapshotStrip({ snapshots }: SnapshotStripProps) {
           return (
             <div
               key={s.id}
-              title={`${new Date(s.timestamp).toLocaleTimeString()} · block ${block ?? '—'} · ${passed}/${total} checks passed`}
+              title={`${new Date(s.timestamp).toLocaleTimeString()} · ${v3EraLabel(getV3Era(s.timestamp))} · block ${block ?? '—'} · ${passed}/${total} checks passed`}
               style={{ animationDelay: `${Math.min(i * 45, 600)}ms` }}
               className={`strip-cell-in h-7 min-w-[10px] flex-1 rounded-[4px] ${tone}`}
             />
