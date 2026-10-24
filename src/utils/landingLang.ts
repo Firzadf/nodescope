@@ -134,6 +134,7 @@ export interface LandingCopy {
   checkObservedClient: string;
   reportSampleLabel: string;
   reportSampleRight: string;
+  typeReplay: string;
   tutorialTitle: string;
   tutorialRight: string;
   tutorialIntro: string;
@@ -231,7 +232,7 @@ const en: LandingCopy = {
   banner: 'Portaldot Hacker House 2026 · Check-in 22 Oct 2026 · Final / code freeze 6 Nov 2026, 11:00 WIB',
   stats: [
     { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · returned by eth_chainId' },
-    { value: '318', label: 'Tests passing', sub: '35 files · Vitest · suite verified 25 Oct 2026' },
+    { value: '319', label: 'Tests passing', sub: '36 files · Vitest · suite verified 25 Oct 2026' },
     {
       value: '38',
       label: 'RPC methods probed',
@@ -295,6 +296,7 @@ const en: LandingCopy = {
   checkObservedClient: 'client string, recorded in snapshot',
   reportSampleLabel: 'nodescope — diagnostic-report.v1',
   reportSampleRight: 'Trimmed sample of a real export',
+  typeReplay: 'Replay typing',
   tutorialTitle: 'Tutorial',
   tutorialRight: 'Five steps, no setup',
   tutorialIntro:
@@ -560,7 +562,7 @@ const id: LandingCopy = {
   banner: 'Portaldot Hacker House 2026 · Check-in 22 Okt 2026 · Final / code freeze 6 Nov 2026, 11:00 WIB',
   stats: [
     { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · dikembalikan oleh eth_chainId' },
-    { value: '318', label: 'Test lolos', sub: '35 file · Vitest · suite terverifikasi 25 Okt 2026' },
+    { value: '319', label: 'Test lolos', sub: '36 file · Vitest · suite terverifikasi 25 Okt 2026' },
     {
       value: '38',
       label: 'Metode RPC diuji',
@@ -623,6 +625,7 @@ const id: LandingCopy = {
   checkObservedClient: 'string client, direkam di snapshot',
   reportSampleLabel: 'nodescope — diagnostic-report.v1',
   reportSampleRight: 'Sampel terpotong dari ekspor nyata',
+  typeReplay: 'Putar ulang ketikan',
   tutorialTitle: 'Tutorial',
   tutorialRight: 'Lima langkah, tanpa setup',
   tutorialIntro:

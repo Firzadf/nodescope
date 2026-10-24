@@ -453,6 +453,114 @@ function WordFill({ sentence }: { sentence: string }) {
 }
 
 
+/* ------------------------------ typewriter -------------------------------- */
+/**
+ * Typewriter for the report JSON sample in How It Works only. Types once
+ * when scrolled into view, then stops with the full text plus a replay
+ * button. Reduced motion shows the full text immediately. The visible
+ * block is aria-hidden; screen readers get the complete plain sample.
+ */
+const JSON_TOKENS: { t: string; c: string }[] = [
+  { t: "{", c: "text-slate-500" },
+  { t: "\n  ", c: "" },
+  { t: '"schema"', c: "text-slate-100" },
+  { t: ": ", c: "text-slate-500" },
+  { t: '"nodescope.diagnostic-report.v1"', c: "text-sky-300/90" },
+  { t: ",", c: "text-slate-500" },
+  { t: "\n  ", c: "" },
+  { t: '"endpoint"', c: "text-slate-100" },
+  { t: ": ", c: "text-slate-500" },
+  { t: '"https://test-evm-rpc-v3.portaldot.dev"', c: "text-sky-300/90" },
+  { t: ",", c: "text-slate-500" },
+  { t: "\n  ", c: "" },
+  { t: '"chainId"', c: "text-slate-100" },
+  { t: ": ", c: "text-slate-500" },
+  { t: '"0x190f1ca9 (420420777)"', c: "text-sky-300/90" },
+  { t: ",", c: "text-slate-500" },
+  { t: "\n  ", c: "" },
+  { t: '"summary"', c: "text-slate-100" },
+  { t: ": ", c: "text-slate-500" },
+  { t: '{ "total":', c: "text-slate-500" },
+  { t: " 13", c: "text-amber-200/90" },
+  { t: ', "success":', c: "text-slate-500" },
+  { t: " 13", c: "text-amber-200/90" },
+  { t: ', "errors":', c: "text-slate-500" },
+  { t: " 0 ", c: "text-amber-200/90" },
+  { t: "}", c: "text-slate-500" },
+  { t: ",", c: "text-slate-500" },
+  { t: "\n  ", c: "" },
+  { t: '"findings"', c: "text-slate-100" },
+  { t: ": ", c: "text-slate-500" },
+  { t: '[{ "ruleId":', c: "text-slate-500" },
+  { t: ' "chain-id-verified"', c: "text-sky-300/90" },
+  { t: ', "severity":', c: "text-slate-500" },
+  { t: ' "info" ', c: "text-sky-300/90" },
+  { t: "}]", c: "text-slate-500" },
+  { t: "\n", c: "" },
+  { t: "}", c: "text-slate-500" },
+];
+const JSON_TOTAL = JSON_TOKENS.reduce((a, tok) => a + tok.t.length, 0);
+const JSON_PLAIN = JSON_TOKENS.map((tok) => tok.t).join("");
+
+function TypewriterJson({ replayLabel }: { replayLabel: string }) {
+  const { ref, inView } = useInView<HTMLDivElement>(0.3);
+  const [count, setCount] = useState(0);
+  const [run, setRun] = useState(0);
+  const done = count >= JSON_TOTAL;
+  useEffect(() => {
+    if (typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setCount(JSON_TOTAL);
+      return;
+    }
+    if (!inView || done) return;
+    const id = window.setInterval(() => {
+      setCount((c) => {
+        const n = Math.min(JSON_TOTAL, c + 2);
+        if (n >= JSON_TOTAL) window.clearInterval(id);
+        return n;
+      });
+    }, 24);
+    return () => window.clearInterval(id);
+  }, [inView, run, done]);
+  let remaining = count;
+  const parts = [];
+  for (let i = 0; i < JSON_TOKENS.length && remaining > 0; i++) {
+    const tok = JSON_TOKENS[i];
+    const take = tok.t.slice(0, remaining);
+    parts.push(
+      <span key={i} className={tok.c}>
+        {take}
+      </span>,
+    );
+    remaining -= take.length;
+  }
+  return (
+    <div ref={ref}>
+      <pre aria-hidden="true" className="overflow-x-auto p-5 font-mono text-[12.5px] leading-relaxed text-slate-400">
+        <code>
+          {parts}
+          {inView && !done ? <span className="animate-pulse text-sky-300">▍</span> : null}
+        </code>
+      </pre>
+      <pre className="sr-only">{JSON_PLAIN}</pre>
+      {done ? (
+        <div className="flex justify-end border-t border-line px-4 py-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              setCount(0);
+              setRun((r) => r + 1);
+            }}
+            className="font-data text-[11px] uppercase tracking-[0.16em] text-sky-300 hover:text-sky-200"
+          >
+            ↻ {replayLabel}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 /* ------------------------------ packet flow -------------------------------- */
 
 /**
@@ -748,17 +856,7 @@ export function Landing() {
                 <span className="font-data text-[11px] text-slate-400">{t.reportSampleLabel}</span>
                 <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">{t.reportSampleRight}</span>
               </div>
-              <pre className="overflow-x-auto p-5 font-mono text-[12.5px] leading-relaxed text-slate-400">
-                <code>
-                  <span className="text-slate-500">{'{'}</span>{'\n'}
-                  {'  '}<span className="text-slate-100">"schema"</span><span className="text-slate-500">:</span> <span className="text-sky-300/90">"nodescope.diagnostic-report.v1"</span><span className="text-slate-500">,</span>{'\n'}
-                  {'  '}<span className="text-slate-100">"endpoint"</span><span className="text-slate-500">:</span> <span className="text-sky-300/90">"https://test-evm-rpc-v3.portaldot.dev"</span><span className="text-slate-500">,</span>{'\n'}
-                  {'  '}<span className="text-slate-100">"chainId"</span><span className="text-slate-500">:</span> <span className="text-sky-300/90">"0x190f1ca9 (420420777)"</span><span className="text-slate-500">,</span>{'\n'}
-                  {'  '}<span className="text-slate-100">"summary"</span><span className="text-slate-500">:</span> <span className="text-slate-500">{'{ "total":'}</span> <span className="text-amber-200/90">13</span><span className="text-slate-500">, "success":</span> <span className="text-amber-200/90">13</span><span className="text-slate-500">, "errors":</span> <span className="text-amber-200/90">0</span> <span className="text-slate-500">{'}'}</span><span className="text-slate-500">,</span>{'\n'}
-                  {'  '}<span className="text-slate-100">"findings"</span><span className="text-slate-500">:</span> <span className="text-slate-500">[{'{ "ruleId":'}</span> <span className="text-sky-300/90">"chain-id-verified"</span><span className="text-slate-500">, "severity":</span> <span className="text-sky-300/90">"info"</span> <span className="text-slate-500">{'}]'}</span>{'\n'}
-                  <span className="text-slate-500">{'}'}</span>
-                </code>
-              </pre>
+              <TypewriterJson replayLabel={t.typeReplay} />
             </div>
           </Reveal>
         </div>
