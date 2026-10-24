@@ -324,7 +324,7 @@ export function SessionTrendsPanel({ snapshots }: SessionTrendsPanelProps) {
             </span>
           </div>
           <div className="overflow-x-auto border border-line rounded-lg">
-            <table className="w-full text-left text-xs border-collapse">
+            <table className="premium-table w-full text-left text-xs border-collapse">
               <thead className="bg-slate-900 border-b border-line text-slate-400 uppercase text-[10px]">
                 <tr>
                   <th className="p-2.5">Method</th>

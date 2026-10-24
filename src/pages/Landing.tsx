@@ -457,6 +457,41 @@ function WordFill({ sentence }: { sentence: string }) {
   );
 }
 
+
+/* ------------------------------ packet flow -------------------------------- */
+
+/**
+ * Packet flow: three dots travelling from YOU to NODE to RECEIPT along one
+ * line, labelled with real method names. Pure decoration: it carries no live
+ * data, no block height, and no result, and the caption says so.
+ */
+function PacketFlow() {
+  return (
+    <div aria-hidden="true" className="mb-6 overflow-hidden rounded-[20px] border border-line bg-panel/70 px-6 py-5">
+      <svg viewBox="0 0 600 60" preserveAspectRatio="none" className="h-[60px] w-full">
+        <path d="M 20 30 H 580" fill="none" stroke="#1e293b" strokeWidth="1" />
+        <circle r="3" fill="#0181FB">
+          <animateMotion dur="6s" repeatCount="indefinite" path="M 20 30 H 580" />
+        </circle>
+        <circle r="3" fill="#38bdf8">
+          <animateMotion dur="8s" begin="1s" repeatCount="indefinite" path="M 20 30 H 580" />
+        </circle>
+        <circle r="3" fill="#34d399">
+          <animateMotion dur="10s" begin="2s" repeatCount="indefinite" path="M 20 30 H 580" />
+        </circle>
+      </svg>
+      <div className="flex justify-between font-data text-[10px] uppercase tracking-[0.2em] text-slate-500">
+        <span>You</span>
+        <span className="text-slate-400">eth_chainId · eth_blockNumber · net_version</span>
+        <span>Receipt</span>
+      </div>
+      <p className="mt-2 text-center font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">
+        Decorative flow · carries no live data
+      </p>
+    </div>
+  );
+}
+
 /* ---------------------------------- page ---------------------------------- */
 
 export function Landing() {
@@ -548,6 +583,7 @@ export function Landing() {
             <span aria-hidden="true" className="absolute -right-2 -top-2 font-data text-sm text-[#0181FB]">+</span>
             <LiveReadout />
             <div className="relative z-10 mx-3 -mt-3">
+              <div aria-hidden="true" className="scan-line pointer-events-none absolute inset-x-0 top-0 z-20 h-16" />
               <figure className="hero-media overflow-hidden rounded-[24px] border border-line bg-panel shadow-[0_32px_90px_rgba(0,0,0,0.55),0_0_60px_rgba(1,129,251,0.12)] transition-transform duration-500 [transform:perspective(1200px)_rotateY(-6deg)_rotateX(1.5deg)] hover:[transform:perspective(1200px)_rotateY(0deg)_rotateX(0deg)]" style={{ transitionTimingFunction: 'var(--ease-out)' }}>
                 <img src="/screenshots/03-snapshot-comparison.png" alt="NodeScope snapshot comparison in a real session" className="aspect-[16/9] w-full object-cover object-top" />
                 <figcaption className="border-t border-line bg-black/30 px-4 py-2.5 font-data text-[10px] uppercase tracking-[0.16em] text-slate-500">
@@ -613,7 +649,18 @@ export function Landing() {
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading title="How It Works" right="Three steps, no setup" />
-            <div className="overflow-hidden rounded-xl border border-line">
+            <PacketFlow />
+            <div className="relative overflow-hidden rounded-[20px] border border-line">
+              <div aria-hidden="true" className="absolute bottom-6 left-[27px] top-6 w-px bg-line" />
+              <div aria-hidden="true" className="probe-bot absolute left-[14px] top-0 z-10">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                  <path d="M14 2 L25 8.5 V19.5 L14 26 L3 19.5 V8.5 Z" fill="#0b1220" stroke="#0181FB" strokeWidth="1.5" />
+                  <circle cx="14" cy="14" r="3" fill="#0181FB">
+                    <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" />
+                  </circle>
+                  <path d="M14 2 V0" stroke="#0181FB" strokeWidth="1.5" />
+                </svg>
+              </div>
               {[
                 { n: '01', title: 'Connect & check', body: 'Point NodeScope at any Portaldot V3 EVM endpoint. A health check runs the core JSON-RPC methods and records the result as a structured snapshot.' },
                 { n: '02', title: 'Snapshot', body: 'Snapshots are timestamped observations — block height, chain ID, client version, latency, per-method outcomes — stored for the session, up to 20.' },
@@ -678,7 +725,7 @@ export function Landing() {
             </div>
           </Reveal>
           <Reveal delay={100}>
-            <div className="mt-6 overflow-hidden rounded-xl border border-line">
+            <div className="mt-6 overflow-hidden rounded-[20px] border border-line shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-line bg-panel font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">
@@ -689,18 +736,36 @@ export function Landing() {
                 </thead>
                 <tbody className="divide-y divide-line bg-panel/60 text-sm">
                   {[
-                    { cap: 'Trends & verdict', what: 'Across a session of snapshots: per-method latency trends, block progression with stall and regression findings, and a deterministic verdict whose rules are printed with their evidence.', proof: 'Needs ≥2 health checks · rules shown, no score' },
-                    { cap: 'Capability discovery', what: 'Probes 38 JSON-RPC methods; an unsupported answer is reported as data, never dressed up as success.', proof: '7 supported on Portaldot V3 EVM' },
-                    { cap: 'RPC console', what: 'Run any method by hand — presets, custom params, and evidence badges drawn from your own run history.', proof: 'User-triggered only · nothing polls' },
-                    { cap: 'Diagnostic reports', what: 'Every run folds into one shareable JSON report with categorized findings and recommendations.', proof: 'Schema nodescope.diagnostic-report.v1' },
-                    { cap: 'Combined verdict', what: 'The latest EVM health snapshot and the Substrate WebSocket probe, read together in one panel — with each number shown with its own timestamp, and the two counters never subtracted from each other.', proof: 'Panel 07 in Overview · both transports, no score' },
-                    { cap: 'Report verification', what: 'Exports are stamped with SHA-256 over a canonical form of the report. Anyone can drop the file back into NodeScope and check the stamp — changing any value in the file breaks it.', proof: 'Verify in History, or at /verify · no server, no account, no wallet' },
-                    { cap: 'Command palette', what: '⌘K drives navigation, connection, health checks, diagnostics, and copying evidence — keyboard first.', proof: 'Press ⌘K inside the app' },
-                  ].map((r) => (
-                    <tr key={r.cap} className="transition-colors hover:bg-white/[0.03]">
-                      <td className="px-5 py-4 font-data text-[13px] font-medium text-white">{r.cap}</td>
+                    { cap: 'Trends & verdict', tone: 'amber', what: 'Across a session of snapshots: per-method latency trends, block progression with stall and regression findings, and a deterministic verdict whose rules are printed with their evidence.', proof: 'Needs ≥2 health checks · rules shown, no score' },
+                    { cap: 'Capability discovery', tone: 'sky', what: 'Probes 38 JSON-RPC methods; an unsupported answer is reported as data, never dressed up as success.', proof: '7 supported on Portaldot V3 EVM' },
+                    { cap: 'RPC console', tone: 'slate', what: 'Run any method by hand — presets, custom params, and evidence badges drawn from your own run history.', proof: 'User-triggered only · nothing polls' },
+                    { cap: 'Diagnostic reports', tone: 'sky', what: 'Every run folds into one shareable JSON report with categorized findings and recommendations.', proof: 'Schema nodescope.diagnostic-report.v1' },
+                    { cap: 'Combined verdict', tone: 'emerald', what: 'The latest EVM health snapshot and the Substrate WebSocket probe, read together in one panel — with each number shown with its own timestamp, and the two counters never subtracted from each other.', proof: 'Panel 07 in Overview · both transports, no score' },
+                    { cap: 'Report verification', tone: 'emerald', what: 'Exports are stamped with SHA-256 over a canonical form of the report. Anyone can drop the file back into NodeScope and check the stamp — changing any value in the file breaks it.', proof: 'Verify in History, or at /verify · no server, no account, no wallet' },
+                    { cap: 'Command palette', tone: 'slate', what: '⌘K drives navigation, connection, health checks, diagnostics, and copying evidence — keyboard first.', proof: 'Press ⌘K inside the app' },
+                  ].map((r, i) => (
+                    <tr key={r.cap} className="group transition-colors hover:bg-white/[0.03]">
+                      <td className="relative px-5 py-4 font-data text-[13px] font-medium text-white">
+                        <span aria-hidden="true" className="absolute left-0 top-0 h-full w-[3px] bg-[#0181FB] opacity-0 transition-opacity group-hover:opacity-100" />
+                        <span className="mr-3 text-slate-600">0{i + 1}</span>
+                        {r.cap}
+                      </td>
                       <td className="hidden max-w-md px-5 py-4 leading-relaxed text-slate-400 md:table-cell">{r.what}</td>
-                      <td className="px-5 py-4 font-data text-[12px] text-slate-300">{r.proof}</td>
+                      <td className="px-5 py-4">
+                        <span
+                          className={`inline-block rounded-full border px-2.5 py-1 font-data text-[11px] ${
+                            r.tone === 'emerald'
+                              ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                              : r.tone === 'amber'
+                                ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
+                                : r.tone === 'sky'
+                                  ? 'border-sky-500/40 bg-sky-500/10 text-sky-300'
+                                  : 'border-line bg-white/[0.03] text-slate-300'
+                          }`}
+                        >
+                          {r.proof}
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -722,7 +787,7 @@ export function Landing() {
                 END-TO-END IN ONE SESSION — THE CHAIN DIDN&apos;T PAUSE FOR US
               </p>
             </div>
-            <div className="mt-6 overflow-hidden rounded-xl border border-line">
+            <div className="mt-6 overflow-hidden rounded-[20px] border border-line shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-line bg-panel font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">
@@ -735,12 +800,22 @@ export function Landing() {
                   {[
                     { block: '133,242', label: 'First recorded observation', when: 'Oct 2026' },
                     { block: '143,764', label: 'Demo Snapshot A', when: '22 Oct 2026 · 15:48 WIB' },
-                    { block: '143,776', label: 'Demo Snapshot B — delta +12', when: '22 Oct 2026 · 15:49 WIB' },
-                    { block: '147,639', label: 'QA session — delta +1 in 7 seconds', when: '22 Oct 2026 · 22:16 WIB' },
+                    { block: '143,776', label: 'Demo Snapshot B', delta: '+12', when: '22 Oct 2026 · 15:49 WIB' },
+                    { block: '147,639', label: 'QA session', delta: '+1 in 7s', when: '22 Oct 2026 · 22:16 WIB' },
                   ].map((r) => (
-                    <tr key={r.block} className="transition-colors hover:bg-white/[0.03]">
-                      <td className="px-5 py-3.5 font-semibold text-white">{r.block}</td>
-                      <td className="px-5 py-3.5 text-slate-300">{r.label}</td>
+                    <tr key={r.block} className="group transition-colors hover:bg-white/[0.03]">
+                      <td className="relative px-5 py-3.5 font-semibold text-white">
+                        <span aria-hidden="true" className="absolute left-0 top-0 h-full w-[3px] bg-[#0181FB] opacity-0 transition-opacity group-hover:opacity-100" />
+                        {r.block}
+                      </td>
+                      <td className="px-5 py-3.5 text-slate-300">
+                        {r.label}
+                        {'delta' in r && r.delta ? (
+                          <span className="ml-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-300">
+                            Δ {r.delta}
+                          </span>
+                        ) : null}
+                      </td>
                       <td className="hidden px-5 py-3.5 text-slate-500 md:table-cell">{r.when}</td>
                     </tr>
                   ))}
@@ -759,9 +834,9 @@ export function Landing() {
                   key={s.src}
                   type="button"
                   onClick={() => setLightbox(i)}
-                  className={`group overflow-hidden rounded-xl border border-line bg-panel text-left transition-colors hover:border-slate-500/40 ${i === 0 ? 'col-span-2 lg:col-span-1' : ''}`}
+                  className={`group overflow-hidden rounded-[20px] border border-line bg-panel text-left shadow-[0_20px_50px_rgba(0,0,0,0.35)] transition-all duration-300 hover:-translate-y-1 hover:border-slate-500/40 hover:shadow-[0_28px_70px_rgba(0,0,0,0.5)] ${i === 0 ? 'col-span-2 lg:col-span-1' : ''}`}
                 >
-                  <img src={s.src} alt={s.caption} className="aspect-[16/10] w-full object-cover object-top opacity-90 transition-opacity group-hover:opacity-100" loading="lazy" />
+                  <img src={s.src} alt={s.caption} className="aspect-[16/10] w-full object-cover object-top opacity-90 transition-all duration-500 group-hover:scale-[1.03] group-hover:opacity-100" loading="lazy" />
                   <span className="block px-4 py-3 font-data text-[11px] uppercase tracking-[0.14em] text-slate-400">{s.caption}</span>
                 </button>
               ))}
@@ -791,8 +866,12 @@ export function Landing() {
                 { label: 'Testnet · WebSocket Node', href: 'https://x.com/Portaldot_Dev/status/2113571130527318088', note: 'Probed by NodeScope as wss://test-node-v3.portaldot.dev · endpoint list by @Portaldot_Dev' },
                 { label: 'Testnet · Block Explorer', href: 'https://scanner-testnet-v3.portaldot.dev/', note: 'Substrate testnet explorer' },
               ].map((link) => (
-                <a key={link.label} href={link.href} target="_blank" rel="noreferrer" className="block bg-panel/70 p-6 transition-colors hover:bg-panel">
-                  <p className="font-data text-[11px] uppercase tracking-[0.16em] text-sky-300">{link.label}</p>
+                <a key={link.label} href={link.href} target="_blank" rel="noreferrer" className="group relative block bg-panel/70 p-6 transition-colors hover:bg-panel">
+                  <span aria-hidden="true" className="absolute left-0 top-0 h-[2px] w-full bg-[#0181FB] opacity-0 transition-opacity group-hover:opacity-100" />
+                  <p className="flex items-center justify-between font-data text-[11px] uppercase tracking-[0.16em] text-sky-300">
+                    {link.label}
+                    <span aria-hidden="true" className="opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100">↗</span>
+                  </p>
                   <p className="mt-2 break-all font-data text-xs text-slate-300">{link.href}</p>
                   <p className="mt-1.5 text-xs text-slate-500">{link.note}</p>
                 </a>
@@ -817,7 +896,8 @@ export function Landing() {
                 { title: 'Multi-Endpoint Comparison', status: 'shipped' as const, body: 'Health snapshots from different endpoints, compared side by side — with comparability discipline: matching chain IDs earn a caveated block delta, different chains are declared not comparable instead of subtracted, and method-support and client differences surface as findings. (Not a watchlist — nothing is monitored in the background; you bring the snapshots.)' },
                 { title: 'Portaldot Mainnet Profile', status: 'shipped' as const, body: 'Mainnet V3 is live since 24 Oct 2026, 06:00 WIB, but no public mainnet EVM RPC is published yet, so NodeScope does not fake a mainnet check. The Mainnet Profile page at /mainnet links the official console, explorer, and bridge and states that absence plainly, and the same snapshot and evidence engine is ready the day a mainnet RPC is published.' },
               ].map((r) => (
-                <div key={r.title} className="bg-panel/70 p-6">
+                <div key={r.title} className="relative bg-panel/70 p-6 pl-16">
+                  <span aria-hidden="true" className="absolute left-[20px] top-7 h-[14px] w-[14px] rounded-full border-2 border-[#0181FB] bg-deep" />
                   {r.status === 'shipped' ? (
                     <span className="inline-flex items-center gap-2 font-data text-[11px] uppercase tracking-[0.16em] text-emerald-300">
                       <span className="h-2 w-2 bg-emerald-400" />

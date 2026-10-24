@@ -112,7 +112,7 @@ export function HistoryList({ history, onSelect, onClear }: HistoryListProps) {
           aria-label={`Receipt for ${detail.request.method}`}
         >
           <div
-            className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-line bg-panel p-5"
+            className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-[20px] border border-line bg-panel p-5 shadow-[0_40px_90px_rgba(0,0,0,0.6)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-3">

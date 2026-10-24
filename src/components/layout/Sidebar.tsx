@@ -1,4 +1,4 @@
-import { Activity, Terminal, Clock, Search, ShieldCheck, Globe, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Activity, Terminal, Clock, Search, ShieldCheck, Globe, Home, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 type NavItem = {
   id: string;
@@ -23,9 +23,19 @@ interface SidebarProps {
 export function Sidebar({ activeSection, onSectionChange, onOpenPalette, collapsed = false, onToggleCollapse }: SidebarProps) {
   const width = collapsed ? 'w-16' : 'w-64';
   const ToggleIcon = collapsed ? PanelLeftOpen : PanelLeftClose;
+  // Collapsed geometry: every row is the same centered 40x40 square, so all
+  // icons share one exact centre (32px in a 64px sidebar). The old code kept
+  // the expanded px-3 wrapper plus px-3.5 button padding, which pushed the
+  // toggle 4px left and the nav icons 3px right of centre, and mixed 16px
+  // and 18px icons, which is why the collapsed column looked off-centre.
+  const row = collapsed
+    ? 'mx-auto flex h-10 w-10 items-center justify-center rounded-lg'
+    : 'flex w-full items-center gap-3 px-3.5 py-2.5 rounded-lg';
+  const rowWrap = collapsed ? 'px-0 space-y-1.5' : 'px-3 space-y-1.5';
+  const smallIcon = collapsed ? 'h-[18px] w-[18px]' : 'h-4 w-4';
   return (
     <aside className={`${width} bg-deep border-r border-line min-h-screen flex flex-col shrink-0 transition-[width] duration-200`}>
-      <div className="flex items-center justify-between px-3 pt-5 pb-2">
+      <div className={`flex items-center pt-5 pb-2 ${collapsed ? 'justify-center px-0' : 'justify-between px-3'}`}>
         {!collapsed && <p className="px-2 font-data text-[10px] uppercase tracking-[0.24em] text-slate-600">Workspace</p>}
         {onToggleCollapse && (
           <button
@@ -34,20 +44,20 @@ export function Sidebar({ activeSection, onSectionChange, onOpenPalette, collaps
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             aria-expanded={!collapsed}
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className="btn-ghost flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+            className={`btn-ghost flex shrink-0 items-center justify-center rounded-lg ${collapsed ? 'h-10 w-10' : 'h-8 w-8'}`}
           >
-            <ToggleIcon className="h-4 w-4" />
+            <ToggleIcon className={smallIcon} />
           </button>
         )}
       </div>
-      <div className="px-3 pb-3">
+      <div className={collapsed ? 'flex justify-center px-0 pb-3' : 'px-3 pb-3'}>
         <button
           type="button"
           onClick={onOpenPalette}
           title="Jump to… (⌘K)"
-          className="flex w-full items-center gap-2.5 rounded-lg border border-line bg-white/[0.02] px-3.5 py-2.5 text-sm text-slate-400 transition-colors hover:border-slate-500/50 hover:text-slate-200"
+          className={`${row} border border-line bg-white/[0.02] text-sm text-slate-400 transition-colors hover:border-slate-500/50 hover:text-slate-200`}
         >
-          <Search className="h-4 w-4 shrink-0" />
+          <Search className={`${smallIcon} shrink-0`} />
           {!collapsed && (
             <>
               Jump to…
@@ -56,7 +66,7 @@ export function Sidebar({ activeSection, onSectionChange, onOpenPalette, collaps
           )}
         </button>
       </div>
-      <nav className="px-3 space-y-1.5">
+      <nav className={rowWrap}>
         {navItems.map((item, i) => {
           const Icon = item.icon;
           const isActive = activeSection === item.id;
@@ -65,9 +75,9 @@ export function Sidebar({ activeSection, onSectionChange, onOpenPalette, collaps
               key={item.id}
               onClick={() => onSectionChange(item.id)}
               title={item.label}
-              className={`relative w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm transition-colors ${
+              className={`relative ${row} text-sm transition-colors ${
                 isActive
-                  ? 'bg-white/[0.06] text-white font-medium'
+                  ? 'bg-white/[0.06] text-white font-medium shadow-[0_0_20px_rgba(1,129,251,0.15)]'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]'
               }`}
             >
@@ -93,11 +103,19 @@ export function Sidebar({ activeSection, onSectionChange, onOpenPalette, collaps
           <p className="font-data text-[10px] uppercase tracking-[0.24em] text-slate-600">Public pages</p>
         </div>
       )}
-      <nav className="px-3 space-y-1.5">
+      <nav className={rowWrap}>
+        <a
+          href="/"
+          title="Back to landing page"
+          className={`${row} text-sm text-slate-400 transition-colors hover:text-slate-200 hover:bg-white/[0.03]`}
+        >
+          <Home className="h-[18px] w-[18px] text-slate-500" />
+          {!collapsed && '← Landing page'}
+        </a>
         <a
           href="/verify"
           title="Verify a Report"
-          className="flex w-full items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm text-slate-400 transition-colors hover:text-slate-200 hover:bg-white/[0.03]"
+          className={`${row} text-sm text-slate-400 transition-colors hover:text-slate-200 hover:bg-white/[0.03]`}
         >
           <ShieldCheck className="h-[18px] w-[18px] text-slate-500" />
           {!collapsed && 'Verify a Report'}
@@ -105,7 +123,7 @@ export function Sidebar({ activeSection, onSectionChange, onOpenPalette, collaps
         <a
           href="/mainnet"
           title="Mainnet Profile"
-          className="flex w-full items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm text-slate-400 transition-colors hover:text-slate-200 hover:bg-white/[0.03]"
+          className={`${row} text-sm text-slate-400 transition-colors hover:text-slate-200 hover:bg-white/[0.03]`}
         >
           <Globe className="h-[18px] w-[18px] text-slate-500" />
           {!collapsed && 'Mainnet Profile'}

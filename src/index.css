@@ -400,6 +400,33 @@ select {
   }
 }
 
+.scan-line {
+  background: linear-gradient(to bottom, transparent, rgba(1, 129, 251, 0.28), transparent);
+  animation: scan-sweep 7s ease-in-out infinite;
+}
+@keyframes scan-sweep {
+  0% { transform: translateY(0); opacity: 0; }
+  12% { opacity: 1; }
+  55% { transform: translateY(340px); opacity: 1; }
+  100% { transform: translateY(340px); opacity: 0; }
+}
+
+.probe-bot {
+  animation: probe-travel 16s ease-in-out infinite alternate;
+}
+@keyframes probe-travel {
+  from { top: 8px; }
+  to { top: calc(100% - 36px); }
+}
+
+/* App tables: same hover accent as the landing tables. */
+.premium-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+.premium-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* Reveals land in their final state immediately — content is never hidden. */
   .reveal {
@@ -460,5 +487,10 @@ select {
   }
   .hero-media {
     animation: none;
+  }
+  .scan-line,
+  .probe-bot {
+    animation: none;
+    display: none;
   }
 }

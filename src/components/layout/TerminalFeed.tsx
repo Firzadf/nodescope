@@ -17,7 +17,7 @@ export function TerminalFeed({ history }: TerminalFeedProps) {
   const latest = history.slice(0, 8);
 
   return (
-    <section aria-label="Session terminal" className="border-t border-line bg-deep">
+    <section aria-label="Session terminal" className="border-t border-line bg-deep shadow-[0_-12px_40px_rgba(0,0,0,0.3)]">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
