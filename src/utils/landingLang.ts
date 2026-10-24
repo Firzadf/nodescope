@@ -135,6 +135,7 @@ export interface LandingCopy {
   reportSampleLabel: string;
   reportSampleRight: string;
   typeReplay: string;
+  backToTop: string;
   tutorialTitle: string;
   tutorialRight: string;
   tutorialIntro: string;
@@ -232,7 +233,7 @@ const en: LandingCopy = {
   banner: 'Portaldot Hacker House 2026 · Check-in 22 Oct 2026 · Final / code freeze 6 Nov 2026, 11:00 WIB',
   stats: [
     { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · returned by eth_chainId' },
-    { value: '319', label: 'Tests passing', sub: '36 files · Vitest · suite verified 25 Oct 2026' },
+    { value: '320', label: 'Tests passing', sub: '37 files · Vitest · suite verified 25 Oct 2026' },
     {
       value: '38',
       label: 'RPC methods probed',
@@ -297,6 +298,7 @@ const en: LandingCopy = {
   reportSampleLabel: 'nodescope — diagnostic-report.v1',
   reportSampleRight: 'Trimmed sample of a real export',
   typeReplay: 'Replay typing',
+  backToTop: 'Back to top',
   tutorialTitle: 'Tutorial',
   tutorialRight: 'Five steps, no setup',
   tutorialIntro:
@@ -562,7 +564,7 @@ const id: LandingCopy = {
   banner: 'Portaldot Hacker House 2026 · Check-in 22 Okt 2026 · Final / code freeze 6 Nov 2026, 11:00 WIB',
   stats: [
     { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · dikembalikan oleh eth_chainId' },
-    { value: '319', label: 'Test lolos', sub: '36 file · Vitest · suite terverifikasi 25 Okt 2026' },
+    { value: '320', label: 'Test lolos', sub: '37 file · Vitest · suite terverifikasi 25 Okt 2026' },
     {
       value: '38',
       label: 'Metode RPC diuji',
@@ -626,6 +628,7 @@ const id: LandingCopy = {
   reportSampleLabel: 'nodescope — diagnostic-report.v1',
   reportSampleRight: 'Sampel terpotong dari ekspor nyata',
   typeReplay: 'Putar ulang ketikan',
+  backToTop: 'Kembali ke atas',
   tutorialTitle: 'Tutorial',
   tutorialRight: 'Lima langkah, tanpa setup',
   tutorialIntro:

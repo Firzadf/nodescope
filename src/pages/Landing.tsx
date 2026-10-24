@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Activity, ArrowRight, ArrowUpRight, Pause, Play, X } from 'lucide-react';
 import { sendJsonRpcRequest } from '../services/rpcClient';
+import { BackToTop } from '../components/BackToTop';
 import { DEFAULT_PORTALDOT_V3_EVM_RPC } from '../types/endpoint';
 import { landingCopy, readStoredLang, storeLang, type Lang } from '../utils/landingLang';
 
@@ -1264,6 +1265,7 @@ export function Landing() {
           </figure>
         </div>
       )}
+      <BackToTop label={t.backToTop} />
     </div>
   );
 }

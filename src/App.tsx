@@ -3,6 +3,7 @@ import { Header } from './components/layout/Header';
 import { CommandPalette, type PaletteCommand } from './components/common/CommandPalette';
 import { Sidebar } from './components/layout/Sidebar';
 import { TerminalFeed } from './components/layout/TerminalFeed';
+import { BackToTop } from './components/BackToTop';
 import { Overview } from './components/dashboard/Overview';
 import { EndpointConfig } from './components/dashboard/EndpointConfig';
 import { RpcConsole } from './components/diagnostics/RpcConsole';
@@ -376,6 +377,7 @@ function App() {
         </div>
       </footer>
       <CommandPalette open={paletteOpen} commands={paletteCommands} onClose={() => setPaletteOpen(false)} />
+      <BackToTop label="Back to top" />
     </div>
   );
 }
