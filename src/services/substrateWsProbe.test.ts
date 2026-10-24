@@ -42,6 +42,19 @@ describe('probeSubstrateWs', () => {
     expect(result.totalMs).not.toBeNull();
   });
 
+  it('rejects a plaintext ws:// URL to a remote host without opening a connection', async () => {
+    let opened = false;
+    const result = await probeSubstrateWs('ws://node.example.com', {
+      wsFactory: () => {
+        opened = true;
+        return fakeWs({});
+      },
+    });
+    expect(opened).toBe(false);
+    expect(result.status).toBe('error');
+    expect(result.error).toContain('wss://');
+  });
+
   it('reports a node error instead of pretending the probe succeeded', async () => {
     const ws = fakeWs({ 1: { peers: 1, isSyncing: false, shouldHavePeers: true } });
     const result = await probeSubstrateWs('wss://example.invalid', {

@@ -72,6 +72,20 @@ export async function probeSubstrateWs(
     headerNumberDecimal: null,
   };
 
+  // Hardening from the REA self-audit: a Substrate probe must not run over
+  // plaintext ws:// to a remote host, where the query and answers travel
+  // unencrypted. The only plaintext exception is a local node, where there
+  // is no network hop to intercept.
+  try {
+    const parsed = new URL(url);
+    const isLocal = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname === '[::1]';
+    if (parsed.protocol !== 'wss:' && !(parsed.protocol === 'ws:' && isLocal)) {
+      return { ...base, status: 'error', error: 'Only wss:// URLs are accepted for a Substrate probe, except ws:// on localhost.' };
+    }
+  } catch {
+    return { ...base, status: 'error', error: 'The WebSocket URL is not valid.' };
+  }
+
   const factory: WsFactory | undefined = options.wsFactory
     ?? (typeof WebSocket !== 'undefined'
       ? () => new WebSocket(url) as unknown as WebSocketLike
