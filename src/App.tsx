@@ -25,6 +25,7 @@ import { getHealthSnapshots, saveHealthSnapshot } from './services/healthSnapsho
 import { runHealthCheck } from './services/healthCheckRunner';
 import type { SubstrateWsProbeResult } from './services/substrateWsProbe';
 import { loadWsProbe, saveWsProbe, loadCapability, saveCapability } from './services/sessionRestore';
+import { initialSidebarCollapsed } from './utils/sidebarState';
 
 const initialMetricsDetailed: NodeMetricsDetailed = {
   latency: { status: 'not_tested', value: null },
@@ -50,13 +51,7 @@ function App() {
   const [probeRestoredAt, setProbeRestoredAt] = useState<number | null>(() => loadWsProbe(endpoint)?.storedAt ?? null);
   const [isHealthChecking, setIsHealthChecking] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    try {
-      return sessionStorage.getItem('nodescope-sidebar-collapsed') === '1';
-    } catch {
-      return false;
-    }
-  });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(initialSidebarCollapsed);
   const toggleSidebar = () => {
     setSidebarCollapsed((prev) => {
       const next = !prev;
