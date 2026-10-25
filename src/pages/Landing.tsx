@@ -427,7 +427,11 @@ function WordFill({ sentence }: { sentence: string }) {
       const el = ref.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      const p = (window.innerHeight * 0.85 - rect.top) / (rect.height + window.innerHeight * 0.3);
+      // Words finish lighting once the heading's center reaches mid-viewport:
+      // a fixed 35%-of-viewport scroll window, so a tall heading no longer
+      // needs to be scrolled far past before its last word clears.
+      const center = rect.top + rect.height / 2;
+      const p = (window.innerHeight * 0.85 - center) / (window.innerHeight * 0.35);
       setProgress(Math.min(1, Math.max(0, p)));
     };
     onScroll();
@@ -782,13 +786,6 @@ export function Landing() {
               <span aria-hidden="true" className="absolute -left-4 top-6 rounded-full border border-line bg-black/80 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-slate-200 shadow-lg">{t.heroChipEvm}</span>
               <span aria-hidden="true" className="absolute -right-3 bottom-12 rounded-full border border-line bg-black/80 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-slate-200 shadow-lg">{t.heroChipSchema}</span>
             </div>
-            <figure className="kiky-float absolute -bottom-8 left-2 z-20 w-28 md:w-36">
-              <span aria-hidden="true" className="kiky-ring absolute -inset-2 rounded-full" />
-              <img src="/kiky.png" alt={t.kikyAlt} className="relative w-full drop-shadow-[0_16px_32px_rgba(0,0,0,0.55)]" />
-              <figcaption className="relative mt-1 text-center font-data text-[9px] uppercase tracking-[0.18em] text-slate-400">
-                {t.kikyCaption}
-              </figcaption>
-            </figure>
           </div>
         </div>
       </section>

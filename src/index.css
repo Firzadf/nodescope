@@ -501,21 +501,6 @@ select {
   100% { transform: translateX(300%); opacity: 0; }
 }
 
-.kiky-float { animation: kiky-float 4s ease-in-out infinite; }
-@keyframes kiky-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-.kiky-ring {
-  border: 2px solid rgba(1, 129, 251, 0.55);
-  box-shadow: 0 0 24px rgba(1, 129, 251, 0.35);
-  animation: kiky-pulse 2.4s ease-in-out infinite;
-}
-@keyframes kiky-pulse {
-  0%, 100% { opacity: 0.55; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.06); }
-}
-
 @media (prefers-reduced-motion: reduce) {
   /* Reveals land in their final state immediately — content is never hidden. */
   .reveal {
@@ -581,10 +566,6 @@ select {
   .probe-bot {
     animation: none;
     display: none;
-  }
-  .kiky-float,
-  .kiky-ring {
-    animation: none;
   }
   .ribbon-orb,
   .ribbon-path,
