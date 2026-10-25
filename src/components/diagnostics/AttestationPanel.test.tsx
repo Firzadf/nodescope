@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { AttestationPanel } from './AttestationPanel';
 
 describe('AttestationPanel', () => {
@@ -22,6 +22,15 @@ describe('AttestationPanel', () => {
     );
     expect(screen.getByDisplayValue(/0x0bc787de4c634a55699e92d90b7280fffebdbcd557c4312044134e4df9dfa286/)).toBeInTheDocument();
     expect(screen.getByText(/Copy shareable verification link/i)).toBeInTheDocument();
+  });
+
+  it('explains why the verify button stays disabled for an invalid hash', () => {
+    const { container } = render(<AttestationPanel endpoint="https://test-evm-rpc-v3.portaldot.dev" />);
+    const scope = within(container);
+    const hashInput = scope.getByPlaceholderText('0x… (64 hex characters)');
+    fireEvent.change(hashInput, { target: { value: 'abc' } });
+    expect(scope.getByText(/Report hash must be 0x followed by 64 hexadecimal characters/i)).toBeInTheDocument();
+    expect(scope.getByRole('button', { name: /Verify anchor on chain/i })).toBeDisabled();
   });
 
   it('has no input field for a private key', () => {

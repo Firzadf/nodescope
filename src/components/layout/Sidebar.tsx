@@ -54,14 +54,14 @@ export function Sidebar({ activeSection, onSectionChange, onOpenPalette, collaps
         <button
           type="button"
           onClick={onOpenPalette}
-          title="Jump to… (⌘K)"
+          title={`Jump to… (${typeof navigator !== 'undefined' && /Mac|iPhone/.test(navigator.platform) ? '⌘K' : 'Ctrl+K'})`}
           className={`${row} border border-line bg-white/[0.02] text-sm text-slate-400 transition-colors hover:border-slate-500/50 hover:text-slate-200`}
         >
           <Search className={`${smallIcon} shrink-0`} />
           {!collapsed && (
             <>
               Jump to…
-              <kbd className="ml-auto shrink-0 rounded border border-line px-1.5 py-0.5 font-data text-[10px] text-slate-500">⌘K</kbd>
+              <kbd className="ml-auto shrink-0 rounded border border-line px-1.5 py-0.5 font-data text-[10px] text-slate-500">{typeof navigator !== 'undefined' && /Mac|iPhone/.test(navigator.platform) ? '⌘K' : 'Ctrl+K'}</kbd>
             </>
           )}
         </button>

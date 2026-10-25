@@ -13,10 +13,10 @@ import {
  * check in NodeScope: no polling, no background connection.
  * The transport matters: this endpoint speaks Substrate methods, not eth_*.
  */
-export function SubstrateWsProbePanel({ onResult }: { onResult?: (result: SubstrateWsProbeResult) => void } = {}) {
+export function SubstrateWsProbePanel({ onResult, initialResult = null, restoredAt = null }: { onResult?: (result: SubstrateWsProbeResult) => void; initialResult?: SubstrateWsProbeResult | null; restoredAt?: number | null } = {}) {
   const [url, setUrl] = useState(DEFAULT_SUBSTRATE_WS_URL);
   const [running, setRunning] = useState(false);
-  const [result, setResult] = useState<SubstrateWsProbeResult | null>(null);
+  const [result, setResult] = useState<SubstrateWsProbeResult | null>(initialResult);
 
   const run = async () => {
     setRunning(true);
@@ -69,6 +69,11 @@ export function SubstrateWsProbePanel({ onResult }: { onResult?: (result: Substr
         </div>
         {result && (
           <div className="bg-black/25 border border-line rounded-lg p-4 text-sm space-y-2">
+            {restoredAt !== null && (
+              <p className="text-[11px] text-slate-500">
+                Restored from previous session · {new Date(restoredAt).toLocaleString()} · re-run Probe WSS Node for a fresh result.
+              </p>
+            )}
             <p className={result.status === 'ok' ? 'text-emerald-400 font-medium' : 'text-red-400 font-medium'}>
               {result.status === 'ok' ? 'Node answered over WebSocket' : `Probe failed: ${result.error ?? 'Unknown error'}`}
             </p>

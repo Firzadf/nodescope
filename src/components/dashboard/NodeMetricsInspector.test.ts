@@ -46,8 +46,8 @@ describe('defaultClientVersionMethodForProfile', () => {
 });
 
 describe('hasPeerCountSupport', () => {
-  it('returns false for portaldot_v3_evm profile', () => {
-    expect(hasPeerCountSupport('portaldot_v3_evm')).toBe(false);
+  it('returns true for portaldot_v3_evm profile (net_peerCount works on the V3 EVM RPC)', () => {
+    expect(hasPeerCountSupport('portaldot_v3_evm')).toBe(true);
   });
 
   it('returns true for generic_http profile', () => {
@@ -56,8 +56,8 @@ describe('hasPeerCountSupport', () => {
 });
 
 describe('defaultPeerMethodForProfile', () => {
-  it('returns null for portaldot_v3_evm profile', () => {
-    expect(defaultPeerMethodForProfile('portaldot_v3_evm')).toBeNull();
+  it('returns net_peerCount for portaldot_v3_evm profile', () => {
+    expect(defaultPeerMethodForProfile('portaldot_v3_evm')).toBe('net_peerCount');
   });
 
   it('returns system_health for generic_http profile', () => {

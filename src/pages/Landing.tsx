@@ -1214,7 +1214,7 @@ export function Landing() {
                           {label}
                         </a>
                       ) : (
-                        <span className="text-slate-400">{label}</span>
+                        <span className="text-slate-500">{label}</span>
                       )}
                     </li>
                   ))}

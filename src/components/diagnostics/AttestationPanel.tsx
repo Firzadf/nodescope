@@ -132,6 +132,11 @@ export function AttestationPanel({
               placeholder={extracted || '0x… (64 hex characters)'}
               className="mt-1.5 w-full rounded-lg border border-line bg-black/25 px-3 py-2 font-data text-xs text-slate-200"
             />
+            {reportHash.trim() && !isReportHash(reportHash.trim()) && (
+              <p className="mt-1.5 text-xs text-amber-400">
+                Report hash must be 0x followed by 64 hexadecimal characters. The verify button stays disabled until all three fields are valid.
+              </p>
+            )}
           </label>
           <label className="block">
             <span className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">Registry contract address</span>
@@ -141,6 +146,11 @@ export function AttestationPanel({
               placeholder="0x… (deployed NodeScopeAttestation)"
               className="mt-1.5 w-full rounded-lg border border-line bg-black/25 px-3 py-2 font-data text-xs text-slate-200"
             />
+            {contractAddress.trim() && !isAddress(contractAddress.trim()) && (
+              <p className="mt-1.5 text-xs text-amber-400">
+                Contract address must be a valid 0x address. The verify button stays disabled until all three fields are valid.
+              </p>
+            )}
           </label>
         </div>
         <label className="block">
@@ -151,6 +161,11 @@ export function AttestationPanel({
             placeholder="0x…"
             className="mt-1.5 w-full rounded-lg border border-line bg-black/25 px-3 py-2 font-data text-xs text-slate-200"
           />
+          {txHash.trim() && !/^0x[0-9a-fA-F]{64}$/.test(txHash.trim()) && (
+            <p className="mt-1.5 text-xs text-amber-400">
+              Transaction hash must be 0x followed by 64 hexadecimal characters. The verify button stays disabled until all three fields are valid.
+            </p>
+          )}
         </label>
         {canCheck && (
           <div className="rounded-lg border border-line bg-black/25 p-3">

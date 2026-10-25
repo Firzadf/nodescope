@@ -24,6 +24,7 @@ import { getDiagnosticHistory, saveDiagnosticHistory, clearDiagnosticHistory } f
 import { getHealthSnapshots, saveHealthSnapshot } from './services/healthSnapshotStorage';
 import { runHealthCheck } from './services/healthCheckRunner';
 import type { SubstrateWsProbeResult } from './services/substrateWsProbe';
+import { loadWsProbe, saveWsProbe, loadCapability, saveCapability } from './services/sessionRestore';
 
 const initialMetricsDetailed: NodeMetricsDetailed = {
   latency: { status: 'not_tested', value: null },
@@ -42,9 +43,11 @@ function App() {
   const [evmConnectionDetails, setEvmConnectionDetails] = useState<EvmConnectionDetails | null>(null);
   const [history, setHistory] = useState<DiagnosticHistoryItem[]>(() => getDiagnosticHistory());
   const [metricsDetailed, setMetricsDetailed] = useState<NodeMetricsDetailed>(initialMetricsDetailed);
-  const [capabilitySnapshot, setCapabilitySnapshot] = useState<CapabilitySnapshot | null>(null); // Lift capability snapshot state
+  const [capabilitySnapshot, setCapabilitySnapshot] = useState<CapabilitySnapshot | null>(() => loadCapability(endpoint)?.snapshot ?? null); // Lift capability snapshot state
+  const [capabilityRestoredAt, setCapabilityRestoredAt] = useState<number | null>(() => loadCapability(endpoint)?.storedAt ?? null);
   const [healthSnapshots, setHealthSnapshots] = useState<HealthCheckSnapshot[]>(() => getHealthSnapshots());
-  const [wsProbeResult, setWsProbeResult] = useState<SubstrateWsProbeResult | null>(null);
+  const [wsProbeResult, setWsProbeResult] = useState<SubstrateWsProbeResult | null>(() => loadWsProbe(endpoint)?.result ?? null);
+  const [probeRestoredAt, setProbeRestoredAt] = useState<number | null>(() => loadWsProbe(endpoint)?.storedAt ?? null);
   const [isHealthChecking, setIsHealthChecking] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -156,6 +159,24 @@ function App() {
   }, [healthSnapshots]);
 
   const isConnected = connectionStatus === 'connected';
+  // Session restore wrappers: a fresh run replaces restored data and is
+  // saved for the next reload; a null (e.g. endpoint change clearing the
+  // capability snapshot) only clears the restored label, not the store.
+  const handleEndpointChange = (next: string) => {
+    setEndpoint(next);
+    setProbeRestoredAt(null);
+    setCapabilityRestoredAt(null);
+  };
+  const handleWsProbeResultChange = (result: SubstrateWsProbeResult) => {
+    setWsProbeResult(result);
+    setProbeRestoredAt(null);
+    saveWsProbe(endpoint, result);
+  };
+  const handleCapabilitySnapshotChange = (snapshot: CapabilitySnapshot | null) => {
+    setCapabilitySnapshot(snapshot);
+    setCapabilityRestoredAt(null);
+    if (snapshot) saveCapability(snapshot);
+  };
   const runDiagnosticAndShow = (method: string, params: unknown[] = []) => {
     setActiveSection('diagnostics');
     void handleRunDiagnosticTracked(method, params);
@@ -190,6 +211,38 @@ function App() {
         setActiveSection('overview');
         window.setTimeout(() => {
           const el = document.getElementById('combined-verdict');
+          if (!el) return;
+          const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+        }, 60);
+      },
+    },
+    {
+      id: 'nav-wss',
+      label: 'Go to Substrate WS Probe',
+      group: 'Navigate',
+      hint: '06',
+      keywords: 'substrate websocket probe wss node health',
+      run: () => {
+        setActiveSection('overview');
+        window.setTimeout(() => {
+          const el = document.getElementById('substrate-ws-probe');
+          if (!el) return;
+          const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+        }, 60);
+      },
+    },
+    {
+      id: 'nav-capabilities',
+      label: 'Go to Capabilities',
+      group: 'Navigate',
+      hint: '08',
+      keywords: 'capabilities discovery rpc methods advertised',
+      run: () => {
+        setActiveSection('overview');
+        window.setTimeout(() => {
+          const el = document.getElementById('capabilities');
           if (!el) return;
           const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
           el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
@@ -242,7 +295,7 @@ function App() {
                 </div>
                 <EndpointConfig
                   endpoint={endpoint}
-                  onEndpointChange={setEndpoint}
+                  onEndpointChange={handleEndpointChange}
                   connectionStatus={connectionStatus}
                   onConnect={handleConnect}
                   onDisconnect={handleDisconnect}
@@ -260,13 +313,15 @@ function App() {
                   endpointProfile={endpointProfile}
                   capabilitySnapshot={capabilitySnapshot} // Pass down snapshot
                   history={history} // Pass down history
-                  onCapabilitySnapshotChange={setCapabilitySnapshot}
+                  onCapabilitySnapshotChange={handleCapabilitySnapshotChange}
                   latestHealthSnapshot={latestHealthSnapshot}
                   healthSnapshots={healthSnapshots}
                   onRunHealthCheck={handleRunHealthCheck}
                   isHealthChecking={isHealthChecking}
                   wsProbeResult={wsProbeResult}
-                  onWsProbeResultChange={setWsProbeResult}
+                  onWsProbeResultChange={handleWsProbeResultChange}
+                  probeRestoredAt={probeRestoredAt}
+                  capabilityRestoredAt={capabilityRestoredAt}
                 />
               </div>
             )}

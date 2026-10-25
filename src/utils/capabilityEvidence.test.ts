@@ -303,8 +303,8 @@ describe('Profile fallback when no usable capability snapshot exists', () => {
     expect(defaultLatencyMethodForProfile('portaldot_v3_evm')).toBe('eth_chainId');
     expect(defaultClientVersionMethodForProfile('portaldot_v3_evm')).toBe('web3_clientVersion');
     expect(defaultBlockMethodForProfile('portaldot_v3_evm')).toBe('eth_blockNumber');
-    expect(hasPeerCountSupport('portaldot_v3_evm')).toBe(false);
-    expect(defaultPeerMethodForProfile('portaldot_v3_evm')).toBeNull();
+    expect(hasPeerCountSupport('portaldot_v3_evm')).toBe(true);
+    expect(defaultPeerMethodForProfile('portaldot_v3_evm')).toBe('net_peerCount');
   });
 
   it('preserves generic_http profile defaults with null snapshot', () => {

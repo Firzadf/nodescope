@@ -9,9 +9,10 @@ export function defaultClientVersionMethodForProfile(profile: EndpointProfile): 
 }
 
 export function hasPeerCountSupport(profile: EndpointProfile): boolean {
-  return profile !== 'portaldot_v3_evm';
+  return true;
 }
 
 export function defaultPeerMethodForProfile(profile: EndpointProfile): string | null {
+  if (profile === 'portaldot_v3_evm') return 'net_peerCount';
   return hasPeerCountSupport(profile) ? 'system_health' : null;
 }

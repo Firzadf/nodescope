@@ -107,6 +107,8 @@ export function RpcConsole({ endpoint, isConnected, onRunDiagnostic, isLoading, 
     if (method) {
       setCustomMethod(method);
     }
+    setParamsInput('[]');
+    setParamError(null);
   };
 
   const handleExecute = async (e: React.FormEvent) => {

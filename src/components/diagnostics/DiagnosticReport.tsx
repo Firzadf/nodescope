@@ -48,7 +48,10 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
 
       const link = document.createElement('a');
       link.href = url;
-      link.download = `nodescope-diagnostic-report-${new Date().toISOString().slice(0, 10)}.json`;
+      const now = new Date();
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const localDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+      link.download = `nodescope-diagnostic-report-${localDate}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

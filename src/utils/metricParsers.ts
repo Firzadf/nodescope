@@ -98,6 +98,17 @@ export function parsePeerCount(res: RpcDiagnosticResult | null): MetricItem<numb
 
   if (res.success && res.response) {
     const val = res.response.result;
+    if (typeof val === 'string' && /^0x[0-9a-fA-F]+$/.test(val)) {
+      const parsed = parseInt(val, 16);
+      if (Number.isFinite(parsed) && parsed >= 0) {
+        return {
+          status: 'success',
+          value: parsed,
+          sourceMethod: res.request.method,
+          timestamp: res.timestamp,
+        };
+      }
+    }
     if (typeof val === 'object' && val !== null && 'peers' in val) {
       const peersVal = (val as Record<string, unknown>).peers;
       if (typeof peersVal === 'number' && Number.isFinite(peersVal) && peersVal >= 0) {

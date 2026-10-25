@@ -31,6 +31,8 @@ interface OverviewProps {
   isHealthChecking?: boolean;
   wsProbeResult?: SubstrateWsProbeResult | null;
   onWsProbeResultChange?: (result: SubstrateWsProbeResult) => void;
+  probeRestoredAt?: number | null;
+  capabilityRestoredAt?: number | null;
 }
 
 export function Overview({
@@ -49,6 +51,8 @@ export function Overview({
   isHealthChecking = false,
   wsProbeResult = null,
   onWsProbeResultChange,
+  probeRestoredAt = null,
+  capabilityRestoredAt = null,
 }: OverviewProps) {
   const isDisconnected = connectionStatus === 'disconnected';
 
@@ -117,16 +121,21 @@ export function Overview({
 
       <SessionTrendsPanel snapshots={healthSnapshots} />
 
-      <SubstrateWsProbePanel onResult={onWsProbeResultChange} />
+      <div id="substrate-ws-probe" className="scroll-mt-6">
+        <SubstrateWsProbePanel onResult={onWsProbeResultChange} initialResult={wsProbeResult} restoredAt={probeRestoredAt} />
+      </div>
 
-      <CombinedVerdictPanel latestHealthSnapshot={latestHealthSnapshot} wsProbeResult={wsProbeResult} />
+      <CombinedVerdictPanel latestHealthSnapshot={latestHealthSnapshot} wsProbeResult={wsProbeResult} probeRestoredAt={probeRestoredAt} />
 
-      <CapabilityDiscoveryPanel
-        endpoint={endpoint}
-        snapshot={capabilitySnapshot}
-        onSnapshotChange={onCapabilitySnapshotChange}
-        history={history}
-      />
+      <div id="capabilities" className="scroll-mt-6">
+        <CapabilityDiscoveryPanel
+          endpoint={endpoint}
+          snapshot={capabilitySnapshot}
+          onSnapshotChange={onCapabilitySnapshotChange}
+          history={history}
+          restoredAt={capabilityRestoredAt}
+        />
+      </div>
 
       {connectionStatus !== 'connected' && (
         <div className="bg-panel border border-line rounded-xl p-4">
@@ -135,7 +144,7 @@ export function Overview({
               <span className="text-white text-sm font-bold">i</span>
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-100">Demo & Preview Mode Active</p>
+              <p className="text-sm font-medium text-slate-100">Not connected yet</p>
               <p className="mt-1 text-sm text-slate-400">
                 Requires a reachable Portaldot JSON-RPC endpoint with CORS enabled for direct browser requests. No auto-polling, no mock metrics.
               </p>

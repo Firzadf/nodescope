@@ -299,7 +299,7 @@ export function NodeMetricsInspector({
               className="w-full py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-xs font-medium text-slate-200 rounded-md flex items-center justify-center gap-2 transition-colors"
             >
               {loadingMetric === 'peer' ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-              {loadingMetric === 'peer' ? 'Checking...' : hasPeerCountSupport(endpointProfile) ? 'Query Peers (system_health)' : 'Peers unavailable for EVM'}
+              {loadingMetric === 'peer' ? 'Checking...' : defaultPeerMethodForProfile(endpointProfile) ? `Query Peers (${defaultPeerMethodForProfile(endpointProfile)})` : 'Peers unavailable for EVM'}
             </button>
           </div>
 

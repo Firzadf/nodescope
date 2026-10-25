@@ -7,6 +7,7 @@ import { CROSS_TRANSPORT_NOTE, computeCombinedVerdict, extractEvmSide } from '..
 interface CombinedVerdictPanelProps {
   latestHealthSnapshot: HealthCheckSnapshot | null;
   wsProbeResult: SubstrateWsProbeResult | null;
+  probeRestoredAt?: number | null;
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -15,7 +16,7 @@ const STATUS_LABEL: Record<string, string> = {
   unavailable: 'UNAVAILABLE — NO TRANSPORT YET',
 };
 
-export function CombinedVerdictPanel({ latestHealthSnapshot, wsProbeResult }: CombinedVerdictPanelProps) {
+export function CombinedVerdictPanel({ latestHealthSnapshot, wsProbeResult, probeRestoredAt = null }: CombinedVerdictPanelProps) {
   const verdict = computeCombinedVerdict(extractEvmSide(latestHealthSnapshot), wsProbeResult);
   const evm = verdict.evm;
   const ws = verdict.substrate;
@@ -36,6 +37,11 @@ export function CombinedVerdictPanel({ latestHealthSnapshot, wsProbeResult }: Co
         }`}>
           {STATUS_LABEL[verdict.status]}
         </p>
+        {wsProbeResult && probeRestoredAt !== null && (
+          <p className="text-[11px] text-slate-500">
+            Substrate side restored from previous session · {new Date(probeRestoredAt).toLocaleString()} · re-run the probe for a fresh result.
+          </p>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-data">
           <div className="bg-black/25 border border-line rounded-lg p-4 space-y-1.5">
             <p className="text-slate-500 uppercase tracking-[0.14em]">EVM · HTTP</p>
