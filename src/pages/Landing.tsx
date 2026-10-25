@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Activity, ArrowRight, ArrowUpRight, Pause, Play, X } from 'lucide-react';
 import { sendJsonRpcRequest } from '../services/rpcClient';
 import { BackToTop } from '../components/BackToTop';
+import { IntroSplash } from '../components/common/IntroSplash';
 import { DEFAULT_PORTALDOT_V3_EVM_RPC } from '../types/endpoint';
 import { landingCopy, readStoredLang, storeLang, type Lang } from '../utils/landingLang';
 import {
@@ -410,7 +411,7 @@ function ScrollProgress() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
   return (
-    <div aria-hidden="true" className="fixed inset-x-0 top-0 z-50 h-[2px] bg-black/40">
+    <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-[100] h-[2px] bg-black/40">
       <div className="h-full bg-[#0181FB]" style={{ width: `${progress}%` }} />
     </div>
   );
@@ -689,6 +690,13 @@ export function Landing() {
 
   return (
     <div className="landing-root min-h-screen bg-ink font-sans text-slate-200 antialiased selection:bg-[#8C1DEF]/40 selection:text-white">
+      <IntroSplash scope="landing" />
+      {/* Scroll progress lives here, as a direct child of the root: every
+          section below is position:relative + z-index:1, which traps any
+          fixed element rendered inside it — that is how the bar used to
+          disappear behind later sections while scrolling. At z-[100] it
+          stays above the nav (z-40), modals (z-50), and every section. */}
+      <ScrollProgress />
       <FullBackground />
       {/* -------------------------------- nav ------------------------------- */}
       <header className="fixed inset-x-0 top-0 z-40 px-4 pt-3">
@@ -740,7 +748,6 @@ export function Landing() {
         <HudArc />
         <div aria-hidden="true" className="pointer-events-none absolute -top-32 right-[-10%] h-[480px] w-[480px] rounded-full bg-[#0181FB]/[0.14] blur-[120px]" />
         <div aria-hidden="true" className="pointer-events-none absolute bottom-0 left-[-10%] h-[360px] w-[360px] rounded-full bg-[#0181FB]/[0.08] blur-[100px]" />
-        <ScrollProgress />
         <div className="relative mx-auto grid max-w-6xl items-start gap-12 lg:grid-cols-12">
           <div className="stagger lg:col-span-7">
             <p className="inline-flex items-center gap-2 rounded-full border border-line bg-black/30 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.22em] text-slate-300">

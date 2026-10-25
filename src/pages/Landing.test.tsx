@@ -26,6 +26,17 @@ describe('Landing', () => {
     ctas.forEach((cta) => expect(cta).toHaveAttribute('href', '/app'));
   });
 
+  it('keeps the scroll progress bar above every section', () => {
+    // Regression: the bar used to live inside the hero section, and every
+    // landing section is position:relative + z-index:1, which traps a
+    // fixed child — later sections painted over the bar while scrolling.
+    const { container } = render(<Landing />);
+    const bars = Array.from(container.querySelectorAll('div.fixed.inset-x-0.top-0'));
+    const bar = bars.find((el) => el.className.includes('z-[100]'));
+    expect(bar).toBeDefined();
+    expect(bar?.parentElement?.className).toContain('landing-root');
+  });
+
   it('shows the live readout falling back honestly when the endpoint is unreachable', async () => {
     render(<Landing />);
     expect(await screen.findByText(/did not answer/i)).toBeInTheDocument();

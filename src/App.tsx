@@ -4,6 +4,7 @@ import { CommandPalette, type PaletteCommand } from './components/common/Command
 import { Sidebar } from './components/layout/Sidebar';
 import { TerminalFeed } from './components/layout/TerminalFeed';
 import { BackToTop } from './components/BackToTop';
+import { IntroSplash } from './components/common/IntroSplash';
 import { Toasts, type Toast } from './components/common/Toasts';
 import { Overview } from './components/dashboard/Overview';
 import { EndpointConfig } from './components/dashboard/EndpointConfig';
@@ -311,6 +312,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-ink text-slate-200">
+      <IntroSplash scope="app" />
       <Header
         connectionStatus={connectionStatus}
         liveBlock={extractEvmSide(latestHealthSnapshot)?.blockHeightDecimal ?? null}

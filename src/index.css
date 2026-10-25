@@ -169,6 +169,37 @@
     filter: blur(0);
   }
 }
+/* Intro splash: brand elements rise in, then a blue line sweeps under
+   them. Pure entrance motion — no progress is faked. The reduced-motion
+   block below turns the whole splash off (the component returns null). */
+@keyframes intro-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.intro-rise {
+  animation: intro-rise 0.5s var(--ease-out) both;
+}
+@keyframes intro-sweep {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+.intro-sweep {
+  animation: intro-sweep 0.9s var(--ease-out) both;
+  transform-origin: center;
+}
+
 .stagger > * {
   animation: load-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
