@@ -216,8 +216,18 @@ When endpoint profile is set to `portaldot_v3_evm`:
 - **HTTP JSON-RPC plus one WebSocket probe** — the EVM checks run over HTTP, and a separate user-triggered probe covers the Substrate WebSocket endpoint `wss://test-node-v3.portaldot.dev` (system_health, system_chain, system_version, chain_getHeader). No polling and no background WebSocket connection
 - **Browser CORS dependency** — cross-origin requests must be permitted by the RPC endpoint for direct browser fetch() to work. A private or firewalled endpoint may require a local proxy (not provided)
 - **SessionStorage-only snapshots** — stored in browser sessionStorage, limited to ~5MB per domain, max 20 snapshots cached per session. Snapshots lost on tab close or browser restart; export them to JSON for long-term retention
-- **No contract deployment** — NodeScope is a diagnostic and monitoring tool, not a contract IDE or wallet. No smart contract development, deployment, or signing features
+- **App never signs, one registry deployed** — NodeScope is a diagnostic and monitoring tool, not a contract IDE or wallet. The app never signs anything; the single ownerless attestation registry above exists only so a report hash can be anchored with the user's own wallet tool and verified read-only afterwards
 - **No private key handling** — no seed phrases, private keys, or wallet mnemonics accepted; the tool only reads node state via RPC
+
+### On-chain attestation (optional, read-only in the app)
+
+A report's SHA-256 hash can be anchored on the Portaldot V3 testnet with the user's own wallet tool (the app never signs). The app and `/verify` then check the anchor by reading the transaction receipt through the RPC — there is no public EVM explorer for this chain.
+
+- Registry contract (ownerless): `0x74c88d3090aD6915BFDc373eD6F037e2da4557Ce` (chain 420420777)
+- Anchor transaction: `0xa7cd3cbd060335d851494c1f48e15124ec8d32ccfa3fe03413c85cf895625448` (block 179228)
+- Anchored report hash: `0x0bc787de4c634a55699e92d90b7280fffebdbcd557c4312044134e4df9dfa286` (exported 2026-10-24T20:12:08Z, 14 records)
+- Contract source: `contracts/NodeScopeAttestation.sol` · Full write-up: `docs/ATTESTATION.md`
+- Verify it: https://nodescope.vercel.app/verify?hash=0x0bc787de4c634a55699e92d90b7280fffebdbcd557c4312044134e4df9dfa286&contract=0x74c88d3090aD6915BFDc373eD6F037e2da4557Ce&tx=0xa7cd3cbd060335d851494c1f48e15124ec8d32ccfa3fe03413c85cf895625448
 
 ## Architecture
 
@@ -290,7 +300,7 @@ src/
 | `SessionTrendsPanel.test.tsx` | Trends panel rendering, including the V3 era note |
 | `SnapshotStrip.test.tsx` | Session strip rendering, including era in tooltips |
 | 6 files not listed above | Component and utility tests added in later phases, including Landing and Command Palette |
-| **Total** | **296 passing tests, 26 test files** |
+| **Total** | **355 passing tests, 48 test files** (suite verified 26 Oct 2026; the landing page, /judges, and this README are checked against one constants file by `src/utils/siteConsistency.test.tsx` and `npm run check:consistency`) |
 
 ### Running Tests
 

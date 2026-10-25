@@ -1,12 +1,39 @@
-import { Badge } from '../common/Badge';
 import type { ConnectionStatus } from '../../types/node';
 
 interface HeaderProps {
   connectionStatus: ConnectionStatus;
+  /** Decimal block of the latest health snapshot, or null when none exists. */
+  liveBlock: string | null;
 }
 
-export function Header({ connectionStatus }: HeaderProps) {
+export function Header({ connectionStatus, liveBlock }: HeaderProps) {
   const isConnected = connectionStatus === 'connected';
+  const statusText =
+    connectionStatus === 'connected'
+      ? liveBlock
+        ? `LIVE · BLOCK #${liveBlock}`
+        : 'CONNECTED'
+      : connectionStatus === 'connecting'
+        ? 'CONNECTING…'
+        : connectionStatus === 'error'
+          ? 'ERROR'
+          : 'NOT CONNECTED';
+  const statusColor =
+    connectionStatus === 'connected'
+      ? '#34d399'
+      : connectionStatus === 'connecting'
+        ? '#fbbf24'
+        : connectionStatus === 'error'
+          ? '#f87171'
+          : '#475569';
+  const statusTextClass =
+    connectionStatus === 'connected'
+      ? 'text-emerald-300'
+      : connectionStatus === 'connecting'
+        ? 'text-amber-300'
+        : connectionStatus === 'error'
+          ? 'text-red-400'
+          : 'text-slate-400';
 
   return (
     <header className="relative bg-deep/85 border-b border-line backdrop-blur shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
@@ -35,7 +62,8 @@ export function Header({ connectionStatus }: HeaderProps) {
           </a>
 
           {/* Centre: a quiet ECG trace that fills the old void. Decoration
-              only, it carries no live data; the real state stays in the pills. */}
+              only, it carries no live data; the real state stays in the one
+              status pill on the right. */}
           <div aria-hidden="true" className="pointer-events-none relative mx-8 hidden flex-1 lg:block">
             <div className="h-px bg-gradient-to-r from-transparent via-[#0181FB]/40 to-transparent" />
             <svg
@@ -66,27 +94,27 @@ export function Header({ connectionStatus }: HeaderProps) {
           </div>
 
           <div className="flex shrink-0 items-center gap-3">
-            {/* Signature Detail: ECG / Pulse line */}
+            {/* The one status indicator: the pulse pill carries the
+                connection state and, once a snapshot exists, its block. */}
             <div className="flex items-center gap-2 px-3 py-1 bg-black/30 rounded-full border border-line">
               <svg className="w-8 h-4 overflow-visible" viewBox="0 0 32 16" fill="none">
                 <path
                   d="M 0,8 L 8,8 L 11,2 L 15,14 L 19,4 L 22,8 L 32,8"
-                  stroke={isConnected ? "#0181FB" : "#475569"}
+                  stroke={statusColor}
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   className={isConnected ? "pulse-anim" : ""}
                 />
               </svg>
-              <span key={isConnected ? 'live' : 'idle'} className="state-swap text-xs font-data text-slate-400">
-                {isConnected ? 'LIVE PULSE' : 'IDLE'}
+              <span key={statusText} className={`state-swap text-xs font-data ${statusTextClass}`}>
+                {statusText}
               </span>
             </div>
 
             <span className="hidden rounded-full border border-[#0181FB]/40 bg-[#0181FB]/10 px-3 py-1.5 font-data text-[11px] uppercase tracking-[0.18em] text-sky-200 shadow-[0_0_20px_rgba(1,129,251,0.15)] md:block">
               V3 Testnet · 420420777
             </span>
-            <Badge status={connectionStatus} />
           </div>
         </div>
       </div>

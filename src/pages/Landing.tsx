@@ -4,6 +4,15 @@ import { sendJsonRpcRequest } from '../services/rpcClient';
 import { BackToTop } from '../components/BackToTop';
 import { DEFAULT_PORTALDOT_V3_EVM_RPC } from '../types/endpoint';
 import { landingCopy, readStoredLang, storeLang, type Lang } from '../utils/landingLang';
+import {
+  ANCHOR_BLOCK,
+  ANCHOR_TX,
+  ANCHORED_REPORT_EXPORTED_AT,
+  ANCHORED_REPORT_HASH,
+  ANCHORED_REPORT_RECORDS,
+  PORTALDOT_CHAIN_ID,
+  REGISTRY_CONTRACT,
+} from '../utils/siteConstants';
 
 const APP_URL = '/app';
 const DEMO_URL = 'https://www.youtube.com/watch?v=qne3_eZdcKA';
@@ -115,7 +124,6 @@ function LiveReadout({ lang }: { lang: Lang }) {
     <div className="overflow-hidden rounded-[24px] border border-line bg-panel/90 shadow-[0_24px_70px_rgba(0,0,0,0.5)]">
       <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2.5">
         <span className="font-data text-[11px] text-slate-400">{lr.liveReadoutHeader}</span>
-        <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">[ Fig. 00 — Now ]</span>
       </div>
       <div className="px-5 py-5">
         <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">{lr.liveReadoutLatest}</p>
@@ -756,7 +764,7 @@ export function Landing() {
                 {t.launchApp}
                 <ArrowRight className="h-4.5 w-4.5" />
               </a>
-              <a href={DEMO_URL} target="_blank" rel="noreferrer" className="btn-ghost inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-[15px] font-medium">
+              <a href={DEMO_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-2 py-3.5 text-[15px] font-medium text-slate-300 underline decoration-slate-600 underline-offset-4 transition-colors hover:text-white">
                 {t.watchDemo}
                 <ArrowUpRight className="h-4.5 w-4.5" />
               </a>
@@ -835,6 +843,17 @@ export function Landing() {
                 </div>
               </div>
             </div>
+            <div className="mt-10 rounded-xl border border-line bg-panel p-6">
+              <h3 className="font-display text-lg font-semibold text-white">{t.whyTitle}</h3>
+              <ul className="mt-3 space-y-2.5">
+                {t.whyItems.map((item) => (
+                  <li key={item} className="flex gap-3 text-[15px] leading-[1.85] text-slate-400">
+                    <span aria-hidden="true" className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#0181FB]" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
             <FlowVisual lang={lang} />
           </Reveal>
         </div>
@@ -853,6 +872,23 @@ export function Landing() {
                   <p className="text-sm leading-relaxed text-slate-400 md:col-span-8">{s.body}</p>
                 </div>
               ))}
+            </div>
+            <div className="mt-6 rounded-xl border border-line bg-panel p-6">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="font-display text-lg font-semibold text-white">{t.archTitle}</h3>
+                <span className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">{t.archRight}</span>
+              </div>
+              <ol className="mt-4">
+                {t.archNodes.map((node, i) => (
+                  <li key={node} className="flex gap-3">
+                    <span className="flex flex-col items-center">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#0181FB]/50 bg-[#0181FB]/10 font-data text-[11px] text-[#7DB4FF]">{i + 1}</span>
+                      {i < t.archNodes.length - 1 && <span aria-hidden="true" className="w-px flex-1 bg-line" />}
+                    </span>
+                    <span className="pb-4 text-sm leading-relaxed text-slate-300">{node}</span>
+                  </li>
+                ))}
+              </ol>
             </div>
           </Reveal>
           <Reveal delay={120}>
@@ -933,7 +969,7 @@ export function Landing() {
             </div>
           </Reveal>
           <Reveal delay={100}>
-            <div className="mt-6 overflow-hidden rounded-[20px] border border-sky-500/25 shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
+            <div className="mt-6 hidden overflow-hidden rounded-[20px] border border-sky-500/25 shadow-[0_24px_60px_rgba(0,0,0,0.4)] md:block">
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-sky-500/25 bg-sky-500/[0.06] font-data text-[11px] uppercase tracking-[0.18em] text-sky-300">
@@ -971,6 +1007,30 @@ export function Landing() {
                 </tbody>
               </table>
             </div>
+            <div className="mt-6 space-y-3 md:hidden">
+              {t.capabilities.map((r, i) => (
+                <div key={r.cap} className="rounded-xl border border-line bg-panel p-4">
+                  <p className="font-data text-[13px] font-medium text-white">
+                    <span className="mr-3 text-slate-600">0{i + 1}</span>
+                    {r.cap}
+                  </p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-slate-400">{r.what}</p>
+                  <span
+                    className={`mt-2 inline-block rounded-full border px-2.5 py-1 font-data text-[11px] ${
+                      r.tone === 'emerald'
+                        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                        : r.tone === 'amber'
+                          ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
+                          : r.tone === 'sky'
+                            ? 'border-sky-500/40 bg-sky-500/10 text-sky-300'
+                            : 'border-line bg-white/[0.03] text-slate-300'
+                    }`}
+                  >
+                    {r.proof}
+                  </span>
+                </div>
+              ))}
+            </div>
           </Reveal>
         </div>
       </section>
@@ -986,7 +1046,7 @@ export function Landing() {
                 {t.evidenceGridCaption}
               </p>
             </div>
-            <div className="mt-6 overflow-hidden rounded-[20px] border border-emerald-500/25 shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
+            <div className="mt-6 hidden overflow-hidden rounded-[20px] border border-emerald-500/25 shadow-[0_24px_60px_rgba(0,0,0,0.4)] md:block">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-emerald-500/25 bg-emerald-500/[0.06] font-data text-[11px] uppercase tracking-[0.18em] text-emerald-300">
@@ -1015,6 +1075,22 @@ export function Landing() {
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div className="mt-6 space-y-3 md:hidden">
+              {t.evidenceRows.map((r) => (
+                <div key={r.block} className="rounded-xl border border-line bg-panel p-4 font-data text-[13px]">
+                  <p className="font-semibold text-white">{r.block}</p>
+                  <p className="mt-1 text-slate-300">
+                    {r.label}
+                    {'delta' in r && r.delta ? (
+                      <span className="ml-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-300">
+                        Δ {r.delta}
+                      </span>
+                    ) : null}
+                  </p>
+                  <p className="mt-1 text-slate-500">{r.when}</p>
+                </div>
+              ))}
             </div>
             <p className="mt-3 font-data text-[11px] leading-relaxed text-slate-600">
               {t.evidenceFootnote}
@@ -1067,6 +1143,68 @@ export function Landing() {
                     </span>
                   </span>
                 </button>
+              ))}
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* --------------------------- on-chain evidence --------------------------- */}
+      <section id="onchain" className="scroll-mt-28 px-4 py-16">
+        <div className="mx-auto max-w-6xl">
+          <Reveal>
+            <SectionHeading title={t.onchainTitle} right={t.onchainRight} accent="emerald" />
+            <p className="max-w-3xl text-[15px] leading-[1.85] text-slate-400">{t.onchainIntro}</p>
+            <div className="mt-6 grid gap-3 md:grid-cols-3">
+              <div className="rounded-xl border border-line bg-panel p-4">
+                <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-500">Registry contract</p>
+                <p className="mt-2 break-all font-data text-[13px] text-slate-200">{REGISTRY_CONTRACT}</p>
+                <p className="mt-1 text-xs text-slate-500">Portaldot V3 testnet · chain {PORTALDOT_CHAIN_ID}</p>
+              </div>
+              <div className="rounded-xl border border-line bg-panel p-4">
+                <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-500">Anchor transaction</p>
+                <p className="mt-2 break-all font-data text-[13px] text-slate-200">{ANCHOR_TX}</p>
+                <p className="mt-1 text-xs text-slate-500">Anchor block {ANCHOR_BLOCK} · receipt status success</p>
+              </div>
+              <div className="rounded-xl border border-line bg-panel p-4">
+                <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-500">Anchored report hash</p>
+                <p className="mt-2 break-all font-data text-[13px] text-slate-200">{ANCHORED_REPORT_HASH}</p>
+                <p className="mt-1 text-xs text-slate-500">Exported {ANCHORED_REPORT_EXPORTED_AT} · {ANCHORED_REPORT_RECORDS} records</p>
+              </div>
+            </div>
+            <div className="mt-6 rounded-xl border border-line bg-panel p-6">
+              <h3 className="font-display text-lg font-semibold text-white">{t.onchainCheckTitle}</h3>
+              <ol className="mt-3 space-y-2.5">
+                {t.onchainCheckSteps.map((s, i) => (
+                  <li key={s} className="flex gap-3 text-[15px] leading-[1.85] text-slate-400">
+                    <span className="font-data text-slate-500">0{i + 1}</span>
+                    <span>{s}</span>
+                  </li>
+                ))}
+              </ol>
+              <a
+                href={`/verify?hash=${ANCHORED_REPORT_HASH}&contract=${REGISTRY_CONTRACT}&tx=${ANCHOR_TX}`}
+                className="mt-4 inline-block rounded-lg bg-[#0181FB] px-4 py-2.5 text-sm font-semibold text-white"
+              >
+                Verify this anchor on /verify
+              </a>
+              <p className="mt-3 text-xs leading-relaxed text-slate-500">{t.onchainVerifyNote}</p>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ------------------------------ who uses ------------------------------ */}
+      <section id="who" className="scroll-mt-28 px-4 py-16">
+        <div className="mx-auto max-w-6xl">
+          <Reveal>
+            <SectionHeading title={t.whoTitle} right={t.whoRight} />
+            <div className="grid gap-4 md:grid-cols-2">
+              {t.whoItems.map((item) => (
+                <div key={item.title} className="rounded-xl border border-line bg-panel p-6">
+                  <h3 className="font-display text-lg font-semibold text-white">{item.title}</h3>
+                  <p className="mt-2 text-[15px] leading-[1.85] text-slate-400">{item.body}</p>
+                </div>
               ))}
             </div>
           </Reveal>
@@ -1128,6 +1266,17 @@ export function Landing() {
                   <p className="mt-2 text-[15px] leading-[1.85] text-slate-400">{r.body}</p>
                 </div>
               ))}
+            </div>
+            <div className="mt-6 rounded-[20px] border border-dashed border-line bg-panel/50 p-6">
+              <p className="font-data text-[11px] uppercase tracking-[0.16em] text-amber-300">{t.roadmapNextLabel}</p>
+              <div className="mt-4 space-y-4">
+                {t.roadmapNextItems.map((r) => (
+                  <div key={r.title}>
+                    <h3 className="font-display text-base font-semibold text-white">{r.title}</h3>
+                    <p className="mt-1 text-[15px] leading-[1.85] text-slate-400">{r.body}</p>
+                  </div>
+                ))}
+              </div>
             </div>
             <p className="mt-5 text-sm text-slate-500">
               {t.roadmapFootnote}

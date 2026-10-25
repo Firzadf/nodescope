@@ -203,6 +203,7 @@ export function ReportVerifier() {
   const [dragOver, setDragOver] = useState(false);
   const [busy, setBusy] = useState(false);
   const [readError, setReadError] = useState<string | null>(null);
+  const [isSample, setIsSample] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const run = async (text: string) => {
@@ -217,10 +218,27 @@ export function ReportVerifier() {
 
   const handleFile = async (file: File) => {
     setFileName(file.name);
+    setIsSample(false);
     try {
       await run(await file.text());
     } catch {
       setReadError('Could not read that file in this browser.');
+    }
+  };
+
+  const loadSample = async () => {
+    setFileName('sample-report.json (bundled sample)');
+    setIsSample(true);
+    setBusy(true);
+    setReadError(null);
+    try {
+      const res = await fetch('/sample-report.json');
+      if (!res.ok) throw new Error('Sample fetch failed');
+      await run(await res.text());
+    } catch {
+      setReadError('Could not load the bundled sample report.');
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -281,6 +299,22 @@ export function ReportVerifier() {
           />
         </div>
 
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => void loadSample()}
+            disabled={busy}
+            className="rounded-lg border border-line px-4 py-2 text-sm font-medium text-slate-300 transition-colors hover:text-white disabled:opacity-50"
+          >
+            Load sample report
+          </button>
+          <p className="text-xs text-slate-500">
+            A real export from 22 Oct 2026: 12 records from the Portaldot V3 testnet RPC. Its
+            SHA-256 stamp verifies locally in one click. It was not anchored on-chain, so the
+            attestation check below stays empty for it.
+          </p>
+        </div>
+
         <div>
           <button
             type="button"
@@ -301,7 +335,10 @@ export function ReportVerifier() {
               <button
                 type="button"
                 disabled={busy || pasteText.trim().length === 0}
-                onClick={() => void run(pasteText)}
+                onClick={() => {
+                  setIsSample(false);
+                  void run(pasteText);
+                }}
                 className="btn-primary px-4 py-2 font-medium rounded-lg text-sm"
               >
                 Verify pasted report
@@ -318,6 +355,16 @@ export function ReportVerifier() {
 
         {result && meta && (
           <div key={`${result.status}-${result.computedHash ?? ''}`} className="state-swap space-y-4">
+            {isSample && (
+              <p>
+                <span className="inline-flex items-center rounded border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 font-data text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-300">
+                  Sample
+                </span>{' '}
+                <span className="text-xs text-slate-500">
+                  Bundled sample, captured 22 Oct 2026 — not your live result and not anchored on chain.
+                </span>
+              </p>
+            )}
             <div className={`border rounded-lg p-4 ${meta.banner}`}>
               <div className={`flex items-center gap-2 font-data text-sm font-semibold tracking-wide ${meta.text}`}>
                 <StatusIcon status={result.status} />

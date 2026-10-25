@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { CapabilitySnapshot } from '../types/capability';
 import type { DiagnosticHistoryItem } from '../types/rpc';
-import { getMethodEvidenceStatus, formatEvidenceLabel } from './capabilityEvidence';
+import { getMethodEvidenceStatus, formatEvidenceLabel, singleStatusFor } from './capabilityEvidence';
 import { defaultBlockMethodForProfile } from './blockMethodDefaults';
 import {
   defaultLatencyMethodForProfile,
@@ -273,6 +273,20 @@ describe('getMethodEvidenceStatus', () => {
     for (const h of networkCases) {
       expect(getMethodEvidenceStatus('eth_getBalance', null, h, 'http://localhost:8545')).toBe('unknown');
     }
+  });
+});
+
+describe('singleStatusFor', () => {
+  it('lets definite evidence decide the badge', () => {
+    expect(singleStatusFor('not_tested', 'confirmed')).toBe('success');
+    expect(singleStatusFor('not_tested', 'unsupported')).toBe('unsupported_method');
+    expect(singleStatusFor('not_tested', 'advertised')).toBe('advertised');
+  });
+
+  it('falls back to the manual status when evidence is unknown', () => {
+    expect(singleStatusFor('success', 'unknown')).toBe('success');
+    expect(singleStatusFor('not_tested', 'unknown')).toBe('not_tested');
+    expect(singleStatusFor('network_error', 'unknown')).toBe('network_error');
   });
 });
 

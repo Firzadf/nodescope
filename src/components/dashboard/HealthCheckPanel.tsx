@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Activity, Play, RefreshCw, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { Activity, Play, RefreshCw, AlertCircle, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { Card } from '../common/Card';
 import { PanelLabel } from '../common/PanelLabel';
+import { methodsForProfile } from '../../services/healthCheckRunner';
 import type { EndpointProfile } from '../../types/endpoint';
 import type { HealthCheckSnapshot, HealthCheckCheck, HealthCheckOutcome } from '../../types/healthCheck';
 import type { Finding } from '../../types/diagnostic';
@@ -11,7 +12,7 @@ interface HealthCheckPanelProps {
   endpointProfile: EndpointProfile;
   isConnected: boolean;
   latestSnapshot: HealthCheckSnapshot | null;
-  onRunHealthCheck: () => Promise<void>;
+  onRunHealthCheck: (onCheck?: (check: HealthCheckCheck) => void) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -96,11 +97,15 @@ export function HealthCheckPanel({
   isLoading,
 }: HealthCheckPanelProps) {
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
+  const [progress, setProgress] = useState<HealthCheckCheck[]>([]);
 
   const handleTrigger = async () => {
     setErrorNotice(null);
+    setProgress([]);
     try {
-      await onRunHealthCheck();
+      await onRunHealthCheck((check) => {
+        setProgress((prev) => [...prev, check]);
+      });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setErrorNotice(msg);
@@ -108,6 +113,7 @@ export function HealthCheckPanel({
   };
 
   const isActionDisabled = !endpoint.trim() || isLoading;
+  const methods = methodsForProfile(endpointProfile);
 
   return (
     <Card>
@@ -156,11 +162,30 @@ export function HealthCheckPanel({
           </div>
         )}
 
-        {!latestSnapshot && isLoading && (
-          <div className="empty-shell px-5 py-6 space-y-3" aria-hidden="true">
-            <div className="skeleton-shimmer h-3 w-44 rounded" />
-            <div className="skeleton-shimmer h-3 w-72 max-w-full rounded" />
-            <div className="skeleton-shimmer h-3 w-28 rounded" />
+        {isLoading && (
+          <div className="space-y-1.5" aria-live="polite">
+            <p className="font-data text-[10px] uppercase tracking-[0.2em] text-slate-500">
+              Running methods — each row turns PASS or FAIL as its call returns
+            </p>
+            {methods.map((method) => {
+              const done = progress.find((c) => c.method === method);
+              const isCurrent =
+                !done && method === methods.find((m) => !progress.some((c) => c.method === m));
+              return (
+                <div key={method} className="flex items-center justify-between gap-3 rounded-lg border border-line bg-black/25 px-3 py-2">
+                  <span className="font-data text-xs text-slate-300">{method}</span>
+                  {done ? (
+                    <OutcomeBadge outcome={done.outcome} />
+                  ) : isCurrent ? (
+                    <span className="inline-flex items-center gap-1.5 text-xs text-sky-300">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Running
+                    </span>
+                  ) : (
+                    <span className="text-xs text-slate-600">Queued</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 

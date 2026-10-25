@@ -1,5 +1,6 @@
 import type { CapabilitySnapshot } from '../types/capability';
 import type { DiagnosticHistoryItem } from '../types/rpc';
+import type { MetricStatus } from '../types/node';
 import { sanitizeEndpointOrigin } from '../utils/reportBuilder';
 
 export type MethodEvidenceStatus = 'confirmed' | 'advertised' | 'unsupported' | 'unknown';
@@ -105,5 +106,30 @@ export function formatEvidenceLabel(status: MethodEvidenceStatus): string {
     case 'unknown':
     default:
       return 'Status Unknown';
+  }
+}
+
+/**
+ * One state per metric row. A row used to show two: its own manual-test badge
+ * ("Not Tested") plus an evidence sentence ("Confirmed"), which read as a
+ * contradiction. Evidence from discovery or history now decides the badge
+ * whenever it says something definite; only when evidence is unknown does
+ * the row fall back to its manual test status. The description line under
+ * the badge then names the method only, never a second status.
+ */
+export function singleStatusFor(
+  manual: MetricStatus,
+  evidence: MethodEvidenceStatus,
+): MetricStatus {
+  switch (evidence) {
+    case 'confirmed':
+      return 'success';
+    case 'unsupported':
+      return 'unsupported_method';
+    case 'advertised':
+      return 'advertised';
+    case 'unknown':
+    default:
+      return manual;
   }
 }

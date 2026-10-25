@@ -38,7 +38,7 @@ export const CROSS_TRANSPORT_NOTE =
   'EVM block height and Substrate header number are different counters on different transports. ' +
   'They are shown side by side with their own timestamps and are never subtracted from each other.';
 
-function hexToDecimal(raw: string | number | boolean | null): string | null {
+export function hexToDecimal(raw: string | number | boolean | null): string | null {
   if (typeof raw !== 'string' || !/^0x[0-9a-fA-F]+$/.test(raw)) return null;
   try {
     return BigInt(raw).toString(10);

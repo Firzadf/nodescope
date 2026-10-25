@@ -4,6 +4,7 @@ import { CommandPalette, type PaletteCommand } from './components/common/Command
 import { Sidebar } from './components/layout/Sidebar';
 import { TerminalFeed } from './components/layout/TerminalFeed';
 import { BackToTop } from './components/BackToTop';
+import { Toasts, type Toast } from './components/common/Toasts';
 import { Overview } from './components/dashboard/Overview';
 import { EndpointConfig } from './components/dashboard/EndpointConfig';
 import { RpcConsole } from './components/diagnostics/RpcConsole';
@@ -17,7 +18,7 @@ import type { RpcDiagnosticResult, DiagnosticHistoryItem } from './types/rpc';
 import type { EvmConnectionDetails, EndpointProfile } from './types/endpoint';
 import { DEFAULT_PORTALDOT_V3_EVM_RPC } from './types/endpoint';
 import type { CapabilitySnapshot } from './types/capability'; // Import new type
-import type { HealthCheckSnapshot } from './types/healthCheck';
+import type { HealthCheckSnapshot, HealthCheckCheck } from './types/healthCheck';
 import { sendJsonRpcRequest } from './services/rpcClient';
 import { testPortaldotV3EvmConnection, testGenericHttpConnection } from './services/connectionTester';
 import { getDiagnosticHistory, saveDiagnosticHistory, clearDiagnosticHistory } from './services/historyStorage';
@@ -26,6 +27,8 @@ import { runHealthCheck } from './services/healthCheckRunner';
 import type { SubstrateWsProbeResult } from './services/substrateWsProbe';
 import { loadWsProbe, saveWsProbe, loadCapability, saveCapability } from './services/sessionRestore';
 import { initialSidebarCollapsed } from './utils/sidebarState';
+import { extractEvmSide } from './utils/combinedVerdict';
+import { FullDiagnosticRunner } from './components/dashboard/FullDiagnosticRunner';
 
 const initialMetricsDetailed: NodeMetricsDetailed = {
   latency: { status: 'not_tested', value: null },
@@ -52,6 +55,18 @@ function App() {
   const [isHealthChecking, setIsHealthChecking] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(initialSidebarCollapsed);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const pushToast = (message: string) => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, message }]);
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4000);
+  };
+  const dismissToast = (id: number) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
   const toggleSidebar = () => {
     setSidebarCollapsed((prev) => {
       const next = !prev;
@@ -75,26 +90,43 @@ function App() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  const handleRunHealthCheck = async () => {
+  const doHealthCheck = async (
+    onCheck?: (check: HealthCheckCheck) => void,
+  ): Promise<HealthCheckSnapshot> => {
     setIsHealthChecking(true);
     try {
       const snapshot = await runHealthCheck(endpoint, endpointProfile, {
         onRecordResult: (result) => {
           setHistory((_prev) => saveDiagnosticHistory(endpoint, result));
         },
+        onCheck,
       });
       saveHealthSnapshot(snapshot);
       setHealthSnapshots(getHealthSnapshots());
+      return snapshot;
     } finally {
       setIsHealthChecking(false);
     }
   };
 
-  const handleConnect = async () => {
+  const handleRunHealthCheck = async (onCheck?: (check: HealthCheckCheck) => void) => {
+    const snap = await doHealthCheck(onCheck);
+    const passed = snap.checks.filter((c) => c.success).length;
+    pushToast(`Health snapshot saved — ${passed}/${snap.checks.length} checks passed`);
+  };
+
+  const handleConnect = async (): Promise<{
+    status: ConnectionStatus;
+    blockHex: string | null;
+    blockAt: number | null;
+  }> => {
     setIsLoading(true);
     setConnectionStatus('connecting');
     setEvmConnectionDetails(null);
 
+    let finalStatus: ConnectionStatus = 'error';
+    let blockHex: string | null = null;
+    let blockAt: number | null = null;
     if (endpointProfile === 'portaldot_v3_evm') {
       const { chainIdResult, blockResult, validation, status } = await testPortaldotV3EvmConnection(endpoint);
 
@@ -106,6 +138,11 @@ function App() {
       setEvmConnectionDetails(details);
       setCurrentResult(chainIdResult);
       setConnectionStatus(status);
+      finalStatus = status;
+      if (blockResult.success && typeof blockResult.response?.result === 'string') {
+        blockHex = blockResult.response.result;
+        blockAt = blockResult.timestamp;
+      }
 
       let updated = saveDiagnosticHistory(endpoint, chainIdResult);
       updated = saveDiagnosticHistory(endpoint, blockResult);
@@ -115,9 +152,11 @@ function App() {
       setCurrentResult(result);
       setHistory(saveDiagnosticHistory(endpoint, result));
       setConnectionStatus(status);
+      finalStatus = status;
     }
 
     setIsLoading(false);
+    return { status: finalStatus, blockHex, blockAt };
   };
 
   const handleDisconnect = () => {
@@ -272,7 +311,10 @@ function App() {
 
   return (
     <div className="min-h-screen bg-ink text-slate-200">
-      <Header connectionStatus={connectionStatus} />
+      <Header
+        connectionStatus={connectionStatus}
+        liveBlock={extractEvmSide(latestHealthSnapshot)?.blockHeightDecimal ?? null}
+      />
       <div className="flex">
         <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} onOpenPalette={() => setPaletteOpen(true)} collapsed={sidebarCollapsed} onToggleCollapse={toggleSidebar} />
         <main className="relative flex-1 p-6">
@@ -288,6 +330,16 @@ function App() {
                   </div>
                   <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500 pb-1">Portaldot V3 EVM · Chain 420420777</p>
                 </div>
+                <FullDiagnosticRunner
+                  endpoint={endpoint}
+                  endpointProfile={endpointProfile}
+                  onConnect={handleConnect}
+                  onRunHealthCheck={doHealthCheck}
+                  onProbeResult={handleWsProbeResultChange}
+                  onCapabilitySnapshot={handleCapabilitySnapshotChange}
+                  onGoHistory={() => setActiveSection('history')}
+                  onToast={pushToast}
+                />
                 <EndpointConfig
                   endpoint={endpoint}
                   onEndpointChange={handleEndpointChange}
@@ -385,7 +437,7 @@ function App() {
                   </div>
                   <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500 pb-1">Session ledger · Exportable JSON</p>
                 </div>
-                <DiagnosticReport history={history} healthSnapshots={healthSnapshots} wsProbeResult={wsProbeResult} />
+                <DiagnosticReport history={history} healthSnapshots={healthSnapshots} wsProbeResult={wsProbeResult} onExported={() => pushToast('Report exported — verify it on /verify')} />
                 <HistoryList
                   history={history}
                   onSelect={(item) => {
@@ -423,11 +475,18 @@ function App() {
             <a href="https://www.youtube.com/watch?v=qne3_eZdcKA" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors">
               Demo Video
             </a>
+            <a href="/docs" className="text-slate-400 hover:text-white transition-colors">
+              Docs
+            </a>
+            <a href="/judges" className="text-slate-400 hover:text-white transition-colors">
+              For Judges
+            </a>
           </div>
         </div>
       </footer>
       <CommandPalette open={paletteOpen} commands={paletteCommands} onClose={() => setPaletteOpen(false)} />
       <BackToTop label="Back to top" />
+      <Toasts toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }

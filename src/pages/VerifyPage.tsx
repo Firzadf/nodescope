@@ -24,6 +24,8 @@ export function VerifyPage() {
             <a href="/" className="transition-colors hover:text-white">Landing</a>
             <a href="/app" className="transition-colors hover:text-white">Launch App</a>
             <a href="/mainnet" className="transition-colors hover:text-white">Mainnet Profile</a>
+            <a href="/docs" className="transition-colors hover:text-white">Docs</a>
+            <a href="/judges" className="transition-colors hover:text-white">Judges</a>
           </nav>
         </div>
       </header>

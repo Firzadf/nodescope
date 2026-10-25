@@ -62,13 +62,16 @@ describe('Landing', () => {
 
   it('labels the roadmap honestly', () => {
     render(<Landing />);
-    // The Mainnet Profile info page is now shipped, so no roadmap card is
-    // planned any more. Honesty is still guarded: the page must keep
-    // stating that no mainnet EVM check is claimed.
-    expect(screen.queryByText(/Planned — not shipped/i)).not.toBeInTheDocument();
+    // Shipped work stays labeled shipped, and the new planned list is labeled
+    // planned — the honest-labeling rule, now with planned items present again.
+    expect(screen.getByText(/Planned — not shipped yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/Scheduled watch mode/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Shipped — live in the app/i).length).toBe(3);
     expect(screen.getByText(/does not claim a mainnet EVM check/i)).toBeInTheDocument();
-    expect(screen.getByText(/Check-in submitted/i)).toBeInTheDocument();
+    // The footer live line no longer claims a check-in status (removed as
+    // stale page furniture); it still names the live chain.
+    expect(screen.getByText(/Live · Chain 420420777 · Portaldot V3 EVM Testnet/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Check-in submitted/i)).not.toBeInTheDocument();
   });
 
   it('shows a judge quickstart that points at real actions, not claims', () => {
@@ -81,7 +84,11 @@ describe('Landing', () => {
   it('lists Trends & Verdict as a shipped capability, not a promise', () => {
     render(<Landing />);
     expect(screen.getByText('Trends & Verdict')).toBeInTheDocument();
-    expect(screen.getByText('Trends & verdict')).toBeInTheDocument();
-    expect(screen.getByText(/rules shown, no score/i)).toBeInTheDocument();
+    // The capabilities table renders twice in the DOM: once as a table
+    // (desktop) and once as stacked cards (mobile), with CSS choosing which
+    // is visible. Both copies carry the same text.
+    expect(screen.getAllByText('Trends & verdict').length).toBe(2);
+    // Same table/card duplication as above: the proof pill renders twice.
+    expect(screen.getAllByText(/rules shown, no score/i).length).toBe(2);
   });
 });

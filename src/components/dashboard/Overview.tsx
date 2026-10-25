@@ -6,6 +6,7 @@ import { SnapshotComparison } from './SnapshotComparison';
 import { SessionTrendsPanel } from './SessionTrendsPanel';
 import { SubstrateWsProbePanel } from './SubstrateWsProbePanel';
 import { CombinedVerdictPanel } from './CombinedVerdictPanel';
+import { VerdictBar } from './VerdictBar';
 import type { SubstrateWsProbeResult } from '../../services/substrateWsProbe';
 import { CapabilityDiscoveryPanel } from '../diagnostics/CapabilityDiscoveryPanel';
 import type { NodeMetricsDetailed } from '../../types/node';
@@ -13,10 +14,9 @@ import type { RpcDiagnosticResult } from '../../types/rpc';
 import type { EndpointProfile } from '../../types/endpoint';
 import type { CapabilitySnapshot } from '../../types/capability';
 import type { DiagnosticHistoryItem } from '../../types/rpc';
-import type { HealthCheckSnapshot } from '../../types/healthCheck';
+import type { HealthCheckSnapshot, HealthCheckCheck } from '../../types/healthCheck';
 
-interface OverviewProps {
-  endpoint: string;
+interface OverviewProps {  endpoint: string;
   connectionStatus: 'connected' | 'disconnected' | 'connecting' | 'error';
   metricsDetailed: NodeMetricsDetailed;
   onUpdateMetricsDetailed: (updater: (prev: NodeMetricsDetailed) => NodeMetricsDetailed) => void;
@@ -27,12 +27,51 @@ interface OverviewProps {
   onCapabilitySnapshotChange: (snapshot: CapabilitySnapshot | null) => void;
   healthSnapshots?: HealthCheckSnapshot[];
   latestHealthSnapshot?: HealthCheckSnapshot | null;
-  onRunHealthCheck?: () => Promise<void>;
+  onRunHealthCheck?: (onCheck?: (check: HealthCheckCheck) => void) => Promise<void>;
   isHealthChecking?: boolean;
   wsProbeResult?: SubstrateWsProbeResult | null;
   onWsProbeResultChange?: (result: SubstrateWsProbeResult) => void;
   probeRestoredAt?: number | null;
   capabilityRestoredAt?: number | null;
+}
+
+/**
+ * One-row stand-in for a panel that has nothing to show yet. Instead of a
+ * big card saying "insufficient data", the row names exactly what is
+ * missing and offers the one action that produces it.
+ */
+function CollapsedPanelRow({
+  index,
+  label,
+  needs,
+  onRun,
+  running,
+}: {
+  index: string;
+  label: string;
+  needs: string;
+  onRun: () => void;
+  running: boolean;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-panel px-4 py-3">
+      <p className="text-sm text-slate-300">
+        <span className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">
+          {index} · {label}
+        </span>
+        <span className="text-slate-500"> — </span>
+        {needs}
+      </p>
+      <button
+        type="button"
+        onClick={onRun}
+        disabled={running}
+        className="rounded-lg bg-[#0181FB] px-3 py-1.5 text-sm font-medium text-white transition-opacity disabled:opacity-50"
+      >
+        {running ? 'Running…' : 'Run health check'}
+      </button>
+    </div>
+  );
 }
 
 export function Overview({
@@ -66,6 +105,12 @@ export function Overview({
 
   return (
     <div className="space-y-6 stagger">
+      <VerdictBar
+        latestHealthSnapshot={latestHealthSnapshot}
+        wsProbeResult={wsProbeResult}
+        latencyMs={metricsDetailed.latency.value}
+        latencyMethod={metricsDetailed.latency.sourceMethod}
+      />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-line border border-line rounded-xl overflow-hidden ">
         <MetricCard
           title="Connection Status"
@@ -117,15 +162,45 @@ export function Overview({
         isLoading={isHealthChecking}
       />
 
-      <SnapshotComparison snapshots={healthSnapshots} />
+      {healthSnapshots.length < 2 ? (
+        <CollapsedPanelRow
+          index="04"
+          label="Comparison"
+          needs="Needs 2 health checks to compare."
+          onRun={() => void (onRunHealthCheck || (async () => {}))()}
+          running={isHealthChecking}
+        />
+      ) : (
+        <SnapshotComparison snapshots={healthSnapshots} />
+      )}
 
-      <SessionTrendsPanel snapshots={healthSnapshots} />
+      {healthSnapshots.length === 0 ? (
+        <CollapsedPanelRow
+          index="05"
+          label="Trends & Verdict"
+          needs="Needs 1 health check to show trends."
+          onRun={() => void (onRunHealthCheck || (async () => {}))()}
+          running={isHealthChecking}
+        />
+      ) : (
+        <SessionTrendsPanel snapshots={healthSnapshots} />
+      )}
 
       <div id="substrate-ws-probe" className="scroll-mt-6">
         <SubstrateWsProbePanel onResult={onWsProbeResultChange} initialResult={wsProbeResult} restoredAt={probeRestoredAt} />
       </div>
 
-      <CombinedVerdictPanel latestHealthSnapshot={latestHealthSnapshot} wsProbeResult={wsProbeResult} probeRestoredAt={probeRestoredAt} />
+      {!latestHealthSnapshot && !wsProbeResult ? (
+        <CollapsedPanelRow
+          index="07"
+          label="Combined Verdict"
+          needs="Needs a health snapshot and a Substrate probe result."
+          onRun={() => void (onRunHealthCheck || (async () => {}))()}
+          running={isHealthChecking}
+        />
+      ) : (
+        <CombinedVerdictPanel latestHealthSnapshot={latestHealthSnapshot} wsProbeResult={wsProbeResult} probeRestoredAt={probeRestoredAt} />
+      )}
 
       <div id="capabilities" className="scroll-mt-6">
         <CapabilityDiscoveryPanel

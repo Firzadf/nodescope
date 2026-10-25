@@ -5,7 +5,8 @@ export type MetricStatus =
   | 'success'
   | 'unsupported_method'
   | 'network_error'
-  | 'invalid_response';
+  | 'invalid_response'
+  | 'advertised';
 
 export interface MetricItem<T> {
   status: MetricStatus;

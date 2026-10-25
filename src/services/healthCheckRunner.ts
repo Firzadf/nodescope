@@ -94,6 +94,8 @@ export interface RunHealthCheckOptions {
   latencyThresholdMs?: number;
   timeoutMs?: number;
   onRecordResult?: (result: RpcDiagnosticResult) => void;
+  /** Called after each method finishes, so a UI can show per-method progress. */
+  onCheck?: (check: HealthCheckCheck) => void;
 }
 
 export async function runHealthCheck(
@@ -122,14 +124,18 @@ export async function runHealthCheck(
 
     const { outcome, observedValue, error } = classifyCheck(result);
 
-    checks.push({
+    const check: HealthCheckCheck = {
       method,
       outcome,
       success: outcome === 'success',
       latencyMs: result.latency,
       observedValue,
       error,
-    });
+    };
+    checks.push(check);
+    if (options.onCheck) {
+      options.onCheck(check);
+    }
 
     // Derive findings from actual evidence
     if (method === 'eth_chainId') {

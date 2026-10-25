@@ -11,6 +11,7 @@
  * - The Tutorial ID copy is the pre-existing Indonesian copy, unchanged.
  *   The Tutorial EN copy is a faithful translation of that Indonesian copy.
  */
+import { SITE_TESTS, SITE_TEST_FILES } from './siteConstants';
 
 export type Lang = 'en' | 'id';
 
@@ -106,6 +107,8 @@ export interface LandingCopy {
   problemPara1Emphasis: string;
   problemPara1b: string;
   problemPara2: string;
+  whyTitle: string;
+  whyItems: string[];
   consoleLabel: string;
   consoleQuote: string;
   nodescopeLabel: string;
@@ -121,6 +124,9 @@ export interface LandingCopy {
   howTitle: string;
   howRight: string;
   howSteps: StepItem[];
+  archTitle: string;
+  archRight: string;
+  archNodes: string[];
   transcriptHeader: string;
   transcriptPause: string;
   transcriptPlay: string;
@@ -160,6 +166,15 @@ export interface LandingCopy {
   evidenceHeaders: [string, string, string];
   evidenceRows: EvidenceRow[];
   evidenceFootnote: string;
+  onchainTitle: string;
+  onchainRight: string;
+  onchainIntro: string;
+  onchainCheckTitle: string;
+  onchainCheckSteps: string[];
+  onchainVerifyNote: string;
+  whoTitle: string;
+  whoRight: string;
+  whoItems: { title: string; body: string }[];
   galleryLabel: string;
   screenshots: ScreenshotItem[];
   v3Title: string;
@@ -172,6 +187,8 @@ export interface LandingCopy {
   roadmapShipped: string;
   roadmapItems: RoadmapItem[];
   roadmapFootnote: string;
+  roadmapNextLabel: string;
+  roadmapNextItems: RoadmapItem[];
   judgeTitle: string;
   judgeRight: string;
   judgeIntro: string;
@@ -233,7 +250,7 @@ const en: LandingCopy = {
   banner: 'Portaldot Hacker House 2026 · Check-in 22 Oct 2026 · Final / code freeze 6 Nov 2026, 11:00 WIB',
   stats: [
     { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · returned by eth_chainId' },
-    { value: '333', label: 'Tests passing', sub: '40 files · Vitest · suite verified 26 Oct 2026' },
+    { value: SITE_TESTS, label: 'Tests passing', sub: `${SITE_TEST_FILES} files · Vitest · suite verified 26 Oct 2026` },
     {
       value: '38',
       label: 'RPC methods probed',
@@ -254,6 +271,13 @@ const en: LandingCopy = {
     ". They don't show drift, silent regressions, or whether the same check still passes an hour later — and they leave you nothing you can hand to anyone as proof.",
   problemPara2:
     'NodeScope treats every check as an observation worth keeping: timestamped, structured, and comparable. When something changes, the diff says exactly what — method by method.',
+  whyTitle: "Why a console isn't enough",
+  whyItems: [
+    'Consoles show one response right now. NodeScope records timestamped snapshots, so a claim about health is anchored to a moment, not a mood.',
+    'Snapshots are diffed deterministically, method by method — drift and silent regressions become visible instead of deniable.',
+    'EVM and Substrate are checked together, so one verdict covers both transports a Portaldot node speaks.',
+    'Every session exports as a hashed report anyone can verify — the proof survives the browser tab it was made in.',
+  ],
   consoleLabel: 'CONSOLE —',
   consoleQuote: '“Reachable right now.”',
   nodescopeLabel: 'NODESCOPE —',
@@ -282,6 +306,16 @@ const en: LandingCopy = {
       title: 'Compare & export',
       body: 'Pick any two snapshots — or read the whole session. NodeScope diffs snapshots deterministically, trends latency and block progression across all of them, and ends in a verdict whose rules are printed, not hidden. Everything folds into an exportable diagnostic report (schema v1) you can share — stamped with a SHA-256 integrity hash, so anyone can verify the file was not altered after export.',
     },
+  ],
+  archTitle: 'How the pieces fit',
+  archRight: 'Browser only · No server in between',
+  archNodes: [
+    'EVM JSON-RPC — eth_chainId, eth_blockNumber, net_version, web3_clientVersion',
+    'Substrate WebSocket — system_health, system_chain, chain_getHeader',
+    'Snapshot engine — timestamped observations, up to 20 per session',
+    'Deterministic diff & verdict — rules printed, never hidden',
+    'Canonical JSON + SHA-256 report — verifiable at /verify',
+    'Optional on-chain anchor — report hash only, on Portaldot V3',
   ],
   transcriptHeader: '>_ HEALTH CHECK — RECORDED RUN',
   transcriptPause: 'Pause transcript',
@@ -400,6 +434,42 @@ const en: LandingCopy = {
   ],
   evidenceFootnote:
     'Endpoint: test-evm-rpc-v3.portaldot.dev · Chain ID 420420777 · Evidence is observed, never manufactured — the optional on-chain anchor stores only a report hash, never the report itself.',
+  onchainTitle: 'On-chain evidence',
+  onchainRight: 'One anchored report · Verifiable now',
+  onchainIntro:
+    'Anchoring is optional and stores only a report hash, never the report itself. One real report has been anchored on the Portaldot V3 testnet — the registry contract, the anchor transaction, and the block are below, and the same check runs live on /verify.',
+  onchainCheckTitle: 'How to check it yourself',
+  onchainCheckSteps: [
+    'Open the verification link below. The report hash, contract address, and anchor transaction are pre-filled.',
+    'Press Verify anchor on chain. The panel asks the testnet RPC for the transaction receipt (eth_getTransactionReceipt) — no wallet, no signing.',
+    'An anchored result means the receipt succeeded, was sent to the registry contract, and carries a log whose topic matches the report hash, at the block shown.',
+  ],
+  onchainVerifyNote:
+    'There is no public EVM explorer for this chain: the two official Portaldot explorers are Substrate explorers and do not show EVM receipts. Verification here is done through the RPC itself, which is the same source the panel reads.',
+  whoTitle: 'Who uses NodeScope',
+  whoRight: 'Built for operators, useful to everyone checking a node',
+  whoItems: [
+    {
+      title: 'Portaldot node operators & validators',
+      body: 'Prove an endpoint stayed healthy across a session, with snapshots to show for it — not just a green light at one moment.',
+    },
+    {
+      title: 'RPC providers proving an SLA',
+      body: 'Export timestamped sessions as evidence for uptime and latency claims, in a file the other side can verify.',
+    },
+    {
+      title: 'Ecosystem & foundation teams',
+      body: 'Audit public endpoints before the mainnet EVM RPC launch, with a deterministic record of what was actually observed.',
+    },
+    {
+      title: 'dApp builders choosing an RPC',
+      body: 'Compare endpoints on real observations — block progression, latency, method support — before hardcoding one.',
+    },
+    {
+      title: 'Incident responders',
+      body: 'Capture a shareable record of what the node did, when — a report that outlives the incident channel.',
+    },
+  ],
   galleryLabel: 'NodeScope · screenshot',
   screenshots: [
     { src: '/screenshots/01-endpoint-config.png', caption: '01 — Endpoint configuration' },
@@ -445,6 +515,25 @@ const en: LandingCopy = {
   ],
   roadmapFootnote:
     "NodeScope's whole point is evidence — so planned work is labeled planned. Nothing on this page claims to exist before it does.",
+  roadmapNextLabel: 'Planned — not shipped yet',
+  roadmapNextItems: [
+    {
+      title: 'Scheduled watch mode',
+      body: 'Opt-in, user-configured re-checks on a schedule — still no silent background polling by default; the schedule is something you explicitly turn on.',
+    },
+    {
+      title: 'Alerts (Discord or Telegram)',
+      body: 'Notify a channel you choose when a watched endpoint degrades — the alert carries the snapshot diff, not just a red light.',
+    },
+    {
+      title: 'Monthly SLA reports for RPC providers',
+      body: 'Roll session exports into a monthly evidence pack: uptime, latency distribution, and method support over the month.',
+    },
+    {
+      title: 'Public endpoint leaderboard for the ecosystem',
+      body: 'Rank public endpoints on observed evidence only — every score traceable to snapshots anyone can re-check.',
+    },
+  ],
   judgeTitle: 'For judges: 60 seconds to verify',
   judgeRight: 'No account · No wallet · No setup',
   judgeIntro:
@@ -476,7 +565,7 @@ const en: LandingCopy = {
   ctaTitleA: 'Put your node ',
   ctaTitleB: 'under the scope.',
   ctaBody: 'Open the live toolkit, run a health check against the Portaldot V3 testnet, and keep the receipt.',
-  footerLive: 'Live · Chain 420420777 · Portaldot V3 EVM Testnet · Status: Check-in submitted',
+  footerLive: 'Live · Chain 420420777 · Portaldot V3 EVM Testnet',
   footerDescription:
     'The Portaldot diagnostics toolkit. Consoles interact — NodeScope proves, with a receipt you can hand to anyone.',
   footerDisclaimer: 'Independent Hacker House build · Not an official Portaldot product · Testnet only',
@@ -490,6 +579,8 @@ const en: LandingCopy = {
         { label: 'Live Evidence', href: '#evidence' },
         { label: 'Verify a Report', href: '/verify' },
         { label: 'Mainnet Profile', href: '/mainnet' },
+        { label: 'Docs', href: '/docs' },
+        { label: 'For Judges', href: '/judges' },
       ],
     },
     {
@@ -564,7 +655,7 @@ const id: LandingCopy = {
   banner: 'Portaldot Hacker House 2026 · Check-in 22 Okt 2026 · Final / code freeze 6 Nov 2026, 11:00 WIB',
   stats: [
     { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · dikembalikan oleh eth_chainId' },
-    { value: '333', label: 'Test lolos', sub: '40 file · Vitest · suite terverifikasi 26 Okt 2026' },
+    { value: SITE_TESTS, label: 'Test lolos', sub: `${SITE_TEST_FILES} file · Vitest · suite terverifikasi 26 Okt 2026` },
     {
       value: '38',
       label: 'Metode RPC diuji',
@@ -585,6 +676,13 @@ const id: LandingCopy = {
     '. Mereka tidak menunjukkan drift, regresi diam-diam, atau apakah pemeriksaan yang sama masih lolos satu jam kemudian, dan mereka tidak memberimu apa pun yang bisa kamu serahkan sebagai bukti.',
   problemPara2:
     'NodeScope memperlakukan setiap pemeriksaan sebagai observasi yang layak disimpan: bertimestamp, terstruktur, dan bisa dibandingkan. Ketika sesuatu berubah, diff-nya mengatakan persis apa yang berubah, metode demi metode.',
+  whyTitle: 'Kenapa konsol saja tidak cukup',
+  whyItems: [
+    'Konsol hanya menunjukkan satu respons saat ini. NodeScope merekam snapshot bertimestamp, sehingga klaim soal kesehatan tertambat pada suatu momen, bukan sekadar kesan.',
+    'Snapshot dibandingkan secara deterministik, metode demi metode, sehingga drift dan regresi diam-diam menjadi terlihat, bukan bisa disangkal.',
+    'EVM dan Substrate diperiksa bersama, sehingga satu verdict mencakup kedua transport yang dipakai node Portaldot.',
+    'Setiap sesi diekspor sebagai laporan ber-hash yang bisa diverifikasi siapa pun, sehingga buktinya tetap ada meski tab browser sudah ditutup.',
+  ],
   consoleLabel: 'KONSOL —',
   consoleQuote: '“Dapat dijangkau saat ini.”',
   nodescopeLabel: 'NODESCOPE —',
@@ -613,6 +711,16 @@ const id: LandingCopy = {
       title: 'Bandingkan & ekspor',
       body: 'Pilih dua snapshot mana pun, atau baca seluruh sesi. NodeScope membandingkan snapshot secara deterministik, melacak tren latensi dan progresi blok di semuanya, dan berakhir pada verdict yang aturannya dicetak, bukan disembunyikan. Semuanya menyatu menjadi laporan diagnostik yang bisa diekspor (skema v1) dan dibagikan, distempel dengan hash integritas SHA-256, sehingga siapa pun bisa memverifikasi bahwa file tidak diubah setelah diekspor.',
     },
+  ],
+  archTitle: 'Cara kerja tiap bagian',
+  archRight: 'Hanya browser · Tanpa server perantara',
+  archNodes: [
+    'EVM JSON-RPC — eth_chainId, eth_blockNumber, net_version, web3_clientVersion',
+    'Substrate WebSocket — system_health, system_chain, chain_getHeader',
+    'Mesin snapshot — observasi bertimestamp, hingga 20 per sesi',
+    'Diff deterministik & verdict — aturannya ditampilkan, tidak disembunyikan',
+    'JSON kanonis + laporan SHA-256 — bisa diverifikasi di /verify',
+    'Anchor on-chain opsional — hanya hash laporan, di Portaldot V3',
   ],
   transcriptHeader: '>_ HEALTH CHECK — RUN YANG DIREKAM',
   transcriptPause: 'Jeda transkrip',
@@ -730,6 +838,42 @@ const id: LandingCopy = {
   ],
   evidenceFootnote:
     'Endpoint: test-evm-rpc-v3.portaldot.dev · Chain ID 420420777 · Bukti diamati, bukan dibuat-buat — anchor on-chain opsional hanya menyimpan hash laporan, bukan laporannya sendiri.',
+  onchainTitle: 'Bukti on-chain',
+  onchainRight: 'Satu laporan ter-anchor · Bisa diverifikasi sekarang',
+  onchainIntro:
+    'Anchoring itu opsional dan hanya menyimpan hash laporan, bukan laporannya sendiri. Satu laporan nyata sudah di-anchor di testnet Portaldot V3. Kontrak registry, transaksi anchor, dan bloknya ada di bawah, dan pemeriksaan yang sama berjalan live di /verify.',
+  onchainCheckTitle: 'Cara memeriksanya sendiri',
+  onchainCheckSteps: [
+    'Buka tautan verifikasi di bawah. Hash laporan, alamat kontrak, dan transaksi anchor sudah terisi otomatis.',
+    'Tekan Verify anchor on chain. Panel meminta receipt transaksi ke RPC testnet (eth_getTransactionReceipt), tanpa dompet, tanpa tanda tangan.',
+    'Hasil anchored berarti receipt berhasil, dikirim ke kontrak registry, dan membawa log yang topiknya cocok dengan hash laporan, pada blok yang ditampilkan.',
+  ],
+  onchainVerifyNote:
+    'Tidak ada explorer EVM publik untuk chain ini: kedua explorer resmi Portaldot adalah explorer Substrate dan tidak menampilkan receipt EVM. Verifikasi di sini dilakukan lewat RPC itu sendiri, sumber yang sama dengan yang dibaca panel.',
+  whoTitle: 'Siapa yang memakai NodeScope',
+  whoRight: 'Dibuat untuk operator, berguna bagi siapa pun yang memeriksa node',
+  whoItems: [
+    {
+      title: 'Operator & validator node Portaldot',
+      body: 'Buktikan sebuah endpoint tetap sehat sepanjang sesi, dengan snapshot sebagai buktinya, bukan sekadar lampu hijau sesaat.',
+    },
+    {
+      title: 'Penyedia RPC yang membuktikan SLA',
+      body: 'Ekspor sesi bertimestamp sebagai bukti klaim uptime dan latensi, dalam file yang bisa diverifikasi pihak lain.',
+    },
+    {
+      title: 'Tim ekosistem & foundation',
+      body: 'Audit endpoint publik sebelum peluncuran RPC EVM mainnet, dengan catatan deterministik tentang apa yang benar-benar teramati.',
+    },
+    {
+      title: 'Builder dApp yang memilih RPC',
+      body: 'Bandingkan endpoint berdasarkan observasi nyata, progres blok, latensi, dukungan metode, sebelum memilih satu untuk dipakai.',
+    },
+    {
+      title: 'Tim respons insiden',
+      body: 'Rekam apa yang dilakukan node dan kapan, dalam laporan yang tetap ada setelah kanal insiden berlalu.',
+    },
+  ],
   galleryLabel: 'NodeScope · screenshot',
   screenshots: [
     { src: '/screenshots/01-endpoint-config.png', caption: '01 — Konfigurasi endpoint' },
@@ -775,6 +919,25 @@ const id: LandingCopy = {
   ],
   roadmapFootnote:
     'Inti NodeScope adalah bukti, sehingga pekerjaan yang direncanakan dilabeli direncanakan. Tidak ada di halaman ini yang mengklaim ada sebelum benar-benar ada.',
+  roadmapNextLabel: 'Rencana — belum dirilis',
+  roadmapNextItems: [
+    {
+      title: 'Mode pantau terjadwal',
+      body: 'Pemeriksaan ulang terjadwal yang bisa diaktifkan, tetap tanpa polling latar diam-diam secara default. Jadwal adalah sesuatu yang sengaja kamu nyalakan.',
+    },
+    {
+      title: 'Peringatan (Discord atau Telegram)',
+      body: 'Beri tahu kanal pilihanmu saat endpoint yang dipantau menurun, dengan diff snapshot sebagai isi peringatan, bukan sekadar lampu merah.',
+    },
+    {
+      title: 'Laporan SLA bulanan untuk penyedia RPC',
+      body: 'Rangkum ekspor sesi menjadi paket bukti bulanan: uptime, distribusi latensi, dan dukungan metode sepanjang bulan.',
+    },
+    {
+      title: 'Papan peringkat endpoint publik untuk ekosistem',
+      body: 'Peringkat endpoint publik hanya berdasarkan bukti observasi, dengan setiap skor bisa dilacak ke snapshot yang dapat diperiksa ulang siapa pun.',
+    },
+  ],
   judgeTitle: 'Untuk juri: 60 detik untuk memverifikasi',
   judgeRight: 'Tanpa akun · Tanpa wallet · Tanpa setup',
   judgeIntro:
@@ -806,7 +969,7 @@ const id: LandingCopy = {
   ctaTitleA: 'Letakkan node-mu ',
   ctaTitleB: 'di bawah scope.',
   ctaBody: 'Buka toolkit live, jalankan health check terhadap testnet Portaldot V3, dan simpan receipt-nya.',
-  footerLive: 'Live · Chain 420420777 · Portaldot V3 EVM Testnet · Status: Check-in dikirim',
+  footerLive: 'Live · Chain 420420777 · Portaldot V3 EVM Testnet',
   footerDescription:
     'Toolkit diagnostik Portaldot. Konsol berinteraksi, NodeScope membuktikan, dengan receipt yang bisa kamu serahkan ke siapa pun.',
   footerDisclaimer: 'Build Hacker House independen · Bukan produk resmi Portaldot · Testnet saja',
@@ -820,6 +983,8 @@ const id: LandingCopy = {
         { label: 'Bukti Live', href: '#evidence' },
         { label: 'Verifikasi Laporan', href: '/verify' },
         { label: 'Profil Mainnet', href: '/mainnet' },
+        { label: 'Docs', href: '/docs' },
+        { label: 'Untuk Juri', href: '/judges' },
       ],
     },
     {

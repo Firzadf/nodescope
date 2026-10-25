@@ -1,0 +1,322 @@
+{
+  "schemaVersion": "nodescope.diagnostic-report.v1",
+  "exportedAt": "2026-10-22T20:20:52.686Z",
+  "recordCount": 12,
+  "records": [
+    {
+      "id": "1792700336943-5nvju",
+      "requestMethod": "net_version",
+      "timestamp": "2026-10-22T20:18:56.653Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 289,
+      "metricStatus": "success",
+      "metricResult": 289,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    },
+    {
+      "id": "1792700336654-nca74",
+      "requestMethod": "web3_clientVersion",
+      "timestamp": "2026-10-22T20:18:56.414Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 239,
+      "metricStatus": "success",
+      "metricResult": 239,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    },
+    {
+      "id": "1792700336415-0i6ys",
+      "requestMethod": "eth_blockNumber",
+      "timestamp": "2026-10-22T20:18:56.173Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 241,
+      "metricStatus": "success",
+      "metricResult": 150648,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    },
+    {
+      "id": "1792700336173-3er6o",
+      "requestMethod": "eth_chainId",
+      "timestamp": "2026-10-22T20:18:55.680Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 492,
+      "metricStatus": "success",
+      "metricResult": 492,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    },
+    {
+      "id": "1792700309148-eijg7",
+      "requestMethod": "eth_blockNumber",
+      "timestamp": "2026-10-22T20:18:28.654Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 494,
+      "metricStatus": "success",
+      "metricResult": 150643,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    },
+    {
+      "id": "1792700293171-sv9h7",
+      "requestMethod": "eth_chainId",
+      "timestamp": "2026-10-22T20:18:12.667Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 503,
+      "metricStatus": "success",
+      "metricResult": 503,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    },
+    {
+      "id": "1792700247460-yftzd",
+      "requestMethod": "net_version",
+      "timestamp": "2026-10-22T20:17:27.208Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 251,
+      "metricStatus": "success",
+      "metricResult": 251,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    },
+    {
+      "id": "1792700247208-cyj60",
+      "requestMethod": "web3_clientVersion",
+      "timestamp": "2026-10-22T20:17:26.916Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 291,
+      "metricStatus": "success",
+      "metricResult": 291,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    },
+    {
+      "id": "1792700246917-lvysi",
+      "requestMethod": "eth_blockNumber",
+      "timestamp": "2026-10-22T20:17:26.678Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 237,
+      "metricStatus": "success",
+      "metricResult": 150634,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    },
+    {
+      "id": "1792700246679-m8uyi",
+      "requestMethod": "eth_chainId",
+      "timestamp": "2026-10-22T20:17:26.162Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 516,
+      "metricStatus": "success",
+      "metricResult": 516,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    },
+    {
+      "id": "1792700212466-uxdyn",
+      "requestMethod": "eth_blockNumber",
+      "timestamp": "2026-10-22T20:16:51.918Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 547,
+      "metricStatus": "success",
+      "metricResult": 150628,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    },
+    {
+      "id": "1792700212466-qao92",
+      "requestMethod": "eth_chainId",
+      "timestamp": "2026-10-22T20:16:50.248Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 1670,
+      "metricStatus": "success",
+      "metricResult": 1670,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    }
+  ],
+  "findings": [
+    {
+      "ruleId": "block-height-retrieved",
+      "severity": "info",
+      "title": "Block Height Retrieved",
+      "evidence": "Method 'eth_blockNumber' returned block height: 0x24c78",
+      "explanation": "The eth_blockNumber method returned a block height from the endpoint. This confirms retrieval only; one measurement does not prove synchronization or continued block production.",
+      "recommendation": "Repeat the check over time to determine whether block height advances."
+    },
+    {
+      "ruleId": "chain-id-verified",
+      "severity": "info",
+      "title": "Chain ID Observed",
+      "evidence": "Observed chain ID: 420420777 (0x190f1ca9); expected: 420420777 (0x190f1ca9)",
+      "explanation": "The endpoint reports the expected Portaldot V3 testnet chain ID.",
+      "recommendation": "Chain ID check passed. Continue with independent endpoint and block-height checks."
+    }
+  ],
+  "sessionTrends": {
+    "status": "available",
+    "reason": null,
+    "totalSnapshotCount": 2,
+    "snapshotCount": 2,
+    "excludedSnapshotCount": 0,
+    "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+    "endpointProfile": "portaldot_v3_evm",
+    "snapshotIds": [
+      "health-1792700247459-x7ibd",
+      "health-1792700336943-lsofw"
+    ],
+    "firstTimestamp": 1792700247459,
+    "lastTimestamp": 1792700336943,
+    "methods": [
+      {
+        "method": "eth_blockNumber",
+        "samples": 2,
+        "minMs": 237,
+        "medianMs": 239,
+        "maxMs": 241,
+        "firstMs": 237,
+        "lastMs": 241,
+        "medianFirstHalfMs": 237,
+        "medianSecondHalfMs": 241
+      },
+      {
+        "method": "eth_chainId",
+        "samples": 2,
+        "minMs": 492,
+        "medianMs": 504,
+        "maxMs": 516,
+        "firstMs": 516,
+        "lastMs": 492,
+        "medianFirstHalfMs": 516,
+        "medianSecondHalfMs": 492
+      },
+      {
+        "method": "net_version",
+        "samples": 2,
+        "minMs": 251,
+        "medianMs": 270,
+        "maxMs": 289,
+        "firstMs": 251,
+        "lastMs": 289,
+        "medianFirstHalfMs": 251,
+        "medianSecondHalfMs": 289
+      },
+      {
+        "method": "web3_clientVersion",
+        "samples": 2,
+        "minMs": 239,
+        "medianMs": 265,
+        "maxMs": 291,
+        "firstMs": 291,
+        "lastMs": 239,
+        "medianFirstHalfMs": 291,
+        "medianSecondHalfMs": 239
+      }
+    ],
+    "blockProgression": {
+      "method": "eth_blockNumber",
+      "points": [
+        {
+          "snapshotId": "health-1792700247459-x7ibd",
+          "timestamp": 1792700247459,
+          "height": "150634"
+        },
+        {
+          "snapshotId": "health-1792700336943-lsofw",
+          "timestamp": 1792700336943,
+          "height": "150648"
+        }
+      ],
+      "totalDelta": "14",
+      "intervals": [
+        {
+          "fromSnapshotId": "health-1792700247459-x7ibd",
+          "toSnapshotId": "health-1792700336943-lsofw",
+          "fromTimestamp": 1792700247459,
+          "toTimestamp": 1792700336943,
+          "blockDelta": "14",
+          "gapSeconds": 89.484,
+          "secondsPerBlock": 6.3917142857142855
+        }
+      ],
+      "medianSecondsPerBlock": 6.3917142857142855,
+      "stalls": [],
+      "regressions": []
+    },
+    "passRate": {
+      "passed": 8,
+      "total": 8,
+      "ratio": 1
+    },
+    "failureCounts": [],
+    "verdict": {
+      "level": "healthy",
+      "reason": null,
+      "rules": [
+        {
+          "ruleId": "verdict.no-real-failures",
+          "description": "Unstable if any check in the session ended in a real failure (RPC, network, HTTP, or invalid response). Unsupported methods (-32601) do not count as failures.",
+          "effect": "unstable",
+          "evaluated": true,
+          "fired": false,
+          "evidence": "0 real failures across 8 checks"
+        },
+        {
+          "ruleId": "verdict.no-block-stall",
+          "description": "Degraded if the block height stays identical across a gap of 30 s or more between consecutive checks (≈5 blocks at the observed ~6 s cadence). Shorter stalls are recorded as findings but do not fire this rule.",
+          "effect": "degraded",
+          "evaluated": true,
+          "fired": false,
+          "evidence": "Block height advanced in all 1 interval(s)"
+        },
+        {
+          "ruleId": "verdict.no-block-regression",
+          "description": "Degraded if the block height ever decreases between consecutive checks on the same endpoint.",
+          "effect": "degraded",
+          "evaluated": true,
+          "fired": false,
+          "evidence": "Block height never decreased between consecutive checks"
+        },
+        {
+          "ruleId": "verdict.no-latency-drift",
+          "description": "Degraded if any method's median latency in the second half of the session is more than 1.5× its first-half median and at least 100 ms higher. Needs at least 4 samples per method.",
+          "effect": "degraded",
+          "evaluated": false,
+          "fired": false,
+          "evidence": "Not evaluated — methods have at most 2 latency sample(s) (needs 4)"
+        }
+      ]
+    },
+    "blockIntervalNote": "The block interval is estimated from the wall-clock gap between your health checks, not from chain data. It assumes blocks were produced steadily between checks."
+  },
+  "integrity": {
+    "algorithm": "SHA-256",
+    "hash": "f99091dc8344b40f2b2c19e497d8afbb3563789997a7aff4527dbf62b4131627",
+    "scope": "SHA-256 over the canonical JSON of this report, excluding the integrity block itself. Covers schemaVersion, exportedAt, recordCount, records, findings and sessionTrends when present."
+  }
+}

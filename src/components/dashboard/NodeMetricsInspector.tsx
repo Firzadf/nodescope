@@ -19,7 +19,7 @@ import {
   parsePeerCount,
   parseBlockHeight,
 } from '../../utils/metricParsers';
-import { getMethodEvidenceStatus, formatEvidenceLabel } from '../../utils/capabilityEvidence';
+import { getMethodEvidenceStatus, singleStatusFor } from '../../utils/capabilityEvidence';
 
 interface NodeMetricsInspectorProps {
   endpoint: string;
@@ -73,6 +73,12 @@ function StatusBadge({ status }: { status: MetricStatus }) {
       return (
         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-400 border border-line">
           Not Tested
+        </span>
+      );
+    case 'advertised':
+      return (
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sky-500/10 text-sky-300 border border-sky-500/30">
+          Advertised — Not Yet Tested
         </span>
       );
   }
@@ -214,15 +220,14 @@ export function NodeMetricsInspector({
                 <Zap className="w-4 h-4 text-cyan-400" />
                 <span className="text-sm font-medium text-white">RPC Latency</span>
               </div>
-              <StatusBadge status={metricsDetailed.latency.status} />
+              <StatusBadge status={singleStatusFor(metricsDetailed.latency.status, getMethodEvidenceStatus(defaultLatencyMethodForProfile(endpointProfile), capabilitySnapshot, history, endpoint))} />
             </div>
             <div className="text-2xl font-semibold text-white font-data">
               {metricsDetailed.latency.value !== null ? `${metricsDetailed.latency.value}ms` : '—'}
             </div>
             {(() => {
               const m = defaultLatencyMethodForProfile(endpointProfile);
-              const ev = getMethodEvidenceStatus(m, capabilitySnapshot, history, endpoint);
-              return <p className="text-xs text-slate-400">Measured via <code className="text-slate-300">{m}</code> — {formatEvidenceLabel(ev)}.</p>;
+              return <p className="text-xs text-slate-400">Measured via <code className="text-slate-300">{m}</code>.</p>;
             })()}
             {metricsDetailed.latency.error && (
               <p className="text-xs text-red-400 font-mono break-all">{metricsDetailed.latency.error}</p>
@@ -245,15 +250,14 @@ export function NodeMetricsInspector({
                 <Server className="w-4 h-4 text-cyan-400" />
                 <span className="text-sm font-medium text-white">Client Version</span>
               </div>
-              <StatusBadge status={metricsDetailed.clientVersion.status} />
+              <StatusBadge status={singleStatusFor(metricsDetailed.clientVersion.status, getMethodEvidenceStatus(defaultClientVersionMethodForProfile(endpointProfile), capabilitySnapshot, history, endpoint))} />
             </div>
             <div className="text-lg font-mono font-medium text-slate-200 truncate" title={metricsDetailed.clientVersion.value || ''}>
               {metricsDetailed.clientVersion.value || '—'}
             </div>
             {(() => {
               const m = defaultClientVersionMethodForProfile(endpointProfile);
-              const ev = getMethodEvidenceStatus(m, capabilitySnapshot, history, endpoint);
-              return <p className="text-xs text-slate-400">Queried via <code className="text-slate-300">{m}</code> — {formatEvidenceLabel(ev)}.</p>;
+              return <p className="text-xs text-slate-400">Queried via <code className="text-slate-300">{m}</code>.</p>;
             })()}
             {metricsDetailed.clientVersion.error && (
               <p className="text-xs text-amber-400 font-mono break-all">{metricsDetailed.clientVersion.error}</p>
@@ -276,7 +280,11 @@ export function NodeMetricsInspector({
                 <Users className="w-4 h-4 text-cyan-400" />
                 <span className="text-sm font-medium text-white">Connected Peers</span>
               </div>
-              <StatusBadge status={metricsDetailed.peerCount.status} />
+              <StatusBadge status={(() => {
+                const m = defaultPeerMethodForProfile(endpointProfile);
+                if (!m || !hasPeerCountSupport(endpointProfile)) return metricsDetailed.peerCount.status;
+                return singleStatusFor(metricsDetailed.peerCount.status, getMethodEvidenceStatus(m, capabilitySnapshot, history, endpoint));
+              })()} />
             </div>
             <div className="text-2xl font-semibold text-white font-data">
               {metricsDetailed.peerCount.value !== null ? metricsDetailed.peerCount.value : '—'}
@@ -286,8 +294,7 @@ export function NodeMetricsInspector({
               if (!m || !hasPeerCountSupport(endpointProfile)) {
                 return <p className="text-xs text-slate-400">Not available for EVM profile.</p>;
               }
-              const ev = getMethodEvidenceStatus(m, capabilitySnapshot, history, endpoint);
-              return <p className="text-xs text-slate-400">Extracted from {m} — {formatEvidenceLabel(ev)} — when valid numeric peers field present.</p>;
+              return <p className="text-xs text-slate-400">Extracted from {m} — when valid numeric peers field present.</p>;
             })()}
             {metricsDetailed.peerCount.error && (
               <p className="text-xs text-amber-400 font-mono break-all">{metricsDetailed.peerCount.error}</p>

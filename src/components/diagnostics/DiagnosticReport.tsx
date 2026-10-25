@@ -21,9 +21,10 @@ interface DiagnosticReportProps {
   latencyThresholdMs?: number;
   healthSnapshots?: HealthCheckSnapshot[];
   wsProbeResult?: SubstrateWsProbeResult | null;
+  onExported?: () => void;
 }
 
-export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots = [], wsProbeResult = null }: DiagnosticReportProps) {
+export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots = [], wsProbeResult = null, onExported }: DiagnosticReportProps) {
   const sessionTrends = useMemo(() => computeSessionTrends(healthSnapshots), [healthSnapshots]);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -56,6 +57,7 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      onExported?.();
     } catch (error) {
       console.error('Failed to generate report:', error);
       setExportError('Failed to generate report. Please try again.');

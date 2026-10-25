@@ -48,7 +48,7 @@ export function MainnetProfile() {
           {LINKS.map((link) => (
             <a key={link.label} href={link.href} target="_blank" rel="noreferrer" className="block bg-panel/70 p-6 transition-colors hover:bg-panel">
               <p className="font-data text-[11px] uppercase tracking-[0.16em] text-sky-300">{link.label}</p>
-              <p className="mt-2 break-all font-data text-xs text-slate-300">{link.href}</p>
+              <p className="mt-2 font-data text-xs text-slate-300 [overflow-wrap:anywhere]">{link.href}</p>
               <p className="mt-1.5 text-xs text-slate-500">{link.note}</p>
             </a>
           ))}

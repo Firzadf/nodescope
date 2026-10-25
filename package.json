@@ -9,6 +9,7 @@
     "lint": "oxlint",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
+    "check:consistency": "node scripts/check-consistency.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

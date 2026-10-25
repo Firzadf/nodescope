@@ -227,7 +227,25 @@ export function AttestationPanel({
                 {result.status === 'anchored' ? 'Anchored' : 'Not verified as anchored'}
               </p>
               <p className="mt-1 text-xs leading-relaxed text-slate-300">{result.reason}</p>
-              {result.blockNumber !== null && result.blockNumber !== undefined && (
+              {result.status === 'anchored' && (
+                <div className="mt-3 space-y-1 border-t border-emerald-500/20 pt-3 font-data text-[11px]">
+                  <div className="flex gap-2">
+                    <span className="w-28 shrink-0 text-slate-500">Anchor transaction</span>
+                    <span className="break-all text-slate-300">{txHash.trim()}</span>
+                  </div>
+                  {result.blockNumber !== null && result.blockNumber !== undefined && (
+                    <div className="flex gap-2">
+                      <span className="w-28 shrink-0 text-slate-500">Anchor block</span>
+                      <span className="text-slate-300">{result.blockNumber}</span>
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <span className="w-28 shrink-0 text-slate-500">Report hash</span>
+                    <span className="break-all text-slate-300">{effectiveHash}</span>
+                  </div>
+                </div>
+              )}
+              {result.status !== 'anchored' && result.blockNumber !== null && result.blockNumber !== undefined && (
                 <p className="mt-1 font-data text-xs text-slate-400">Anchor block: {result.blockNumber}</p>
               )}
             </div>

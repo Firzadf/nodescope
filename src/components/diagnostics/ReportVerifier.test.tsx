@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { ReportVerifier } from './ReportVerifier';
+import sampleReport from '../../../public/sample-report.json';
 import {
   attachSessionTrends,
   buildDiagnosticReport,
@@ -22,7 +23,10 @@ import {
 // The app tsconfig restricts ambient types to vite/client, so no node:*
 // imports are available to test files; none are needed.
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 const T0 = 1700000000000;
 
@@ -118,5 +122,20 @@ describe('ReportVerifier', () => {
 
     expect(await screen.findByText('NO INTEGRITY STAMP')).toBeInTheDocument();
     expect(screen.getByText(/predates integrity stamping/)).toBeInTheDocument();
+  });
+
+  it('labels a loaded sample report with a SAMPLE badge and its capture date', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      text: async () => JSON.stringify(sampleReport),
+    }));
+
+    render(<ReportVerifier />);
+    fireEvent.click(screen.getByText('Load sample report'));
+
+    expect(await screen.findByText('VERIFIED — INTACT')).toBeInTheDocument();
+    expect(screen.getByText('Sample')).toBeInTheDocument();
+    expect(screen.getByText(/captured 22 Oct 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/not anchored on chain/)).toBeInTheDocument();
   });
 });

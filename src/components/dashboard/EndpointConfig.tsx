@@ -119,7 +119,7 @@ export function EndpointConfig({
 
         <div className="space-y-2">
           <label className="block text-sm font-medium text-slate-300">Node JSON-RPC URL</label>
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative flex-1">
               <input
                 type="text"
@@ -138,7 +138,7 @@ export function EndpointConfig({
               <button
                 type="button"
                 onClick={onDisconnect}
-                className="px-5 py-2.5 border border-red-500/30 text-red-300 hover:bg-red-500/10 font-medium rounded-lg text-sm transition-colors"
+                className="w-full sm:w-auto justify-center px-5 py-2.5 border border-red-500/30 text-red-300 hover:bg-red-500/10 font-medium rounded-lg text-sm transition-colors"
               >
                 Disconnect
               </button>
@@ -147,7 +147,7 @@ export function EndpointConfig({
                 type="button"
                 onClick={onConnect}
                 disabled={isConnecting || !!validationError || !inputUrl.trim()}
-                className="btn-primary px-5 py-2.5 font-medium rounded-lg text-sm flex items-center gap-2"
+                className="btn-primary w-full sm:w-auto justify-center px-5 py-2.5 font-medium rounded-lg text-sm flex items-center gap-2"
               >
                 {isConnecting && <RefreshCw className="w-4 h-4 animate-spin" />}
                 {isConnecting ? 'Testing...' : 'Connect & Test'}
@@ -160,6 +160,21 @@ export function EndpointConfig({
               {validationError}
             </p>
           )}
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => handleUrlChange('https://unreachable.portaldot.invalid')}
+              disabled={isConnected || isConnecting}
+              className="text-xs font-medium text-amber-300 hover:text-amber-200 disabled:opacity-50 underline underline-offset-2"
+            >
+              Try a degraded endpoint (expected to fail)
+            </button>
+            <span className="text-xs text-slate-500">
+              Fills an unresolvable URL (.invalid never resolves). Connect fails with a network
+              error, run a health check on it, then compare snapshots in panel 04 to see the
+              healthy-vs-degraded diff. Nothing here is simulated: the failure is the real one.
+            </span>
+          </div>
         </div>
 
         {evmConnectionDetails && endpointProfile === 'portaldot_v3_evm' && (
