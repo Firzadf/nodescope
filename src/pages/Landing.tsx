@@ -782,6 +782,13 @@ export function Landing() {
               <span aria-hidden="true" className="absolute -left-4 top-6 rounded-full border border-line bg-black/80 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-slate-200 shadow-lg">{t.heroChipEvm}</span>
               <span aria-hidden="true" className="absolute -right-3 bottom-12 rounded-full border border-line bg-black/80 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-slate-200 shadow-lg">{t.heroChipSchema}</span>
             </div>
+            <figure className="kiky-float absolute -bottom-8 left-2 z-20 w-28 md:w-36">
+              <span aria-hidden="true" className="kiky-ring absolute -inset-2 rounded-full" />
+              <img src="/kiky.png" alt={t.kikyAlt} className="relative w-full drop-shadow-[0_16px_32px_rgba(0,0,0,0.55)]" />
+              <figcaption className="relative mt-1 text-center font-data text-[9px] uppercase tracking-[0.18em] text-slate-400">
+                {t.kikyCaption}
+              </figcaption>
+            </figure>
           </div>
         </div>
       </section>

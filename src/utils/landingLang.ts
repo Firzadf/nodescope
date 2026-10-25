@@ -97,6 +97,8 @@ export interface LandingCopy {
   heroFigureCaption: string;
   heroChipEvm: string;
   heroChipSchema: string;
+  kikyAlt: string;
+  kikyCaption: string;
   banner: string;
   stats: StatItem[];
   problemTitle: string;
@@ -230,10 +232,12 @@ const en: LandingCopy = {
   heroFigureCaption: 'The app — snapshot comparison, cropped from a real session',
   heroChipEvm: 'Portaldot V3 EVM',
   heroChipSchema: 'Report schema v1',
+  kikyAlt: 'Kiky, the Portaldot mascot',
+  kikyCaption: 'Kiky · Portaldot mascot · fan tribute · decorative only',
   banner: 'Portaldot Hacker House 2026 · Check-in 22 Oct 2026 · Final / code freeze 6 Nov 2026, 11:00 WIB',
   stats: [
     { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · returned by eth_chainId' },
-    { value: '320', label: 'Tests passing', sub: '37 files · Vitest · suite verified 25 Oct 2026' },
+    { value: '322', label: 'Tests passing', sub: '38 files · Vitest · suite verified 25 Oct 2026' },
     {
       value: '38',
       label: 'RPC methods probed',
@@ -561,10 +565,12 @@ const id: LandingCopy = {
   heroFigureCaption: 'App-nya — perbandingan snapshot, dipotong dari sesi nyata',
   heroChipEvm: 'Portaldot V3 EVM',
   heroChipSchema: 'Report schema v1',
+  kikyAlt: 'Kiky, maskot Portaldot',
+  kikyCaption: 'Kiky · maskot Portaldot · tribut penggemar · dekorasi saja',
   banner: 'Portaldot Hacker House 2026 · Check-in 22 Okt 2026 · Final / code freeze 6 Nov 2026, 11:00 WIB',
   stats: [
     { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · dikembalikan oleh eth_chainId' },
-    { value: '320', label: 'Test lolos', sub: '37 file · Vitest · suite terverifikasi 25 Okt 2026' },
+    { value: '322', label: 'Test lolos', sub: '38 file · Vitest · suite terverifikasi 25 Okt 2026' },
     {
       value: '38',
       label: 'Metode RPC diuji',
