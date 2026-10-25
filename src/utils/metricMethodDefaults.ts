@@ -8,7 +8,13 @@ export function defaultClientVersionMethodForProfile(profile: EndpointProfile): 
   return profile === 'portaldot_v3_evm' ? 'web3_clientVersion' : 'system_version';
 }
 
-export function hasPeerCountSupport(profile: EndpointProfile): boolean {
+/**
+ * Every profile now has a peer query: the EVM profile uses net_peerCount,
+ * other profiles use system_health. The parameter stays so call sites keep
+ * their shape and a future profile can opt out again; it is intentionally
+ * unused for now.
+ */
+export function hasPeerCountSupport(_profile: EndpointProfile): boolean {
   return true;
 }
 
