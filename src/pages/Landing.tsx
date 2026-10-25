@@ -601,7 +601,7 @@ function PacketFlow({ lang }: { lang: Lang }) {
 /* --------------------------- full background ------------------------------- */
 
 /**
- * Full-page background animation, Plinths-style but built from cheap parts:
+ * Full-page background animation, built from cheap parts:
  * radial-gradient glow orbs (no filter blur, so moving them is just
  * compositing), two SVG ribbon paths drifting on transform, and one light
  * streak sweeping across. A rAF-throttled scroll listener only shifts the

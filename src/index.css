@@ -154,7 +154,7 @@
 }
 
 /* Panels rise in sequence when a view mounts. */
-/* Page-load choreography, Plinths-style: elements rise out of blur, one
+/* Page-load choreography: elements rise out of blur, one
    after another, instead of appearing all at once. Non-blocking, and the
    reduced-motion block below already turns it off entirely. */
 @keyframes load-rise {
