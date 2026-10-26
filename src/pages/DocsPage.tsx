@@ -116,6 +116,23 @@ export function DocsPage() {
           </ol>
         </section>
 
+        <section className="mt-10">
+          <h2 className="text-xl font-semibold text-white">Fee Lab: the same operation on both surfaces</h2>
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
+            The Fee Lab section in <a href="/app/fee-lab" className="text-[#7DB4FF] hover:text-white">/app</a> measures
+            one operation twice, live, from your browser: once through the EVM endpoint
+            (<code className="font-data text-slate-300">eth_estimateGas</code> ×{' '}
+            <code className="font-data text-slate-300">eth_gasPrice</code>) and once natively through the
+            Substrate WebSocket (a <code className="font-data text-slate-300">ReviveApi</code> dry-run plus{' '}
+            <code className="font-data text-slate-300">TransactionPaymentApi.query_info</code>). The EVM gas
+            figure already includes the storage deposit; the native figure reports it separately as
+            a refundable hold. That is why a fee-only comparison can read ~800× while the all-in
+            comparison lands near 1×. The From address is only a dry-run origin: nothing signs.
+            The section opens no connection until you measure, polls nothing, and closes the
+            Substrate connection when you leave it.
+          </p>
+        </section>
+
         <section className="mt-10 border-t border-line pt-6">
           <h2 className="text-xl font-semibold text-white">Honest scope</h2>
           <ul className="mt-3 space-y-1.5 text-sm leading-relaxed text-slate-400">

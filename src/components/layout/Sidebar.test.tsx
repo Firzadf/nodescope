@@ -11,6 +11,7 @@ describe('Sidebar collapse', () => {
     const props = { activeSection: 'overview', onSectionChange: vi.fn(), onOpenPalette: vi.fn() };
     const { rerender } = render(<Sidebar {...props} />);
     expect(screen.getByText('Overview')).toBeTruthy();
+    expect(screen.getByText('Fee Lab')).toBeTruthy();
     rerender(<Sidebar {...props} collapsed />);
     expect(screen.queryByText('Overview')).toBeNull();
     expect(screen.getByTitle('Overview')).toBeTruthy();

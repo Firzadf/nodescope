@@ -30,5 +30,5 @@ export const ANCHORED_REPORT_HASH =
 export const ANCHORED_REPORT_EXPORTED_AT = '2026-10-24T20:12:08Z';
 export const ANCHORED_REPORT_RECORDS = 14;
 
-export const SITE_TESTS = '360';
-export const SITE_TEST_FILES = '49';
+export const SITE_TESTS = '376';
+export const SITE_TEST_FILES = '51';

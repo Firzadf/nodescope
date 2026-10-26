@@ -30,6 +30,7 @@ import { loadWsProbe, saveWsProbe, loadCapability, saveCapability } from './serv
 import { initialSidebarCollapsed } from './utils/sidebarState';
 import { extractEvmSide } from './utils/combinedVerdict';
 import { FullDiagnosticRunner } from './components/dashboard/FullDiagnosticRunner';
+import { FeeLabPanel } from './components/feeLab/FeeLabPanel';
 
 const initialMetricsDetailed: NodeMetricsDetailed = {
   latency: { status: 'not_tested', value: null },
@@ -39,7 +40,11 @@ const initialMetricsDetailed: NodeMetricsDetailed = {
 };
 
 function App() {
-  const [activeSection, setActiveSection] = useState('overview');
+  // Deep link: /app/fee-lab opens the Fee Lab section directly; every other
+  // /app path starts on the overview, as before.
+  const [activeSection, setActiveSection] = useState(() =>
+    window.location.pathname === '/app/fee-lab' ? 'fee-lab' : 'overview',
+  );
   const [endpoint, setEndpoint] = useState(DEFAULT_PORTALDOT_V3_EVM_RPC);
   const [endpointProfile, setEndpointProfile] = useState<EndpointProfile>('portaldot_v3_evm');
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
@@ -236,6 +241,7 @@ function App() {
     },
     { id: 'nav-diagnostics', label: 'Go to RPC Diagnostics', group: 'Navigate', hint: '02', keywords: 'console rpc run method', run: () => setActiveSection('diagnostics') },
     { id: 'nav-history', label: 'Go to History', group: 'Navigate', hint: '03', keywords: 'report export ledger records', run: () => setActiveSection('history') },
+    { id: 'nav-fee-lab', label: 'Go to Fee Lab', group: 'Navigate', hint: '04', keywords: 'fee lab evm native revive estimate cost gas storage deposit', run: () => setActiveSection('fee-lab') },
     {
       id: 'nav-combined',
       label: 'Go to Combined Verdict',
@@ -426,6 +432,11 @@ function App() {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+            {activeSection === 'fee-lab' && (
+              <div className="space-y-6 stagger">
+                <FeeLabPanel />
               </div>
             )}
             {activeSection === 'history' && (

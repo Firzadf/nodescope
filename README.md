@@ -163,6 +163,17 @@ npm run preview
 - **URL validation** — http:// and https:// only, credential stripping, query parameter redaction
 - **Chain ID validator** — Portaldot V3.0 chain ID 420420777 (0x190f1ca9) with comparison and error messages
 
+### Fee Lab — EVM vs Native Fee Comparison (Complete ✅)
+
+Ported from DualFee (merged into NodeScope; one build per account, so DualFee is a module here, not a separate submission). Lives in the app sidebar as **Fee Lab** (`/app/fee-lab`).
+
+- **Same operation, both surfaces** — native transfer, ERC-20 transfer, contract deploy (sample, registry, or custom bytecode), and pasted calldata. The From address is only a dry-run origin; nothing signs.
+- **EVM leg** — `eth_estimateGas` × `eth_gasPrice`. The gas figure already folds the storage deposit in.
+- **Native leg** — `ReviveApi` dry-run plus `TransactionPaymentApi.query_info` over the Substrate WebSocket (via `@polkadot/api`, lazy-loaded on first measure), reported as partialFee + storage deposit separately.
+- **Honest comparison** — all-in ratio (EVM ÷ native fee + deposit) next to the fee-only ratio (EVM ÷ native fee), which is how "~800×" headlines are usually produced. Within 2% all-in, the recommendation reads "either".
+- **Doctrine kept** — user-triggered only: no connection opens until you measure, nothing polls, and the Substrate connection closes when you leave the section. No placeholder numbers; a surface that fails reports `unavailable` with its reason instead of a dressed-up value.
+- **Deferred to phase 2** — DualFee's Calculator, Address converter, History recording, Leaderboard, on-chain Verify, and optional wallet Deploy pages. They were not ported in phase 1 to keep the merge clean.
+
 ## Portaldot Integration & Deployment Evidence
 
 ### Verified Endpoint
@@ -300,7 +311,7 @@ src/
 | `SessionTrendsPanel.test.tsx` | Trends panel rendering, including the V3 era note |
 | `SnapshotStrip.test.tsx` | Session strip rendering, including era in tooltips |
 | 6 files not listed above | Component and utility tests added in later phases, including Landing and Command Palette |
-| **Total** | **360 passing tests, 49 test files** (suite verified 26 Oct 2026; the landing page, /judges, and this README are checked against one constants file by `src/utils/siteConsistency.test.tsx` and `npm run check:consistency`) |
+| **Total** | **376 passing tests, 51 test files** (suite verified 26 Oct 2026; the landing page, /judges, and this README are checked against one constants file by `src/utils/siteConsistency.test.tsx` and `npm run check:consistency`) |
 
 ### Running Tests
 

@@ -1,4 +1,4 @@
-import { Activity, Terminal, Clock, Search, ShieldCheck, Globe, Home, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Activity, Terminal, Clock, Scale, Search, ShieldCheck, Globe, Home, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 type NavItem = {
   id: string;
@@ -10,6 +10,7 @@ const navItems: NavItem[] = [
   { id: 'overview', label: 'Overview', icon: Activity },
   { id: 'diagnostics', label: 'RPC Diagnostics', icon: Terminal },
   { id: 'history', label: 'History', icon: Clock },
+  { id: 'fee-lab', label: 'Fee Lab', icon: Scale },
 ];
 
 interface SidebarProps {
