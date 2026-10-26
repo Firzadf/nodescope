@@ -37,4 +37,25 @@ describe('FeesPage', () => {
     expect(window.sessionStorage.getItem('nodescope-lang')).toBe('id');
     unmount();
   });
+
+  it('opens and closes the mobile menu from the hamburger', () => {
+    const { container, unmount } = render(<FeesPage />);
+    const header = within(container.querySelector('header') as HTMLElement);
+    const toggle = header.getByRole('button', { name: 'Toggle navigation menu' });
+    expect(container.querySelector('#fees-mobile-menu')).toBeNull();
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    const menu = container.querySelector('#fees-mobile-menu');
+    expect(menu).not.toBeNull();
+    const links = menu?.querySelectorAll('a') ?? [];
+    expect(links.length).toBe(5);
+    expect(links[0]?.getAttribute('href')).toBe('/');
+    expect(links[2]?.getAttribute('href')).toBe('/app/fee-lab');
+    // Clicking a link closes the menu again.
+    fireEvent.click(links[0]!);
+    expect(container.querySelector('#fees-mobile-menu')).toBeNull();
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    unmount();
+  });
 });

@@ -45,11 +45,19 @@ function PillarCard({
   accent,
   measure,
   valueTestId,
+  autoMeasure = true,
 }: {
   copy: PillarCardCopy;
   accent: 'blue' | 'amber';
   measure: () => Promise<string>;
   valueTestId: string;
+  /**
+   * Viewport entry measures once. The Fees card opts out: its measurement
+   * lazy-loads the ~948 kB @polkadot/api chunk and opens a WSS connection,
+   * too expensive to trigger just because the card scrolled into view, so
+   * it only measures on an explicit Measure press.
+   */
+  autoMeasure?: boolean;
 }) {
   const { state, run } = useOneShot(measure);
   const ref = useRef<HTMLDivElement>(null);
@@ -57,7 +65,7 @@ function PillarCard({
   // (tests, old browsers) the card simply waits for the Measure press.
   useEffect(() => {
     const el = ref.current;
-    if (!el || typeof IntersectionObserver === 'undefined') return;
+    if (!el || !autoMeasure || typeof IntersectionObserver === 'undefined') return;
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -126,7 +134,7 @@ export function PillarCards({
   return (
     <div className="grid min-w-0 gap-5 md:grid-cols-2">
       <PillarCard copy={health} accent="blue" measure={healthMeasure} valueTestId="health-proof-value" />
-      <PillarCard copy={fees} accent="amber" measure={feesMeasure} valueTestId="fees-proof-value" />
+      <PillarCard copy={fees} accent="amber" measure={feesMeasure} valueTestId="fees-proof-value" autoMeasure={false} />
     </div>
   );
 }

@@ -61,6 +61,13 @@ let attempt = 0;
  * - A connect timeout (default 10s): if ApiPromise.create never settles
  *   (socket open but the node silent), the attempt is torn down and the
  *   call rejects with 'timed out' instead of hanging the Measure button.
+ *
+ * autoConnect=false also means the provider never connects on its own, and
+ * ApiPromise.create waits on it forever — so connect() is called explicitly
+ * here, still inside the 10s withTimeout below. Without this call the live
+ * native leg timed out on every run even though the raw WSS endpoint was
+ * healthy (independent QA, 26 Oct 2026). The flag stays false: one explicit
+ * connection attempt, no reconnect loop.
  */
 export async function getApi(url: string, timeoutMs = 10000): Promise<ApiPromise> {
   if (apiPromise && apiUrl === url) return apiPromise;
@@ -70,6 +77,7 @@ export async function getApi(url: string, timeoutMs = 10000): Promise<ApiPromise
     const { ApiPromise, WsProvider } = await import('@polkadot/api');
     const provider = new WsProvider(url, false);
     if (myAttempt === attempt) apiProvider = provider;
+    await provider.connect();
     const api = await ApiPromise.create({ provider, noInitWarn: true, throwOnConnect: true });
     if (myAttempt === attempt) apiSettled = api;
     return api;

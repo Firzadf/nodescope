@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, afterEach } from 'vitest';
 import { PillarCards, type PillarCardCopy } from './PillarCards';
 
 function copy(overrides: Partial<PillarCardCopy>): PillarCardCopy {
@@ -18,6 +18,10 @@ function copy(overrides: Partial<PillarCardCopy>): PillarCardCopy {
     ...overrides,
   };
 }
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe('PillarCards', () => {
   it('renders both cards with their CTAs', () => {
@@ -95,6 +99,42 @@ describe('PillarCards', () => {
     fireEvent.click(root.getByRole('button', { name: 'Measure fees' }));
     expect(await screen.findByTestId('fees-proof-value')).toBeTruthy();
     expect(feesMeasure).toHaveBeenCalledTimes(2);
+    unmount();
+  });
+
+  it('auto-measures Health on viewport entry but not Fees (click-only)', async () => {
+    // An observer that reports every card as intersecting immediately.
+    class ImmediateObserver {
+      private cb: IntersectionObserverCallback;
+      constructor(cb: IntersectionObserverCallback) {
+        this.cb = cb;
+      }      observe() {
+        this.cb([{ isIntersecting: true } as IntersectionObserverEntry], this as unknown as IntersectionObserver);
+      }
+      disconnect() {}
+      unobserve() {}
+    }
+    vi.stubGlobal('IntersectionObserver', ImmediateObserver);
+    const healthMeasure = vi.fn(async () => 'Block #1');
+    const feesMeasure = vi.fn(async () => '1.016× all-in');
+    const { container, unmount } = render(
+      <PillarCards
+        health={copy({ measureLabel: 'Measure health' })}
+        fees={copy({ measureLabel: 'Measure fees' })}
+        healthMeasure={healthMeasure}
+        feesMeasure={feesMeasure}
+      />,
+    );
+    // Health auto-measured on viewport entry; Fees did not, so its
+    // Measure button is still there and no fees value rendered.
+    expect(await screen.findByTestId('health-proof-value')).toBeTruthy();
+    expect(healthMeasure).toHaveBeenCalledTimes(1);
+    expect(feesMeasure).not.toHaveBeenCalled();
+    expect(within(container).getByRole('button', { name: 'Measure fees' })).toBeTruthy();
+    // An explicit press still measures Fees.
+    fireEvent.click(within(container).getByRole('button', { name: 'Measure fees' }));
+    expect(await screen.findByTestId('fees-proof-value')).toBeTruthy();
+    expect(feesMeasure).toHaveBeenCalledTimes(1);
     unmount();
   });
 });

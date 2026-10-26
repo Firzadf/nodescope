@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Activity, ArrowRight, ArrowUpRight, Menu, Pause, Play, X } from 'lucide-react';
+import { Activity, ArrowRight, ArrowUpRight, Pause, Play, X } from 'lucide-react';
 import { sendJsonRpcRequest } from '../services/rpcClient';
 import { BackToTop } from '../components/BackToTop';
 import { IntroSplash } from '../components/common/IntroSplash';
@@ -7,6 +7,7 @@ import { DEFAULT_PORTALDOT_V3_EVM_RPC } from '../types/endpoint';
 import { landingCopy, readStoredLang, storeLang, type Lang } from '../utils/landingLang';
 import { PillarCards } from '../components/landing/PillarCards';
 import { SiteFooter } from '../components/layout/SiteFooter';
+import { SiteHeader } from '../components/layout/SiteHeader';
 import {
   ANCHOR_BLOCK,
   ANCHOR_TX,
@@ -18,7 +19,7 @@ import {
 } from '../utils/siteConstants';
 
 const APP_URL = '/app';
-const DEMO_URL = 'https://www.youtube.com/watch?v=qne3_eZdcKA';
+const DEMO_URL = 'https://youtu.be/TyTudF3MUaI';
 const DOCUMENTED_CHAIN_ID = 420420777;
 
 /* ---------------------------------- hooks --------------------------------- */
@@ -682,7 +683,6 @@ export function Landing() {
     setLangState(l);
     storeLang(l);
   };
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const t = landingCopy[lang];
 
   useEffect(() => {
@@ -705,75 +705,16 @@ export function Landing() {
       <ScrollProgress />
       <FullBackground />
       {/* -------------------------------- nav ------------------------------- */}
-      <header className="fixed inset-x-0 top-0 z-40 px-4 pt-3">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 rounded-[20px] border border-line bg-ink/80 px-4 py-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur">
-          <a href="/" className="flex shrink-0 items-center gap-2.5">
-            <img src="/logo.png" alt="NodeScope logo" className="h-7 w-7 rounded-lg shadow-[0_0_20px_rgba(1,129,251,0.35)] ring-1 ring-[#0181FB]/40" />
-            <span className="hidden font-display text-[17px] font-semibold tracking-tight text-white sm:inline">
-              Node<span className="text-[#0181FB]">Scope</span>
-            </span>
-          </a>
-          <nav className="mx-auto hidden items-center gap-7 text-sm text-slate-400 xl:flex">
-            {t.nav.map(({ href, label }) => (
-              <a key={href} href={href} className="group relative shrink-0 whitespace-nowrap transition-colors hover:text-white">
-                {label}
-                <span aria-hidden="true" className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-[#0181FB] transition-transform duration-300 group-hover:scale-x-100" />
-              </a>
-            ))}
-          </nav>
-          <span className="flex shrink-0 items-center gap-1 rounded-full border border-line bg-black/30 p-1" role="group" aria-label="Language">
-            {(['en', 'id'] as Lang[]).map((l) => (
-              <button
-                key={l}
-                type="button"
-                aria-label={l === 'en' ? 'English' : 'Bahasa Indonesia'}
-                aria-pressed={lang === l}
-                onClick={() => setLang(l)}
-                className={`rounded-full px-2.5 py-1 font-data text-[10px] uppercase tracking-[0.14em] transition-colors ${lang === l ? 'bg-[#0181FB] text-white' : 'text-slate-400 hover:text-white'}`}
-              >
-                {l.toUpperCase()}
-              </button>
-            ))}
-          </span>
-          <span className="hidden items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-emerald-300 xl:flex">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            </span>
-            V3 Testnet
-          </span>
-          <a href={APP_URL} className="btn-primary ml-auto inline-flex shrink-0 items-center gap-2 whitespace-nowrap px-4 py-2 text-sm font-semibold md:ml-0">
-            {t.launchApp}
-            <ArrowUpRight className="h-4 w-4" />
-          </a>
-          <button
-            type="button"
-            aria-label="Toggle navigation menu"
-            aria-expanded={mobileMenuOpen}
-            aria-controls="landing-mobile-menu"
-            onClick={() => setMobileMenuOpen((v) => !v)}
-            className="btn-ghost flex h-9 w-9 shrink-0 items-center justify-center rounded-lg xl:hidden"
-          >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
-        {mobileMenuOpen && (
-          <div id="landing-mobile-menu" className="mx-auto mt-2 max-w-6xl rounded-[20px] border border-line bg-ink/95 px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur xl:hidden">
-            <nav className="grid gap-1">
-              {t.nav.map(({ href, label }) => (
-                <a
-                  key={href}
-                  href={href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="whitespace-nowrap rounded-lg px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-white/[0.04] hover:text-white"
-                >
-                  {label}
-                </a>
-              ))}
-            </nav>
-          </div>
-        )}
-      </header>
+      <SiteHeader
+        nav={t.nav}
+        lang={lang}
+        setLang={setLang}
+        accent="blue"
+        menuId="landing-mobile-menu"
+        variant="landing"
+        launchLabel={t.launchApp}
+        launchHref={APP_URL}
+      />
 
       {/* -------------------------------- hero ------------------------------ */}
       <section className="relative overflow-hidden px-4 pb-24 pt-32 md:pt-40">

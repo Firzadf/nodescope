@@ -3,6 +3,7 @@ import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { feesCopy } from '../utils/feesLang';
 import { landingCopy, readStoredLang, storeLang, type Lang } from '../utils/landingLang';
 import { SiteFooter } from '../components/layout/SiteFooter';
+import { SiteHeader } from '../components/layout/SiteHeader';
 
 // /fees: the Fees sub-landing. Same design system, fonts, and footer as the
 // main landing, but its own hero layout and amber accent (amber already
@@ -70,37 +71,14 @@ export function FeesPage() {
   const footerCopy = landingCopy[lang];
   return (
     <div className="landing-root min-h-screen bg-ink font-sans text-slate-200 antialiased">
-      <header className="border-b border-line px-4 py-4">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3">
-          <a href="/" className="flex shrink-0 items-center gap-2.5">
-            <img src="/logo.png" alt="NodeScope logo" className="h-7 w-7 rounded-lg shadow-[0_0_20px_rgba(1,129,251,0.35)] ring-1 ring-[#0181FB]/40" />
-            <span className="font-display text-[17px] font-semibold tracking-tight text-white">
-              Node<span className="text-[#0181FB]">Scope</span>
-            </span>
-          </a>
-          <nav className="mx-auto flex flex-wrap items-center gap-5 font-data text-[11px] uppercase tracking-[0.18em] text-slate-400">
-            {t.nav.map(({ href, label }) => (
-              <a key={href} href={href} className="shrink-0 whitespace-nowrap transition-colors hover:text-white">
-                {label}
-              </a>
-            ))}
-          </nav>
-          <span className="flex shrink-0 items-center gap-1 rounded-full border border-line bg-black/30 p-1" role="group" aria-label="Language">
-            {(['en', 'id'] as Lang[]).map((l) => (
-              <button
-                key={l}
-                type="button"
-                aria-label={l === 'en' ? 'English' : 'Bahasa Indonesia'}
-                aria-pressed={lang === l}
-                onClick={() => setLang(l)}
-                className={`rounded-full px-2.5 py-1 font-data text-[10px] uppercase tracking-[0.14em] transition-colors ${lang === l ? 'bg-amber-400 text-black' : 'text-slate-400 hover:text-white'}`}
-              >
-                {l.toUpperCase()}
-              </button>
-            ))}
-          </span>
-        </div>
-      </header>
+      <SiteHeader
+        nav={t.nav}
+        lang={lang}
+        setLang={setLang}
+        accent="amber"
+        menuId="fees-mobile-menu"
+        variant="fees"
+      />
 
       {/* Hero: centered single column and amber accent, deliberately unlike
           the main landing's two-column blue hero. */}
