@@ -1,6 +1,6 @@
 import { DEFAULT_NETWORK, type NetworkConfig } from './constants';
 import { quoteEvm, erc20TransferCalldata, type EvmTx } from './evm';
-import { getApi, quoteNativeTransfer, quoteReviveCall, quoteReviveInstantiate, quoteAssetsTransfer } from './native';
+import { getApi, withTimeout, quoteNativeTransfer, quoteReviveCall, quoteReviveInstantiate, quoteAssetsTransfer } from './native';
 import { compareLegs, evmLegFromQuote, nativeLegFromQuote, type Comparison, type EvmLeg, type NativeLeg, type Surface } from './compare';
 import { h160ToAccountId32, isH160 } from './mapping';
 import { planckToWei } from './units';
@@ -21,6 +21,10 @@ export type { DualTx, OpKind } from './types';
 export type EstimateOptions = {
   network?: NetworkConfig;
   api?: ApiPromise;
+  /** Passed to getApi when no api is supplied. Default 10000. */
+  connectTimeoutMs?: number;
+  /** Wall clock allowed for one native quote. Default 15000. */
+  estimateTimeoutMs?: number;
 };
 
 function msg(e: unknown): string {
@@ -64,8 +68,9 @@ export async function estimateEvm(tx: DualTx, net: NetworkConfig = DEFAULT_NETWO
   }
 }
 
-export async function estimateNative(tx: DualTx, opts: EstimateOptions = {}): Promise<NativeLeg> {
-  const net = opts.network ?? DEFAULT_NETWORK;
+/** The native extrinsic a DualTx is weighed as. Shared with the panel so a
+ * natively-unavailable leg names the same method estimateNative would. */
+export function nativeMethodFor(tx: DualTx): string {
   const methodFor: Record<OpKind, string> = {
     nativeTransfer: 'balances.transferKeepAlive',
     erc20Transfer: 'revive.call',
@@ -73,30 +78,34 @@ export async function estimateNative(tx: DualTx, opts: EstimateOptions = {}): Pr
     calldata: 'revive.call',
     assetsTransfer: 'assets.transferKeepAlive',
   };
-  const method = tx.kind === 'calldata' && !tx.to ? 'revive.instantiateWithCode' : methodFor[tx.kind];
+  return tx.kind === 'calldata' && !tx.to ? 'revive.instantiateWithCode' : methodFor[tx.kind];
+}
+
+export async function estimateNative(tx: DualTx, opts: EstimateOptions = {}): Promise<NativeLeg> {
+  const net = opts.network ?? DEFAULT_NETWORK;
+  const method = nativeMethodFor(tx);
   try {
-    const api = opts.api ?? (await getApi(net.substrateWss));
+    const api = opts.api ?? (await getApi(net.substrateWss, opts.connectTimeoutMs));
     const origin = h160ToAccountId32(tx.from);
-    let q;
-    switch (tx.kind) {
-      case 'nativeTransfer':
-        q = await quoteNativeTransfer(api, origin, h160ToAccountId32(tx.to), tx.amountPlanck);
-        break;
-      case 'erc20Transfer':
-        q = await quoteReviveCall(api, origin, tx.token, 0n, erc20TransferCalldata(tx.to, tx.amount));
-        break;
-      case 'contractDeploy':
-        q = await quoteReviveInstantiate(api, origin, tx.bytecode, tx.constructorData ?? '0x');
-        break;
-      case 'calldata':
-        q = tx.to
-          ? await quoteReviveCall(api, origin, tx.to, tx.valuePlanck ?? 0n, tx.data)
-          : await quoteReviveInstantiate(api, origin, tx.data, '0x', tx.valuePlanck ?? 0n);
-        break;
-      case 'assetsTransfer':
-        q = await quoteAssetsTransfer(api, origin, tx.assetId, h160ToAccountId32(tx.to), tx.amount);
-        break;
-    }
+    const quote = async () => {
+      switch (tx.kind) {
+        case 'nativeTransfer':
+          return quoteNativeTransfer(api, origin, h160ToAccountId32(tx.to), tx.amountPlanck);
+        case 'erc20Transfer':
+          return quoteReviveCall(api, origin, tx.token, 0n, erc20TransferCalldata(tx.to, tx.amount));
+        case 'contractDeploy':
+          return quoteReviveInstantiate(api, origin, tx.bytecode, tx.constructorData ?? '0x');
+        case 'calldata':
+          return tx.to
+            ? quoteReviveCall(api, origin, tx.to, tx.valuePlanck ?? 0n, tx.data)
+            : quoteReviveInstantiate(api, origin, tx.data, '0x', tx.valuePlanck ?? 0n);
+        case 'assetsTransfer':
+          return quoteAssetsTransfer(api, origin, tx.assetId, h160ToAccountId32(tx.to), tx.amount);
+      }
+    };
+    // One hung dry-run or paymentInfo must not hang the comparison: the
+    // 15s budget turns it into "unavailable: timed out" instead.
+    const q = await withTimeout(quote(), opts.estimateTimeoutMs ?? 15000);
     return nativeLegFromQuote(q);
   } catch (e) {
     return { status: 'unavailable', method, reason: msg(e) };

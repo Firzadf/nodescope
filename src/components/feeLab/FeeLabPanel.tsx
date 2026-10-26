@@ -17,25 +17,34 @@
  *   not belong in it. The comparison is shown, not stored.
  * - No framer-motion: plain divs, NodeScope tokens (bg-panel, border-line,
  *   font-data, btn-primary).
+ * - Timeouts, so a dead endpoint can never hang Measure: native connect
+ *   10s with no auto-reconnect, native estimate 15s, EVM request 10s with
+ *   one retry on network failure. A timed-out leg reports unavailable and
+ *   the EVM leg starts without waiting on the native connection.
  * - The From address is only a dry-run origin. Nothing here signs, sends,
  *   or asks for a wallet.
  */
 import { useEffect, useRef, useState } from 'react';
-import type { ApiPromise } from '@polkadot/api';
 import {
   DEFAULT_NETWORK,
   FeeRegistryBytecode,
   SampleTokenBytecode,
+  compareLegs,
   disconnectApi,
-  estimateBoth,
+  erc20Decimals,
+  estimateEvm,
+  estimateNative,
   formatUnits,
   getApi,
   isH160,
   liveDecimals,
+  nativeMethodFor,
   parseUnits,
   SAMPLE,
   type Comparison,
   type DualTx,
+  type EvmLeg,
+  type NativeLeg,
   type NetworkConfig,
 } from '../../services/feeLab/estimate';
 import { PORTALDOT_CHAIN_ID } from '../../utils/siteConstants';
@@ -134,14 +143,14 @@ export function FeeLabPanel() {
     };
   }, []);
 
-  const buildTx = (decimals: number): DualTx | string => {
+  const buildTx = (decimals: number, tokenDecimals: number): DualTx | string => {
     try {
       if (!isH160(from)) return 'From must be a 0x… EVM address (used only as the dry-run origin; nothing is signed).';
       switch (op) {
         case 'transfer':
           return { kind: 'nativeTransfer', from, to, amountPlanck: parseUnits(amount, decimals) };
         case 'erc20':
-          return { kind: 'erc20Transfer', from, token, to: tokenTo, amount: parseUnits(tokenAmount, SAMPLE.erc20Decimals) };
+          return { kind: 'erc20Transfer', from, token, to: tokenTo, amount: parseUnits(tokenAmount, tokenDecimals) };
         case 'deploy':
           return { kind: 'contractDeploy', from, bytecode: codeOf(codeChoice, customCode) };
         case 'calldata':
@@ -160,26 +169,60 @@ export function FeeLabPanel() {
     setBusy(true);
     setError(null);
     try {
-      // Connect natively first so live chain decimals shape the estimate;
-      // a failed native connection still leaves the EVM leg measurable.
-      let api: ApiPromise | null = null;
-      let net: NetworkConfig = DEFAULT_NETWORK;
-      try {
-        api = await getApi(DEFAULT_NETWORK.substrateWss);
-        const d = await liveDecimals(api);
-        net = { ...DEFAULT_NETWORK, nativeDecimals: d.nativeDecimals, evmDecimals: d.evmDecimals ?? DEFAULT_NETWORK.evmDecimals };
-      } catch {
-        api = null;
-      }
-      if (!aliveRef.current) return;
-      const tx = buildTx(net.nativeDecimals);
-      if (typeof tx === 'string') {
-        setError(tx);
+      // Native setup and (for ERC-20 ops) the token decimals read start
+      // immediately, on their own clocks. The EVM leg never waits on the
+      // native connection: the old code awaited getApi first, so one
+      // silent WSS endpoint stalled the whole Measure past 60s while the
+      // EVM leg — which needs no native connection at all — sat idle.
+      // getApi itself times out after 10s and never auto-reconnects.
+      const nativeSetupPromise = (async () => {
+        try {
+          const api = await getApi(DEFAULT_NETWORK.substrateWss);
+          const d = await liveDecimals(api);
+          return {
+            api,
+            net: { ...DEFAULT_NETWORK, nativeDecimals: d.nativeDecimals, evmDecimals: d.evmDecimals ?? DEFAULT_NETWORK.evmDecimals },
+            error: null as string | null,
+          };
+        } catch (e) {
+          return { api: null, net: DEFAULT_NETWORK, error: e instanceof Error ? e.message : String(e) };
+        }
+      })();
+      const tokenDecimalsPromise =
+        op === 'erc20'
+          ? erc20Decimals(DEFAULT_NETWORK.evmRpc, token).catch(() => SAMPLE.erc20Decimals)
+          : Promise.resolve(SAMPLE.erc20Decimals);
+      const tokenDecimals = await tokenDecimalsPromise;
+      const defaultTx = buildTx(DEFAULT_NETWORK.nativeDecimals, tokenDecimals);
+      if (typeof defaultTx === 'string') {
+        setError(defaultTx);
         return;
       }
-      const c = await estimateBoth(tx, { network: net, api: api ?? undefined });
+      const evmPromise = estimateEvm(defaultTx, DEFAULT_NETWORK);
+      const setup = await nativeSetupPromise;
+      let net = setup.net;
+      let tx = defaultTx;
+      let evm: EvmLeg = await evmPromise;
+      // Live chain decimals shape the transfer amount. If they differ from
+      // the defaults the EVM leg used, rebuild and re-run the EVM leg once
+      // so both legs still price the same operation.
+      if (setup.api && (net.nativeDecimals !== DEFAULT_NETWORK.nativeDecimals || net.evmDecimals !== DEFAULT_NETWORK.evmDecimals)) {
+        const liveTx = buildTx(net.nativeDecimals, tokenDecimals);
+        if (typeof liveTx === 'string') {
+          setError(liveTx);
+          return;
+        }
+        tx = liveTx;
+        evm = await estimateEvm(liveTx, net);
+      }
+      // A failed native setup never reconnects and never blocks the EVM
+      // result: it surfaces as an unavailable leg with the setup error
+      // (usually "timed out") instead of a second connect attempt.
+      const native: NativeLeg = setup.api
+        ? await estimateNative(tx, { network: net, api: setup.api })
+        : { status: 'unavailable', method: nativeMethodFor(tx), reason: setup.error ?? 'native connection unavailable' };
       if (!aliveRef.current) return;
-      setResult({ c, net });
+      setResult({ c: compareLegs(evm, native), net });
     } catch (e) {
       if (aliveRef.current) setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -204,7 +247,7 @@ export function FeeLabPanel() {
             {c.evm.status === 'ok' ? (
               <>
                 <div className="mt-2 text-2xl font-semibold tabular-nums text-white">{tpot(c.evm.totalPlanck, d)} <span className="text-sm text-slate-400">tPOT</span></div>
-                <dl className="mt-3 grid grid-cols-[auto,1fr] gap-x-3 gap-y-1 text-xs text-slate-400">
+                <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs text-slate-400">
                   <dt>method</dt><dd className="font-data text-slate-100">{c.evm.method}</dd>
                   <dt>gas</dt><dd className="font-data text-slate-100">{c.evm.gas.toString()}</dd>
                   <dt>gasPrice</dt><dd className="font-data text-slate-100">{c.evm.gasPrice.toString()} wei</dd>
@@ -227,7 +270,7 @@ export function FeeLabPanel() {
             {c.native.status === 'ok' ? (
               <>
                 <div className="mt-2 text-2xl font-semibold tabular-nums text-white">{tpot(c.native.totalPlanck, d)} <span className="text-sm text-slate-400">tPOT</span></div>
-                <dl className="mt-3 grid grid-cols-[auto,1fr] gap-x-3 gap-y-1 text-xs text-slate-400">
+                <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs text-slate-400">
                   <dt>method</dt><dd className="font-data text-slate-100">{c.native.method}</dd>
                   <dt>partialFee</dt><dd className="font-data text-slate-100">{tpot(c.native.partialFee, d, 8)} tPOT</dd>
                   <dt>storage dep.</dt><dd className="font-data text-slate-100">{tpot(c.native.storageDeposit, d, 8)} tPOT</dd>
@@ -300,13 +343,28 @@ export function FeeLabPanel() {
         comparison can read ~800× while the all-in comparison lands near 1×.
       </p>
       <div className="bg-panel border border-line rounded-xl p-4 grid gap-4">
-        <div className="flex flex-wrap gap-2" role="tablist">
+        <div
+          className="flex flex-wrap gap-2"
+          role="tablist"
+          onKeyDown={(e) => {
+            if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+            e.preventDefault();
+            const tabs = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]'));
+            const current = tabs.findIndex((t) => t.getAttribute('aria-selected') === 'true');
+            const delta = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : -1;
+            const next = tabs[(current + delta + tabs.length) % tabs.length];
+            if (!next) return;
+            next.focus();
+            next.click();
+          }}
+        >
           {OPS.map((o) => (
             <button
               key={o.id}
               type="button"
               role="tab"
               aria-selected={op === o.id}
+              tabIndex={op === o.id ? 0 : -1}
               onClick={() => { setOp(o.id); setResult(null); }}
               className={`rounded-xl px-3 py-2 text-sm transition ${
                 op === o.id ? 'bg-[#0181FB] font-semibold text-white' : 'border border-line text-slate-400 hover:text-slate-200'

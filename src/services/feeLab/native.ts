@@ -1,4 +1,5 @@
 import type { ApiPromise } from '@polkadot/api';
+import type { WsProvider } from '@polkadot/api';
 import { DRY_RUN_DEPOSIT_LIMIT } from './constants';
 
 export type NativeFeeQuote = {
@@ -12,19 +13,80 @@ export type NativeFeeQuote = {
   blockNumber: number;
 };
 
-let apiPromise: Promise<ApiPromise> | null = null;
-let apiUrl = '';
+/**
+ * Race a promise against a timeout. On timeout the timer's callback runs
+ * first (so the caller can tear down the underlying resource), then the
+ * returned promise rejects with Error('timed out') — the exact reason the
+ * Fee Lab surfaces as "unavailable: timed out" instead of hanging.
+ */
+export function withTimeout<T>(promise: Promise<T>, ms: number, onTimeout?: () => void): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      onTimeout?.();
+      reject(new Error('timed out'));
+    }, ms);
+  });
+  return Promise.race([
+    promise.then(
+      (v) => {
+        clearTimeout(timer);
+        return v;
+      },
+      (e: unknown) => {
+        clearTimeout(timer);
+        throw e;
+      },
+    ),
+    timeout,
+  ]);
+}
 
-/** Lazily connect (and memoise) an ApiPromise. Dynamic import keeps @polkadot/api out of SSR bundles. */
-export async function getApi(url: string): Promise<ApiPromise> {
+let apiPromise: Promise<ApiPromise> | null = null;
+/** The live provider handle, kept separately so disconnectApi can close a
+ * connection whose ApiPromise.create never settled (the old code awaited
+ * the pending promise, so a silent endpoint leaked the socket forever). */
+let apiProvider: WsProvider | null = null;
+let apiSettled: ApiPromise | null = null;
+let apiUrl = '';
+let attempt = 0;
+
+/**
+ * Lazily connect (and memoise) an ApiPromise. Dynamic import keeps
+ * @polkadot/api out of SSR bundles.
+ *
+ * Two hang guards, both deliberate:
+ * - WsProvider with autoConnectMs=false: a dropped or silent endpoint never
+ *   reconnects on its own (the old default retried every ~2.5s forever).
+ * - A connect timeout (default 10s): if ApiPromise.create never settles
+ *   (socket open but the node silent), the attempt is torn down and the
+ *   call rejects with 'timed out' instead of hanging the Measure button.
+ */
+export async function getApi(url: string, timeoutMs = 10000): Promise<ApiPromise> {
   if (apiPromise && apiUrl === url) return apiPromise;
+  const myAttempt = ++attempt;
   apiUrl = url;
   apiPromise = (async () => {
     const { ApiPromise, WsProvider } = await import('@polkadot/api');
-    return ApiPromise.create({ provider: new WsProvider(url), noInitWarn: true, throwOnConnect: true });
+    const provider = new WsProvider(url, false);
+    if (myAttempt === attempt) apiProvider = provider;
+    const api = await ApiPromise.create({ provider, noInitWarn: true, throwOnConnect: true });
+    if (myAttempt === attempt) apiSettled = api;
+    return api;
   })();
-  apiPromise.catch(() => { apiPromise = null; });
-  return apiPromise;
+  apiPromise.then(
+    () => undefined,
+    () => {
+      if (myAttempt === attempt) {
+        apiPromise = null;
+        apiProvider = null;
+        apiSettled = null;
+      }
+    },
+  );
+  return withTimeout(apiPromise, timeoutMs, () => {
+    if (myAttempt === attempt) void disconnectApi();
+  });
 }
 
 async function head(api: ApiPromise): Promise<number> {
@@ -153,16 +215,33 @@ export async function liveDecimals(api: ApiPromise): Promise<LiveDecimals> {
  * Fee Lab leaves no live connection behind when its panel unmounts. Nothing
  * polls in NodeScope; this only tears down a connection that a
  * user-triggered measurement opened. A later measurement reconnects lazily.
+ *
+ * The provider handle is closed directly, without awaiting the pending
+ * ApiPromise.create: when the endpoint is silent, that promise never
+ * settles, and awaiting it is exactly how the old code leaked the socket.
+ * Bumping the attempt invalidates any late settlement from the abandoned
+ * attempt, so it can never resurrect a torn-down connection.
  */
 export async function disconnectApi(): Promise<void> {
-  const pending = apiPromise;
+  attempt++;
+  const provider = apiProvider;
+  const settled = apiSettled;
   apiPromise = null;
+  apiProvider = null;
+  apiSettled = null;
   apiUrl = '';
-  if (!pending) return;
-  try {
-    const api = await pending;
-    await api.disconnect();
-  } catch {
-    // The connection already failed; there is nothing to tear down.
+  if (provider) {
+    try {
+      void provider.disconnect();
+    } catch {
+      // Already closed; nothing to tear down.
+    }
+  }
+  if (settled) {
+    try {
+      await settled.disconnect();
+    } catch {
+      // The connection already failed; there is nothing to tear down.
+    }
   }
 }

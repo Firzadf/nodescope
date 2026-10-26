@@ -1,11 +1,13 @@
 // Pure-logic tests for the ported DualFee fee-estimation code. No network:
 // every case here runs on constants and bigint math only.
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   SAMPLE,
   accountId32ToH160,
   compareLegs,
   erc20TransferCalldata,
+  estimateBoth,
+  estimateNative,
   formatUnits,
   h160ToAccountId32,
   h160ToSs58,
@@ -20,9 +22,13 @@ import {
   toHex,
   validateTx,
   weiToPlanck,
+  type DualTx,
   type EvmLeg,
   type NativeLeg,
 } from './estimate';
+import { evmRpc } from './evm';
+import { withTimeout } from './native';
+import type { ApiPromise } from '@polkadot/api';
 
 const evmOk = (totalPlanck: bigint): EvmLeg => ({
   status: 'ok',
@@ -144,5 +150,88 @@ describe('tx mapping and validation', () => {
     expect(SAMPLE.nativeAssetId).toBe(7777);
     expect(isH160(SAMPLE.holder)).toBe(true);
     expect(isH160(SAMPLE.erc20Token)).toBe(true);
+  });
+});
+
+// Timeout and retry behavior: a stalled native connection must still
+// yield a result (EVM ok, native unavailable: timed out), never a hang.
+describe('timeouts and retries', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  // An api whose calls never resolve: transferKeepAlive's paymentInfo and
+  // the chain head both hang, like a WSS socket that opened but stays silent.
+  const hangingApi = {
+    tx: { balances: { transferKeepAlive: () => ({ paymentInfo: () => new Promise(() => {}) }) } },
+    rpc: { chain: { getHeader: () => new Promise(() => {}) } },
+  } as unknown as ApiPromise;
+
+  const transfer: DualTx = {
+    kind: 'nativeTransfer',
+    from: '0x0000000000000000000000000000000000000001',
+    to: '0x0000000000000000000000000000000000000002',
+    amountPlanck: 1000n,
+  };
+
+  it('withTimeout rejects a never-resolving promise', async () => {
+    await expect(withTimeout(new Promise(() => {}), 20)).rejects.toThrow('timed out');
+  });
+
+  it('estimateNative with a hanging api returns unavailable: timed out', async () => {
+    const leg = await estimateNative(transfer, { api: hangingApi, estimateTimeoutMs: 50 });
+    expect(leg.status).toBe('unavailable');
+    if (leg.status === 'unavailable') {
+      expect(leg.method).toBe('balances.transferKeepAlive');
+      expect(leg.reason).toBe('timed out');
+    }
+  });
+
+  it('estimateBoth with a hanging native api still resolves: EVM ok, native timed out', async () => {
+    vi.stubGlobal('fetch', async (_url: unknown, init: { body: string }) => {
+      const body = JSON.parse(init.body) as { id: number; method: string };
+      const result = body.method === 'eth_gasPrice' ? '0x3b9aca00' : '0x5208';
+      return { ok: true, json: async () => ({ jsonrpc: '2.0', id: body.id, result }) };
+    });
+    const comparison = await estimateBoth(transfer, { api: hangingApi, estimateTimeoutMs: 50 });
+    expect(comparison.evm.status).toBe('ok');
+    expect(comparison.native.status).toBe('unavailable');
+    if (comparison.native.status === 'unavailable') {
+      expect(comparison.native.method).toBe('balances.transferKeepAlive');
+      expect(comparison.native.reason).toBe('timed out');
+    }
+  });
+});
+
+describe('evmRpc retries', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('retries once on network failure, then succeeds', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ jsonrpc: '2.0', id: 1, result: '0x190f1ca9' }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(evmRpc('https://example.invalid', 'eth_chainId')).resolves.toBe('0x190f1ca9');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('fails with a plain-language error after the retry is exhausted', async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(evmRpc('https://example.invalid', 'eth_chainId')).rejects.toThrow('network error after 1 retry');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not retry HTTP errors', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 500 });
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(evmRpc('https://example.invalid', 'eth_chainId')).rejects.toThrow('HTTP 500');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
