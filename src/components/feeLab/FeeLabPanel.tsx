@@ -148,16 +148,22 @@ export function FeeLabPanel() {
     { id: 'deploy', label: p.ops.deploy },
     { id: 'calldata', label: p.ops.calldata },
   ];
+  // A share link (?op=deploy&code=0x…&args=0x…&from=0x…) opens Fee Lab
+  // with that contract already loaded. A malformed link parses to null
+  // and the panel renders its default state instead of erroring. The
+  // shared state seeds the initial values below (lazy initializers, not
+  // an effect: the link is read once, at mount, like the stored language).
+  const sharedOnLoad = parseFeeLabShareParams(window.location.search);
   const [op, setOp] = useState<OpId>('deploy');
-  const [from, setFrom] = useState<string>(SAMPLE.holder);
+  const [from, setFrom] = useState<string>(sharedOnLoad?.from ?? SAMPLE.holder);
   const [to, setTo] = useState<string>(SAMPLE.existingEoa);
   const [amount, setAmount] = useState('1');
   const [token, setToken] = useState<string>(SAMPLE.erc20Token);
   const [tokenTo, setTokenTo] = useState<string>(SAMPLE.existingRecipient);
   const [tokenAmount, setTokenAmount] = useState('1');
-  const [codeChoice, setCodeChoice] = useState<CodeChoice>('sample');
-  const [customCode, setCustomCode] = useState('');
-  const [constructorData, setConstructorData] = useState('');
+  const [codeChoice, setCodeChoice] = useState<CodeChoice>(sharedOnLoad ? 'custom' : 'sample');
+  const [customCode, setCustomCode] = useState(sharedOnLoad?.code ?? '');
+  const [constructorData, setConstructorData] = useState(sharedOnLoad?.args ?? '');
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [shareNote, setShareNote] = useState<string | null>(null);
   const [callTo, setCallTo] = useState<string>(SAMPLE.erc20Token);
@@ -175,19 +181,6 @@ export function FeeLabPanel() {
       aliveRef.current = false;
       void disconnectApi();
     };
-  }, []);
-
-  // A share link (?op=deploy&code=0x…&args=0x…&from=0x…) opens Fee Lab
-  // with that contract already loaded. A malformed link parses to null
-  // and the panel renders its default state instead of erroring.
-  useEffect(() => {
-    const shared = parseFeeLabShareParams(window.location.search);
-    if (!shared) return;
-    setOp('deploy');
-    setCodeChoice('custom');
-    if (shared.code) setCustomCode(shared.code);
-    if (shared.args) setConstructorData(shared.args);
-    if (shared.from) setFrom(shared.from);
   }, []);
 
   const buildTx = (decimals: number, tokenDecimals: number): DualTx | string => {

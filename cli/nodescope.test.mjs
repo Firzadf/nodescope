@@ -3,7 +3,7 @@
 // unavailable path (closed WSS port); the live two-leg path is the Fee
 // Lab's own suite plus the manual estimate script, not something a unit
 // test can fake without a Substrate node.
-import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { execFile } from 'node:child_process';
 import { createServer } from 'node:http';
 import { writeFileSync, unlinkSync } from 'node:fs';

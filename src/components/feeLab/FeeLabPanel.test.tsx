@@ -276,6 +276,19 @@ describe('FeeLabPanel', () => {
     expect(parsed.feeComparison.evm.method).toBe('eth_estimateGas (create)');
   });
 
+  it('preloads a custom contract from a share link query', () => {
+    window.history.pushState({}, '', '/app/fee-lab?op=deploy&code=0x608060&args=0x0001');
+    try {
+      const { container } = render(<FeeLabPanel />);
+      const scope = within(container);
+      expect((scope.getByPlaceholderText('0x6080…') as HTMLTextAreaElement).value).toBe('0x608060');
+      const textInputs = container.querySelectorAll('input[type="text"]');
+      expect((textInputs[1] as HTMLInputElement).value).toBe('0x0001');
+    } finally {
+      window.history.pushState({}, '', '/');
+    }
+  });
+
   it('copies a share link carrying the custom code and args', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(window.navigator, 'clipboard', { value: { writeText }, configurable: true });

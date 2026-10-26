@@ -22,7 +22,7 @@ Judges and operators do not need to trust any number in this README. `docs/REPRO
 
 ---
 
-**Current Status:** Phase 1 (Health Check Snapshots) and Phase 2 (Snapshot Comparison) complete, plus Trends & Verdict, Multi-Endpoint Comparison, a V3 era marker (Pre-V3/Post-V3 against go-live 24 Oct 2026, 06:00 WIB), a Substrate WebSocket probe, a combined EVM + Substrate verdict, a public /verify page, a Mainnet Profile info page that claims no mainnet EVM check, and sidebar links to /verify and /mainnet plus a palette jump to the Combined Verdict. Portaldot V3.0 EVM endpoint verified and integrated. 424 passing tests across 61 test files, verified 27 Oct 2026.
+**Current Status:** Phase 1 (Health Check Snapshots) and Phase 2 (Snapshot Comparison) complete, plus Trends & Verdict, Multi-Endpoint Comparison, a V3 era marker (Pre-V3/Post-V3 against go-live 24 Oct 2026, 06:00 WIB), a Substrate WebSocket probe, a combined EVM + Substrate verdict, a public /verify page, a Mainnet Profile info page that claims no mainnet EVM check, and sidebar links to /verify and /mainnet plus a palette jump to the Combined Verdict. Portaldot V3.0 EVM endpoint verified and integrated. 453 passing tests across 64 test files, verified 27 Oct 2026.
 
 ## Project Overview
 
@@ -169,7 +169,7 @@ npm run preview
 
 The Fee Lab module lives in the app sidebar as **Fee Lab** (`/app/fee-lab`), with its own sub-landing at `/fees`.
 
-- **Same operation, both surfaces** — native transfer, ERC-20 transfer, contract deploy (sample, registry, or custom bytecode), and pasted calldata. The From address is only a dry-run origin; nothing signs.
+- **Same operation, both surfaces** — native transfer, ERC-20 transfer, contract deploy (sample, registry, or your own artifact: pasted creation bytecode, constructor args, or an uploaded solc artifact JSON, plus a share link that reopens Fee Lab with the contract preloaded), and pasted calldata. The From address is only a dry-run origin; nothing signs.
 - **EVM leg** — `eth_estimateGas` × `eth_gasPrice`. The gas figure already folds the storage deposit in.
 - **Native leg** — `ReviveApi` dry-run plus `TransactionPaymentApi.query_info` over the Substrate WebSocket (via `@polkadot/api`, lazy-loaded on first measure), reported as partialFee + storage deposit separately.
 - **Honest comparison** — all-in ratio (EVM ÷ native fee + deposit) next to the fee-only ratio (EVM ÷ native fee), which is how "~800×" headlines are usually produced. Within 2% all-in, the recommendation reads "either".
@@ -186,6 +186,72 @@ How a Fee Lab number is produced, and what it does and does not claim:
 - **One measured run, dated** — 26 Oct 2026 (~13:13 UTC), runtime `portaldot-v3` spec 3002: deploy of the 1,414-byte SampleToken measured EVM 124.098219 tPOT against native all-in 122.191411 tPOT (fee 0.154411 + deposit 122.037), i.e. 804x fee-only versus 1.016x all-in. Plain transfers in the same run measured EVM 7-12% cheaper all-in (0.880x and 0.933x), because they add no new storage and therefore carry no deposit.
 - **Timeouts, no polling** — native connect 10s with no auto-reconnect, native estimate 15s, EVM request 10s with one retry on network failure. Nothing opens until the visitor presses Measure; a failed leg reports `unavailable` with its reason.
 - **Honest limits** — the claim "EVM gas folds the deposit in" is an inference from the numbers (EVM total matching native fee + deposit within ~1.6%), not a statement read in pallet-revive documentation. Gas prices move, so a ratio measured today is a measurement, not a permanent property of the chain. Re-measure live in Fee Lab before quoting a number.
+
+## For builders: CLI, GitHub Action, and custom artifacts
+
+NodeScope is not only a website. The same measurements run headless, so
+other Portaldot builders can gate a deploy on them:
+
+- **CLI — `npx nodescope`** (from a repo checkout; the package stays
+  private and nothing is published to npm). `nodescope check <rpc>`
+  prints a healthy / degraded / down verdict for an EVM endpoint.
+  `nodescope fees --artifact <solc artifact JSON>` prices the same
+  deploy on EVM (eth_estimateGas × eth_gasPrice) and native (ReviveApi
+  dry-run + paymentInfo), with `--max-tpot` failing the run when the
+  cheapest priced all-in cost exceeds the budget. Exit codes and the
+  full flag list are documented in `cli/README.md`; nothing signs,
+  nothing needs a key.
+- **GitHub Action — `action.yml`** wraps the CLI for CI: check the node,
+  price the deploy, fail the job when the node is unhealthy, the EVM leg
+  is unpriceable, or the cost exceeds `max-tpot`. Example:
+
+```yaml
+- uses: Firzadf/nodescope@v1
+  with:
+    rpc: https://test-evm-rpc-v3.portaldot.dev
+    artifact: out/MyContract.sol/MyContract.json
+    max-tpot: '200'
+```
+
+- **Custom artifacts in Fee Lab** — paste creation bytecode, add
+  ABI-encoded constructor args, or upload a solc artifact JSON (creation
+  bytecode only; deployedBytecode-only artifacts are rejected plainly).
+  A share link (`/app/fee-lab?op=deploy&code=…&args=…&from=…`) reopens Fee
+  Lab with the contract preloaded, and the export still emits the
+  stamped v1 report.
+
+## Business model
+
+Free, open source (MIT): the app, the Fee Lab, the CLI, the GitHub
+Action, and the attestation registry. Paid, when there is demand to
+charge for:
+
+- **Hosted monitoring + alerts for node operators** — the Health checks
+  run on NodeScope infrastructure on a schedule, with alerts when a node
+  degrades, instead of the operator running the checks themselves.
+- **Pre-deploy cost gate for teams / CI** — the Action above as a
+  managed gate with history: every deploy priced, every price recorded,
+  budgets enforced across a team.
+
+Targets: Portaldot builders, node operators, and wallets / dApps that
+need EVM vs native routing. Market sizing, only from verified numbers:
+the Week 2 check-in reviewed 62 projects and passed 54 (check-in
+results, 27 Oct 2026); the tool speaks to builders on two public
+testnet endpoints (one EVM RPC, one Substrate WebSocket). No total
+addressable market is claimed: builder counts beyond the check-in
+document are unverified and are not used here.
+
+## Adoption
+
+No team has tried Fee Lab or the CLI on their own contract yet. The
+outreach message and the results table live in
+`docs/ADOPTION-OUTREACH.md`, and the table stays empty until a team
+actually replies. Quotes and results are added only when real, never
+invented.
+
+| Team | Contract priced | EVM | Native all-in | Their words |
+| --- | --- | --- | --- | --- |
+| _Waiting for the first teams._ | | | | |
 
 ## Portaldot Integration & Deployment Evidence
 
@@ -323,7 +389,7 @@ src/
 
 **Test Framework:** Vitest 5 with @testing-library/react  
 **Coverage Target:** 80%+  
-**Current Status:** 424 passing tests across 61 test files, verified 27 Oct 2026
+**Current Status:** 453 passing tests across 64 test files, verified 27 Oct 2026
 
 ### Test Files
 
@@ -348,8 +414,11 @@ src/
 | `substrateWsProbe.test.ts` | Substrate WebSocket probe, header hex to decimal, error reporting |
 | `SessionTrendsPanel.test.tsx` | Trends panel rendering, including the V3 era note |
 | `SnapshotStrip.test.tsx` | Session strip rendering, including era in tooltips |
+| `cli/nodescope.test.mjs` | CLI parsing, verdicts, budgets, exit codes, mocked RPC |
+| `artifactInput.test.ts` | Custom artifact parsing, coded failures |
+| `feeLabShare.test.ts` | Fee Lab share-link round-trip and forgiving parse |
 | 6 files not listed above | Component and utility tests added in later phases, including Landing and Command Palette |
-| **Total** | **424 passing tests, 61 test files** (suite verified 27 Oct 2026; the landing page, /judges, and this README are checked against one constants file by `src/utils/siteConsistency.test.tsx` and `npm run check:consistency`) |
+| **Total** | **453 passing tests, 64 test files** (suite verified 27 Oct 2026; the landing page, /judges, and this README are checked against one constants file by `src/utils/siteConsistency.test.tsx` and `npm run check:consistency`) |
 
 ### Running Tests
 
@@ -463,6 +532,7 @@ MIT (as per Portaldot Hacker House requirements).
 
 **Project Status:** Check-in submitted Oct 22, 2026. Repository public with 42 commits as of 25 Oct 2026, development records retained. Final sprint to the 6 Nov 2026 code freeze is in progress.
 
-- ✅ Phase 1 & Phase 2 complete, plus Trends & Verdict, Multi-Endpoint Comparison, V3 era marker, and Substrate WebSocket probe, 424 tests across 61 files
+- ✅ Phase 1 & Phase 2 complete, plus Trends & Verdict, Multi-Endpoint Comparison, V3 era marker, and Substrate WebSocket probe, 453 tests across 64 files
+- ✅ **FASE 2 — Ecosystem & Business (roadmap juara):** CLI (`check` + `fees`), GitHub Action pre-deploy gate, Fee Lab custom artifacts + share link, findings doc for Portaldot, business model, adoption outreach
 - ✅ Portaldot V3.0 EVM integration verified, chain ID 420420777 validated, methods documented
 - ✅ Demo video, live deployment, and screenshots published
