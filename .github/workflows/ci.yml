@@ -48,10 +48,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Foundry
+        # The foundryup installer now places foundryup in
+        # ~/.config/.foundry/bin (older installs used ~/.foundry/bin);
+        # try the new location first so this step cannot 127.
         run: |
           curl -L https://foundry.paradigm.xyz | bash
-          "$HOME/.foundry/bin/foundryup"
+          if [ -x "$HOME/.config/.foundry/bin/foundryup" ]; then
+            "$HOME/.config/.foundry/bin/foundryup"
+          else
+            "$HOME/.foundry/bin/foundryup"
+          fi
       - name: Add Foundry to PATH
-        run: echo "$HOME/.foundry/bin" >> "$GITHUB_PATH"
+        run: |
+          if [ -d "$HOME/.config/.foundry/bin" ]; then echo "$HOME/.config/.foundry/bin" >> "$GITHUB_PATH"; fi
+          if [ -d "$HOME/.foundry/bin" ]; then echo "$HOME/.foundry/bin" >> "$GITHUB_PATH"; fi
       - run: forge build
       - run: forge test
