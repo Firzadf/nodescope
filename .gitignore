@@ -12,6 +12,15 @@ dist
 dist-ssr
 *.local
 
+# Local secrets (never commit)
+.env
+.env.local
+.env.*.local
+
+# Foundry build outputs (only the registry artifact is force-added and tracked)
+contracts/out/
+cache/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

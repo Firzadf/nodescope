@@ -350,7 +350,7 @@ function App() {
       : []),
     { id: 'open-github', label: 'Open GitHub repository', group: 'Open', keywords: 'source code repo external', run: () => window.open('https://github.com/Firzadf/nodescope', '_blank', 'noreferrer') },
     { id: 'open-buidl', label: 'Open DoraHacks BUIDL', group: 'Open', keywords: 'hackathon submission external', run: () => window.open('https://dorahacks.io/build/50146', '_blank', 'noreferrer') },
-    { id: 'open-demo', label: 'Open demo video', group: 'Open', keywords: 'youtube watch external', run: () => window.open('https://www.youtube.com/watch?v=qne3_eZdcKA', '_blank', 'noreferrer') },
+    { id: 'open-demo', label: 'Open demo video', group: 'Open', keywords: 'youtube watch external', run: () => window.open('https://youtu.be/TyTudF3MUaI', '_blank', 'noreferrer') },
   ];
 
   return (
@@ -524,7 +524,7 @@ function App() {
             <a href="https://dorahacks.io/build/50146" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors">
               DoraHacks BUIDL
             </a>
-            <a href="https://www.youtube.com/watch?v=qne3_eZdcKA" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors">
+            <a href="https://youtu.be/TyTudF3MUaI" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors">
               Demo Video
             </a>
             <a href="/docs" className="text-slate-400 hover:text-white transition-colors">

@@ -1,0 +1,15 @@
+# Foundry config for the NodeScopeAttestation registry (contracts/NodeScopeAttestation.sol).
+# Pinned so a reviewer can recompile byte-identical artifacts:
+# same solc version, optimizer settings, and EVM version every time.
+[profile.default]
+src = "contracts"
+out = "contracts/out"
+test = "contracts/test"
+libs = ["lib"]
+solc_version = "0.8.24"
+auto_detect_solc = false
+optimizer = true
+optimizer_runs = 200
+evm_version = "cancun"
+# No build-info files: contracts/out stays exactly the committed artifacts.
+build_info = false
