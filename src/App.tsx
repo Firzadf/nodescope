@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Header } from './components/layout/Header';
 import { CommandPalette, type PaletteCommand } from './components/common/CommandPalette';
 import { Sidebar } from './components/layout/Sidebar';
@@ -28,9 +28,13 @@ import { runHealthCheck } from './services/healthCheckRunner';
 import type { SubstrateWsProbeResult } from './services/substrateWsProbe';
 import { loadWsProbe, saveWsProbe, loadCapability, saveCapability } from './services/sessionRestore';
 import { initialSidebarCollapsed } from './utils/sidebarState';
+import { defaultLatencyMethodForProfile, defaultClientVersionMethodForProfile } from './utils/metricMethodDefaults';
+import { parseLatency, parseClientVersion, latencyFromCheck, versionFromCheck } from './utils/metricParsers';
 import { extractEvmSide } from './utils/combinedVerdict';
 import { FullDiagnosticRunner } from './components/dashboard/FullDiagnosticRunner';
-import { FeeLabPanel } from './components/feeLab/FeeLabPanel';
+// Fee Lab is lazy: its panel code stays out of the first load (the
+// @polkadot/api chunk was already lazy via dynamic import).
+const FeeLabPanel = lazy(() => import('./components/feeLab/FeeLabPanel').then((m) => ({ default: m.FeeLabPanel })));
 
 const initialMetricsDetailed: NodeMetricsDetailed = {
   latency: { status: 'not_tested', value: null },
@@ -39,12 +43,20 @@ const initialMetricsDetailed: NodeMetricsDetailed = {
   blockHeight: { status: 'not_tested', value: null },
 };
 
+// Section <-> URL sync (no router dependency: the app switches on state,
+// and the URL is kept in step with replaceState so a section is linkable
+// and reloadable). Unknown /app paths fall back to overview, as before;
+// trailing slashes are normalized so /app/fee-lab/ opens Fee Lab.
+import { sectionFromPath, pathForSection } from './utils/appSections';
+
 function App() {
-  // Deep link: /app/fee-lab opens the Fee Lab section directly; every other
-  // /app path starts on the overview, as before.
-  const [activeSection, setActiveSection] = useState(() =>
-    window.location.pathname === '/app/fee-lab' ? 'fee-lab' : 'overview',
-  );
+  const [activeSection, setActiveSection] = useState(() => sectionFromPath(window.location.pathname));
+  // replaceState (not pushState): section switches keep the URL honest
+  // without flooding the back-button history with every sidebar click.
+  const handleSectionChange = (section: string) => {
+    setActiveSection(section);
+    window.history.replaceState(null, '', pathForSection(section));
+  };
   const [endpoint, setEndpoint] = useState(DEFAULT_PORTALDOT_V3_EVM_RPC);
   const [endpointProfile, setEndpointProfile] = useState<EndpointProfile>('portaldot_v3_evm');
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
@@ -109,6 +121,24 @@ function App() {
       });
       saveHealthSnapshot(snapshot);
       setHealthSnapshots(getHealthSnapshots());
+      // Fill Node Metrics (and the VerdictBar latency, which reads the
+      // same value) from this snapshot's actual checks, so a "Success"
+      // badge never sits next to a "—" value again.
+      const latency = latencyFromCheck(
+        snapshot.checks.find((c) => c.method === defaultLatencyMethodForProfile(endpointProfile)),
+        snapshot.timestamp,
+      );
+      const version = versionFromCheck(
+        snapshot.checks.find((c) => c.method === defaultClientVersionMethodForProfile(endpointProfile)),
+        snapshot.timestamp,
+      );
+      if (latency || version) {
+        setMetricsDetailed((prev) => ({
+          ...prev,
+          ...(latency ? { latency } : {}),
+          ...(version ? { clientVersion: version } : {}),
+        }));
+      }
       return snapshot;
     } finally {
       setIsHealthChecking(false);
@@ -178,6 +208,13 @@ function App() {
     const result = await sendJsonRpcRequest(endpoint, method, params);
     setCurrentResult(result);
     setHistory(saveDiagnosticHistory(endpoint, result));
+    // Same fill as a health-check snapshot: a single diagnostic run for
+    // the latency or version method updates its metric from the result.
+    if (method === defaultLatencyMethodForProfile(endpointProfile)) {
+      setMetricsDetailed((prev) => ({ ...prev, latency: parseLatency(result) }));
+    } else if (method === defaultClientVersionMethodForProfile(endpointProfile)) {
+      setMetricsDetailed((prev) => ({ ...prev, clientVersion: parseClientVersion(result) }));
+    }
     setIsLoading(false);
     return result;
   };
@@ -218,11 +255,11 @@ function App() {
     if (snapshot) saveCapability(snapshot);
   };
   const runDiagnosticAndShow = (method: string, params: unknown[] = []) => {
-    setActiveSection('diagnostics');
+    handleSectionChange('diagnostics');
     void handleRunDiagnosticTracked(method, params);
   };
   const paletteCommands: PaletteCommand[] = [
-    { id: 'nav-overview', label: 'Go to Overview', group: 'Navigate', hint: '01', keywords: 'home dashboard panels', run: () => setActiveSection('overview') },
+    { id: 'nav-overview', label: 'Go to Overview', group: 'Navigate', hint: '01', keywords: 'home dashboard panels', run: () => handleSectionChange('overview') },
     {
       id: 'nav-trends',
       label: 'Go to Trends & Verdict',
@@ -230,7 +267,7 @@ function App() {
       hint: '05',
       keywords: 'trends verdict session drift stall latency progression health',
       run: () => {
-        setActiveSection('overview');
+        handleSectionChange('overview');
         window.setTimeout(() => {
           const el = document.getElementById('session-trends');
           if (!el) return;
@@ -239,9 +276,9 @@ function App() {
         }, 60);
       },
     },
-    { id: 'nav-diagnostics', label: 'Go to RPC Diagnostics', group: 'Navigate', hint: '02', keywords: 'console rpc run method', run: () => setActiveSection('diagnostics') },
-    { id: 'nav-history', label: 'Go to History', group: 'Navigate', hint: '03', keywords: 'report export ledger records', run: () => setActiveSection('history') },
-    { id: 'nav-fee-lab', label: 'Go to Fee Lab', group: 'Navigate', hint: '04', keywords: 'fee lab evm native revive estimate cost gas storage deposit', run: () => setActiveSection('fee-lab') },
+    { id: 'nav-diagnostics', label: 'Go to RPC Diagnostics', group: 'Navigate', hint: '02', keywords: 'console rpc run method', run: () => handleSectionChange('diagnostics') },
+    { id: 'nav-history', label: 'Go to History', group: 'Navigate', hint: '03', keywords: 'report export ledger records', run: () => handleSectionChange('history') },
+    { id: 'nav-fee-lab', label: 'Go to Fee Lab', group: 'Navigate', hint: '04', keywords: 'fee lab evm native revive estimate cost gas storage deposit', run: () => handleSectionChange('fee-lab') },
     {
       id: 'nav-combined',
       label: 'Go to Combined Verdict',
@@ -249,7 +286,7 @@ function App() {
       hint: '07',
       keywords: 'combined verdict evm substrate two transports',
       run: () => {
-        setActiveSection('overview');
+        handleSectionChange('overview');
         window.setTimeout(() => {
           const el = document.getElementById('combined-verdict');
           if (!el) return;
@@ -265,7 +302,7 @@ function App() {
       hint: '06',
       keywords: 'substrate websocket probe wss node health',
       run: () => {
-        setActiveSection('overview');
+        handleSectionChange('overview');
         window.setTimeout(() => {
           const el = document.getElementById('substrate-ws-probe');
           if (!el) return;
@@ -281,7 +318,7 @@ function App() {
       hint: '08',
       keywords: 'capabilities discovery rpc methods advertised',
       run: () => {
-        setActiveSection('overview');
+        handleSectionChange('overview');
         window.setTimeout(() => {
           const el = document.getElementById('capabilities');
           if (!el) return;
@@ -299,7 +336,7 @@ function App() {
       group: 'Actions',
       keywords: 'health check snapshot node status',
       run: () => {
-        setActiveSection('overview');
+        handleSectionChange('overview');
         void handleRunHealthCheck();
       },
     },
@@ -324,8 +361,8 @@ function App() {
         liveBlock={extractEvmSide(latestHealthSnapshot)?.blockHeightDecimal ?? null}
       />
       <div className="flex">
-        <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} onOpenPalette={() => setPaletteOpen(true)} collapsed={sidebarCollapsed} onToggleCollapse={toggleSidebar} />
-        <main className="relative flex-1 p-6">
+        <Sidebar activeSection={activeSection} onSectionChange={handleSectionChange} onOpenPalette={() => setPaletteOpen(true)} collapsed={sidebarCollapsed} onToggleCollapse={toggleSidebar} />
+        <main className="relative min-w-0 flex-1 p-6">
           <div className="relative max-w-7xl mx-auto space-y-6">
             {activeSection === 'overview' && (
               <div className="space-y-6 stagger">
@@ -345,7 +382,7 @@ function App() {
                   onRunHealthCheck={doHealthCheck}
                   onProbeResult={handleWsProbeResultChange}
                   onCapabilitySnapshot={handleCapabilitySnapshotChange}
-                  onGoHistory={() => setActiveSection('history')}
+                  onGoHistory={() => handleSectionChange('history')}
                   onToast={pushToast}
                 />
                 <EndpointConfig
@@ -436,7 +473,9 @@ function App() {
             )}
             {activeSection === 'fee-lab' && (
               <div className="space-y-6 stagger">
-                <FeeLabPanel />
+                <Suspense fallback={<div className="empty-shell p-4"><p className="text-sm text-slate-400">Loading Fee Lab…</p></div>}>
+                  <FeeLabPanel />
+                </Suspense>
               </div>
             )}
             {activeSection === 'history' && (
@@ -455,7 +494,7 @@ function App() {
                   history={history}
                   onSelect={(item) => {
                     setCurrentResult(item);
-                    setActiveSection('diagnostics');
+                    handleSectionChange('diagnostics');
                   }}
                   onClear={() => {
                     clearDiagnosticHistory();

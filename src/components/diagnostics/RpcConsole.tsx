@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import type { RpcDiagnosticResult, RpcMethodPreset } from '../../types/rpc';
 import type { CapabilitySnapshot } from '../../types/capability';
 import type { DiagnosticHistoryItem } from '../../types/rpc';
@@ -80,12 +80,17 @@ export function RpcConsole({ endpoint, isConnected, onRunDiagnostic, isLoading, 
   const [selectedPreset, setSelectedPreset] = useState<string>('eth_chainId');
   const [customMethod, setCustomMethod] = useState<string>('eth_chainId');
 
-  useEffect(() => {
+  // Render-adjustment instead of setState-in-effect: when a diagnostic is
+  // triggered outside the console, the form follows that run's method.
+  // Identity comparison means a re-render with the same signal is a no-op.
+  const [prevSignal, setPrevSignal] = useState(methodSignal);
+  if (methodSignal !== prevSignal) {
+    setPrevSignal(methodSignal);
     if (methodSignal) {
       setSelectedPreset(PRESETS.some((p) => p.method === methodSignal.method) ? methodSignal.method : '');
       setCustomMethod(methodSignal.method);
     }
-  }, [methodSignal]);
+  }
   const [paramsInput, setParamsInput] = useState<string>('[]');
   const [paramError, setParamError] = useState<string | null>(null);
 

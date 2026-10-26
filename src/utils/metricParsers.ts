@@ -1,4 +1,5 @@
 import type { RpcDiagnosticResult } from '../types/rpc';
+import type { HealthCheckCheck } from '../types/healthCheck';
 import type { MetricItem } from '../types/node';
 
 function classifyFailure(res: RpcDiagnosticResult): { status: 'unsupported_method' | 'network_error' | 'invalid_response'; error: string } {
@@ -215,4 +216,33 @@ export function parseBlockHeight(res: RpcDiagnosticResult | null): MetricItem<nu
     sourceMethod: res.request.method,
     timestamp: res.timestamp,
   };
+}
+
+// Node Metrics values must come from results that actually ran. The
+// inspector badge merges capability evidence, so without this a method
+// seen succeeding before showed "Success" while its value stayed "—".
+// These mirror parseLatency/parseClientVersion for health-check snapshots,
+// whose checks carry latencyMs + observedValue instead of a full result.
+// A successful check with no usable value returns null so the caller
+// leaves the previous metric untouched rather than inventing one.
+export function latencyFromCheck(check: HealthCheckCheck | undefined, timestamp: number): MetricItem<number> | null {
+  if (!check) return null;
+  if (check.success) {
+    return check.latencyMs !== null
+      ? { status: 'success', value: check.latencyMs, sourceMethod: check.method, timestamp }
+      : null;
+  }
+  const status = check.outcome === 'unsupported_method' ? 'unsupported_method' : check.outcome === 'network_error' ? 'network_error' : 'invalid_response';
+  return { status, value: null, error: check.error ?? undefined, sourceMethod: check.method, timestamp };
+}
+
+export function versionFromCheck(check: HealthCheckCheck | undefined, timestamp: number): MetricItem<string> | null {
+  if (!check) return null;
+  if (check.success) {
+    return typeof check.observedValue === 'string' && check.observedValue.trim().length > 0
+      ? { status: 'success', value: check.observedValue, sourceMethod: check.method, timestamp }
+      : null;
+  }
+  const status = check.outcome === 'unsupported_method' ? 'unsupported_method' : check.outcome === 'network_error' ? 'network_error' : 'invalid_response';
+  return { status, value: null, error: check.error ?? undefined, sourceMethod: check.method, timestamp };
 }

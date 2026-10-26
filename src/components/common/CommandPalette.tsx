@@ -29,23 +29,46 @@ export function CommandPalette({ open, commands, onClose }: CommandPaletteProps)
     );
   }, [commands, query]);
 
-  useEffect(() => {
+  // Render-adjustment instead of setState-in-effect: opening the palette
+  // resets the query and selection, and a new query resets the selection.
+  // (Adjusting state during render is the documented React pattern for
+  // this; the effect below only touches the DOM, never state.)
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setQuery('');
       setActiveIndex(0);
-      const prevOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      const t = setTimeout(() => inputRef.current?.focus(), 30);
-      return () => {
-        document.body.style.overflow = prevOverflow;
-        clearTimeout(t);
-      };
     }
-  }, [open ]);
+  }
+  const [prevQuery, setPrevQuery] = useState(query);
+  if (query !== prevQuery) {
+    setPrevQuery(query);
+    setActiveIndex(0);
+  }
+
+  // Group headers are computed data, not render-time mutation: each row
+  // carries its header (or null) so rendering never writes to a variable.
+  const rows = useMemo(
+    () =>
+      filtered.map((cmd, i) => ({
+        cmd,
+        index: i,
+        header: i === 0 || filtered[i - 1]?.group !== cmd.group ? cmd.group : null,
+      })),
+    [filtered],
+  );
 
   useEffect(() => {
-    setActiveIndex(0);
-  }, [query]);
+    if (!open) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const t = setTimeout(() => inputRef.current?.focus(), 30);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      clearTimeout(t);
+    };
+  }, [open]);
 
   if (!open) return null;
 
@@ -71,8 +94,6 @@ export function CommandPalette({ open, commands, onClose }: CommandPaletteProps)
     }
   };
 
-  let lastGroup = '';
-
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-[13vh]" role="dialog" aria-modal="true" aria-label="Command palette">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
@@ -95,9 +116,7 @@ export function CommandPalette({ open, commands, onClose }: CommandPaletteProps)
           {filtered.length === 0 && (
             <p className="px-4 py-6 text-center font-data text-xs text-slate-500">No commands match &ldquo;{query}&rdquo;</p>
           )}
-          {filtered.map((cmd, i) => {
-            const header = cmd.group !== lastGroup ? cmd.group : null;
-            lastGroup = cmd.group;
+          {rows.map(({ cmd, index: i, header }) => {
             const isActive = i === activeIndex;
             return (
               <div key={cmd.id}>

@@ -110,6 +110,7 @@ export function Overview({
         wsProbeResult={wsProbeResult}
         latencyMs={metricsDetailed.latency.value}
         latencyMethod={metricsDetailed.latency.sourceMethod}
+        endpointProfile={endpointProfile}
       />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-line border border-line rounded-xl overflow-hidden ">
         <MetricCard

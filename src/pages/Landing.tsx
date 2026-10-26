@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Activity, ArrowRight, ArrowUpRight, Pause, Play, X } from 'lucide-react';
+import { Activity, ArrowRight, ArrowUpRight, Menu, Pause, Play, X } from 'lucide-react';
 import { sendJsonRpcRequest } from '../services/rpcClient';
 import { BackToTop } from '../components/BackToTop';
 import { IntroSplash } from '../components/common/IntroSplash';
@@ -23,14 +23,11 @@ const DOCUMENTED_CHAIN_ID = 420420777;
 
 function useInView<T extends HTMLElement>(threshold = 0.2) {
   const ref = useRef<T>(null);
-  const [inView, setInView] = useState(false);
+  const [inView, setInView] = useState(() => typeof IntersectionObserver === 'undefined');
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (typeof IntersectionObserver === 'undefined') {
-      setInView(true);
-      return;
-    }
+    if (typeof IntersectionObserver === 'undefined') return;
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -426,10 +423,13 @@ function ScrollProgress() {
  */
 function WordFill({ sentence }: { sentence: string }) {
   const ref = useRef<HTMLParagraphElement>(null);
-  const [progress, setProgress] = useState(0);
+  // Reduced-motion readers see the full sentence at once, decided at
+  // first render instead of an effect that sets state after mount.
+  const [progress, setProgress] = useState(() =>
+    typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : 0,
+  );
   useEffect(() => {
     if (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setProgress(1);
       return;
     }
     const onScroll = () => {
@@ -518,12 +518,15 @@ const JSON_PLAIN = JSON_TOKENS.map((tok) => tok.t).join("");
 
 function TypewriterJson({ replayLabel }: { replayLabel: string }) {
   const { ref, inView } = useInView<HTMLDivElement>(0.3);
-  const [count, setCount] = useState(0);
+  // Reduced-motion readers see the full JSON at once, decided at first
+  // render instead of an effect that sets state after mount.
+  const [count, setCount] = useState(() =>
+    typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? JSON_TOTAL : 0,
+  );
   const [run, setRun] = useState(0);
   const done = count >= JSON_TOTAL;
   useEffect(() => {
     if (typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setCount(JSON_TOTAL);
       return;
     }
     if (!inView || done) return;
@@ -677,6 +680,7 @@ export function Landing() {
     setLangState(l);
     storeLang(l);
   };
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const t = landingCopy[lang];
 
   useEffect(() => {
@@ -701,15 +705,15 @@ export function Landing() {
       {/* -------------------------------- nav ------------------------------- */}
       <header className="fixed inset-x-0 top-0 z-40 px-4 pt-3">
         <div className="mx-auto flex max-w-6xl items-center gap-3 rounded-[20px] border border-line bg-ink/80 px-4 py-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur">
-          <a href="/" className="flex items-center gap-2.5">
+          <a href="/" className="flex shrink-0 items-center gap-2.5">
             <img src="/logo.png" alt="NodeScope logo" className="h-7 w-7 rounded-lg shadow-[0_0_20px_rgba(1,129,251,0.35)] ring-1 ring-[#0181FB]/40" />
-            <span className="font-display text-[17px] font-semibold tracking-tight text-white">
+            <span className="hidden font-display text-[17px] font-semibold tracking-tight text-white sm:inline">
               Node<span className="text-[#0181FB]">Scope</span>
             </span>
           </a>
-          <nav className="mx-auto hidden items-center gap-7 text-sm text-slate-400 md:flex">
+          <nav className="mx-auto hidden items-center gap-7 text-sm text-slate-400 xl:flex">
             {t.nav.map(({ href, label }) => (
-              <a key={href} href={href} className="group relative transition-colors hover:text-white">
+              <a key={href} href={href} className="group relative shrink-0 whitespace-nowrap transition-colors hover:text-white">
                 {label}
                 <span aria-hidden="true" className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-[#0181FB] transition-transform duration-300 group-hover:scale-x-100" />
               </a>
@@ -729,18 +733,44 @@ export function Landing() {
               </button>
             ))}
           </span>
-          <span className="hidden items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-emerald-300 lg:flex">
+          <span className="hidden items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-emerald-300 xl:flex">
             <span className="relative flex h-1.5 w-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
             </span>
             V3 Testnet
           </span>
-          <a href={APP_URL} className="btn-primary ml-auto inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold md:ml-0">
+          <a href={APP_URL} className="btn-primary ml-auto inline-flex shrink-0 items-center gap-2 whitespace-nowrap px-4 py-2 text-sm font-semibold md:ml-0">
             {t.launchApp}
             <ArrowUpRight className="h-4 w-4" />
           </a>
+          <button
+            type="button"
+            aria-label="Toggle navigation menu"
+            aria-expanded={mobileMenuOpen}
+            aria-controls="landing-mobile-menu"
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            className="btn-ghost flex h-9 w-9 shrink-0 items-center justify-center rounded-lg xl:hidden"
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
+        {mobileMenuOpen && (
+          <div id="landing-mobile-menu" className="mx-auto mt-2 max-w-6xl rounded-[20px] border border-line bg-ink/95 px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur xl:hidden">
+            <nav className="grid gap-1">
+              {t.nav.map(({ href, label }) => (
+                <a
+                  key={href}
+                  href={href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="whitespace-nowrap rounded-lg px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-white/[0.04] hover:text-white"
+                >
+                  {label}
+                </a>
+              ))}
+            </nav>
+          </div>
+        )}
       </header>
 
       {/* -------------------------------- hero ------------------------------ */}

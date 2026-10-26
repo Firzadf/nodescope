@@ -4,8 +4,11 @@ import {
   parseClientVersion,
   parsePeerCount,
   parseBlockHeight,
+  latencyFromCheck,
+  versionFromCheck,
 } from './metricParsers';
 import type { RpcDiagnosticResult } from '../types/rpc';
+import type { HealthCheckCheck } from '../types/healthCheck';
 
 function createMockResult(overrides: Partial<RpcDiagnosticResult>): RpcDiagnosticResult {
   return {
@@ -226,5 +229,53 @@ describe('metricParsers', () => {
       );
       expect(res.status).toBe('unsupported_method');
     });
+  });
+});
+
+describe('latencyFromCheck / versionFromCheck', () => {
+  const check = (overrides: Partial<HealthCheckCheck>): HealthCheckCheck => ({
+    method: 'eth_chainId',
+    outcome: 'success',
+    success: true,
+    latencyMs: 42,
+    observedValue: 'Portaldot/v1.0',
+    error: null,
+    ...overrides,
+  });
+
+  it('fills latency and version from a successful check', () => {
+    expect(latencyFromCheck(check({}), 1000)).toEqual({
+      status: 'success',
+      value: 42,
+      sourceMethod: 'eth_chainId',
+      timestamp: 1000,
+    });
+    expect(versionFromCheck(check({}), 1000)).toEqual({
+      status: 'success',
+      value: 'Portaldot/v1.0',
+      sourceMethod: 'eth_chainId',
+      timestamp: 1000,
+    });
+  });
+
+  it('returns null for a missing check or a success with no usable value', () => {
+    expect(latencyFromCheck(undefined, 1000)).toBeNull();
+    expect(versionFromCheck(undefined, 1000)).toBeNull();
+    expect(latencyFromCheck(check({ latencyMs: null }), 1000)).toBeNull();
+    expect(versionFromCheck(check({ observedValue: '   ' }), 1000)).toBeNull();
+    expect(versionFromCheck(check({ observedValue: 123 }), 1000)).toBeNull();
+  });
+
+  it('maps a failed check to its failure status, never to a value', () => {
+    expect(latencyFromCheck(check({ success: false, outcome: 'network_error', error: 'boom' }), 1000)).toEqual({
+      status: 'network_error',
+      value: null,
+      error: 'boom',
+      sourceMethod: 'eth_chainId',
+      timestamp: 1000,
+    });
+    expect(versionFromCheck(check({ success: false, outcome: 'unsupported_method', error: null }), 1000)?.status).toBe(
+      'unsupported_method',
+    );
   });
 });

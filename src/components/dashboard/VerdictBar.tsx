@@ -1,6 +1,7 @@
 import { overallVerdictFrom, type OverallVerdict } from '../../utils/overallVerdict';
 import type { HealthCheckSnapshot } from '../../types/healthCheck';
 import type { SubstrateWsProbeResult } from '../../services/substrateWsProbe';
+import type { EndpointProfile } from '../../types/endpoint';
 
 const LABEL: Record<OverallVerdict, string> = {
   healthy: 'HEALTHY',
@@ -21,6 +22,18 @@ interface VerdictBarProps {
   wsProbeResult: SubstrateWsProbeResult | null;
   latencyMs: number | null;
   latencyMethod?: string;
+  endpointProfile?: EndpointProfile;
+}
+
+/**
+ * The probe result's host, shortened the way the bar names it: the default
+ * Portaldot probe endpoint reads as "test-node-v3", anything else reads as
+ * its real hostname so a custom probe URL is never mislabeled.
+ */
+function probeHostLabel(url: string | null): string {
+  if (!url) return 'test-node-v3';
+  const host = url.replace(/^wss?:\/\//, '').split('/')[0];
+  return host.startsWith('test-node-v3.') ? 'test-node-v3' : host;
 }
 
 /**
@@ -29,13 +42,19 @@ interface VerdictBarProps {
  * comes from overallVerdictFrom, which shares panel 07's EVM-side extraction.
  * With no data at all it reads NOT CHECKED YET, never DOWN.
  */
-export function VerdictBar({ latestHealthSnapshot, wsProbeResult, latencyMs, latencyMethod }: VerdictBarProps) {
+export function VerdictBar({ latestHealthSnapshot, wsProbeResult, latencyMs, latencyMethod, endpointProfile }: VerdictBarProps) {
   const overall = overallVerdictFrom(latestHealthSnapshot, wsProbeResult);
   const evmPassed = latestHealthSnapshot
     ? latestHealthSnapshot.checks.filter((c) => c.success).length
     : null;
   const evmTotal = latestHealthSnapshot ? latestHealthSnapshot.checks.length : null;
   const evmText = evmPassed === null ? 'No snapshot yet' : `${evmPassed}/${evmTotal} checks passed`;
+  // On the EVM HTTP-only profile the bare "WSS" label reads as if the EVM
+  // endpoint itself answered over WebSocket. Name the transport: the
+  // probe always runs against the Substrate node, never the EVM RPC.
+  const wssLabel = endpointProfile === 'portaldot_v3_evm'
+    ? `Substrate WSS (${probeHostLabel(wsProbeResult?.url ?? null)})`
+    : 'WSS';
   const wssText =
     wsProbeResult === null
       ? 'No probe yet'
@@ -57,7 +76,7 @@ export function VerdictBar({ latestHealthSnapshot, wsProbeResult, latencyMs, lat
           EVM <span className="text-slate-200 font-data">{evmText}</span>
         </span>
         <span className="text-xs text-slate-400">
-          WSS <span className="text-slate-200 font-data">{wssText}</span>
+          {wssLabel} <span className="text-slate-200 font-data">{wssText}</span>
         </span>
         <span className="text-xs text-slate-400">
           Latency{' '}

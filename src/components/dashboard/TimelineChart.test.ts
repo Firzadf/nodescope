@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildTimelinePoints } from './TimelineChart';
+import { buildTimelinePoints } from '../../utils/timelinePoints';
 import type { HealthCheckSnapshot } from '../../types/healthCheck';
 
 function snapshot(id: string, timestamp: number, height: number | null, latencies: (number | null)[]): HealthCheckSnapshot {
