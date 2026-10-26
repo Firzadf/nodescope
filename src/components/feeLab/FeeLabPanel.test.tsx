@@ -163,4 +163,141 @@ describe('FeeLabPanel', () => {
     unmount();
     window.sessionStorage.clear();
   });
+
+  it('fills custom bytecode + constructor args from an uploaded artifact JSON', async () => {
+    const { container } = render(<FeeLabPanel />);
+    const scope = within(container);
+    fireEvent.click(scope.getByRole('button', { name: 'Custom bytecode' }));
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(
+      [JSON.stringify({ evm: { bytecode: { object: '0x608060' } }, constructorArgs: '0x0001' })],
+      'artifact.json',
+      { type: 'application/json' },
+    );
+    fireEvent.change(fileInput, { target: { files: [file] } });
+    await waitFor(() => {
+      expect((scope.getByPlaceholderText('0x6080…') as HTMLTextAreaElement).value).toBe('0x608060');
+    });
+    const textInputs = container.querySelectorAll('input[type="text"]');
+    expect((textInputs[1] as HTMLInputElement).value).toBe('0x0001');
+  });
+
+  it('rejects an artifact with only deployedBytecode, plainly', async () => {
+    const { container } = render(<FeeLabPanel />);
+    const scope = within(container);
+    fireEvent.click(scope.getByRole('button', { name: 'Custom bytecode' }));
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(
+      [JSON.stringify({ deployedBytecode: '0x6080' })],
+      'artifact.json',
+      { type: 'application/json' },
+    );
+    fireEvent.change(fileInput, { target: { files: [file] } });
+    await waitFor(() => {
+      expect(scope.getByText(/only deployedBytecode/)).toBeTruthy();
+    });
+  });
+
+  it('rejects non-hex custom bytecode before any network call', async () => {
+    vi.mocked(getApi).mockRejectedValue(new Error('timed out'));
+    const { container } = render(<FeeLabPanel />);
+    const scope = within(container);
+    fireEvent.click(scope.getByRole('button', { name: 'Custom bytecode' }));
+    fireEvent.change(scope.getByPlaceholderText('0x6080…'), { target: { value: 'not-hex' } });
+    fireEvent.click(scope.getByRole('button', { name: 'Estimate on both surfaces' }));
+    await waitFor(() => {
+      expect(scope.getByText('Custom bytecode must be 0x-prefixed hex.')).toBeTruthy();
+    });
+    expect(vi.mocked(estimateEvm)).not.toHaveBeenCalled();
+  });
+
+  it('measures a custom deploy with constructor args appended to the bytecode', async () => {
+    vi.mocked(getApi).mockRejectedValue(new Error('timed out'));
+    let captured: unknown = null;
+    vi.mocked(estimateEvm).mockImplementation(async (tx) => {
+      captured = tx;
+      return {
+        status: 'ok',
+        method: 'eth_estimateGas (create)',
+        gas: 100000n,
+        gasPrice: 1000n,
+        feeWei: 100000000n,
+        totalPlanck: 10n ** 14n,
+        blockNumber: 1,
+      };
+    });
+    const { container } = render(<FeeLabPanel />);
+    const scope = within(container);
+    fireEvent.click(scope.getByRole('button', { name: 'Custom bytecode' }));
+    fireEvent.change(scope.getByPlaceholderText('0x6080…'), { target: { value: '0x608060' } });
+    const textInputs = container.querySelectorAll('input[type="text"]');
+    fireEvent.change(textInputs[1], { target: { value: '0x0001' } });
+    fireEvent.click(scope.getByRole('button', { name: 'Estimate on both surfaces' }));
+    await waitFor(() => {
+      expect(scope.getByRole('button', { name: 'Estimate on both surfaces' })).toBeEnabled();
+    });
+    expect(captured).toMatchObject({ kind: 'contractDeploy', bytecode: '0x608060', constructorData: '0x0001' });
+  });
+
+  it('exports a custom-artifact measurement as a stamped v1 report', async () => {
+    vi.mocked(getApi).mockRejectedValue(new Error('timed out'));
+    vi.mocked(estimateEvm).mockResolvedValue({
+      status: 'ok',
+      method: 'eth_estimateGas (create)',
+      gas: 100000n,
+      gasPrice: 1000n,
+      feeWei: 100000000n,
+      totalPlanck: 10n ** 14n,
+      blockNumber: 1,
+    });
+    let captured: Blob | null = null;
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((obj: Blob | MediaSource) => {
+      captured = obj as Blob;
+      return 'blob:test';
+    });
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const { container } = render(<FeeLabPanel />);
+    const scope = within(container);
+    fireEvent.click(scope.getByRole('button', { name: 'Custom bytecode' }));
+    fireEvent.change(scope.getByPlaceholderText('0x6080…'), { target: { value: '0x608060' } });
+    fireEvent.click(scope.getByRole('button', { name: 'Estimate on both surfaces' }));
+    await waitFor(() => {
+      expect(scope.getByRole('button', { name: 'Estimate on both surfaces' })).toBeEnabled();
+    });
+    fireEvent.click(scope.getByRole('button', { name: 'Export fee report' }));
+    await waitFor(() => {
+      expect(captured).not.toBeNull();
+    });
+    const text = await (captured as unknown as Blob).text();
+    const v = await verifyReportText(text);
+    expect(v.status).toBe('verified');
+    const parsed = JSON.parse(text) as { feeOperation: string; feeComparison: { evm: { method: string } } };
+    expect(parsed.feeOperation).toBe('deploy');
+    expect(parsed.feeComparison.evm.method).toBe('eth_estimateGas (create)');
+  });
+
+  it('copies a share link carrying the custom code and args', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(window.navigator, 'clipboard', { value: { writeText }, configurable: true });
+    try {
+      const { container } = render(<FeeLabPanel />);
+      const scope = within(container);
+      fireEvent.click(scope.getByRole('button', { name: 'Custom bytecode' }));
+      fireEvent.change(scope.getByPlaceholderText('0x6080…'), { target: { value: '0x608060' } });
+      const textInputs = container.querySelectorAll('input[type="text"]');
+      fireEvent.change(textInputs[1], { target: { value: '0x0001' } });
+      fireEvent.click(scope.getByRole('button', { name: 'Copy share link' }));
+      await waitFor(() => {
+        expect(writeText).toHaveBeenCalledTimes(1);
+      });
+      const url = writeText.mock.calls[0][0] as string;
+      expect(url).toContain('op=deploy');
+      expect(url).toContain('code=0x608060');
+      expect(url).toContain('args=0x0001');
+      expect(scope.getByText('Share link copied.')).toBeTruthy();
+    } finally {
+      // jsdom has no clipboard by default; remove the test double.
+      delete (window.navigator as unknown as Record<string, unknown>).clipboard;
+    }
+  });
 });

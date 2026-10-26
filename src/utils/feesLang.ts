@@ -47,6 +47,18 @@ export interface FeesPanelCopy {
   codeRegistry: string;
   codeCustom: string;
   codeLabel: string;
+  codeError: string;
+  constructorLabel: string;
+  constructorHint: string;
+  constructorError: string;
+  uploadLabel: string;
+  uploadErrorJson: string;
+  uploadErrorBytecode: string;
+  uploadErrorDeployed: string;
+  uploadErrorHex: string;
+  shareLabel: string;
+  shareCopied: string;
+  shareFailed: string;
   callToLabel: string;
   callDataLabel: string;
   measure: string;
@@ -215,6 +227,18 @@ export const feesCopy: Record<Lang, FeesCopy> = {
     codeRegistry: 'FeeRegistry.sol · {bytes} B',
     codeCustom: 'Custom bytecode',
     codeLabel: 'Creation bytecode (0x…)',
+    codeError: 'Custom bytecode must be 0x-prefixed hex.',
+    constructorLabel: 'Constructor args (0x…, ABI-encoded, optional)',
+    constructorHint: 'Appended to the creation bytecode. Leave empty for constructors with no arguments.',
+    constructorError: 'Constructor args must be 0x-prefixed hex (ABI-encoded).',
+    uploadLabel: 'Upload artifact JSON (solc output)',
+    uploadErrorJson: 'Artifact file is not valid JSON.',
+    uploadErrorBytecode: 'No creation bytecode found in this artifact. Expected bytecode, bytecode.object, or evm.bytecode.object.',
+    uploadErrorDeployed: 'This artifact contains only deployedBytecode (runtime code). Upload the creation bytecode artifact instead.',
+    uploadErrorHex: 'Bytecode in this artifact must be 0x-prefixed hex.',
+    shareLabel: 'Copy share link',
+    shareCopied: 'Share link copied.',
+    shareFailed: 'Could not copy the share link. Copy it from the address bar instead.',
     callToLabel: 'To (leave empty for a create)',
     callDataLabel: 'Calldata',
     measure: 'Estimate on both surfaces',
@@ -352,6 +376,18 @@ export const feesCopy: Record<Lang, FeesCopy> = {
     codeRegistry: 'FeeRegistry.sol · {bytes} B',
     codeCustom: 'Bytecode kustom',
     codeLabel: 'Bytecode creation (0x…)',
+    codeError: 'Bytecode kustom harus hex berawalan 0x.',
+    constructorLabel: 'Argumen constructor (0x…, ABI-encoded, opsional)',
+    constructorHint: 'Ditambahkan ke akhir creation bytecode. Kosongkan untuk constructor tanpa argumen.',
+    constructorError: 'Argumen constructor harus hex berawalan 0x (ABI-encoded).',
+    uploadLabel: 'Unggah artifact JSON (output solc)',
+    uploadErrorJson: 'File artifact bukan JSON yang valid.',
+    uploadErrorBytecode: 'Tidak ada creation bytecode di artifact ini. Harus ada bytecode, bytecode.object, atau evm.bytecode.object.',
+    uploadErrorDeployed: 'Artifact ini hanya berisi deployedBytecode (runtime code). Unggah artifact creation bytecode.',
+    uploadErrorHex: 'Bytecode di artifact ini harus hex berawalan 0x.',
+    shareLabel: 'Salin link berbagi',
+    shareCopied: 'Link berbagi disalin.',
+    shareFailed: 'Link berbagi gagal disalin. Salin dari address bar.',
     callToLabel: 'Ke (kosongkan untuk create)',
     callDataLabel: 'Calldata',
     measure: 'Estimasi di kedua permukaan',

@@ -49,6 +49,8 @@ import {
 import { feesCopy, type FeesPanelCopy } from '../../utils/feesLang';
 import { buildFeeReport } from '../../utils/feeReport';
 import { stampReportIntegrity } from '../../utils/reportIntegrity';
+import { parseArtifactInput, ArtifactInputError } from '../../utils/artifactInput';
+import { buildFeeLabShareParams, parseFeeLabShareParams } from '../../utils/feeLabShare';
 import { readStoredLang, storeLang, type Lang } from '../../utils/landingLang';
 import { PORTALDOT_CHAIN_ID } from '../../utils/siteConstants';
 
@@ -155,6 +157,9 @@ export function FeeLabPanel() {
   const [tokenAmount, setTokenAmount] = useState('1');
   const [codeChoice, setCodeChoice] = useState<CodeChoice>('sample');
   const [customCode, setCustomCode] = useState('');
+  const [constructorData, setConstructorData] = useState('');
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [shareNote, setShareNote] = useState<string | null>(null);
   const [callTo, setCallTo] = useState<string>(SAMPLE.erc20Token);
   const [callData, setCallData] = useState('0x18160ddd');
   const [busy, setBusy] = useState(false);
@@ -172,6 +177,19 @@ export function FeeLabPanel() {
     };
   }, []);
 
+  // A share link (?op=deploy&code=0x…&args=0x…&from=0x…) opens Fee Lab
+  // with that contract already loaded. A malformed link parses to null
+  // and the panel renders its default state instead of erroring.
+  useEffect(() => {
+    const shared = parseFeeLabShareParams(window.location.search);
+    if (!shared) return;
+    setOp('deploy');
+    setCodeChoice('custom');
+    if (shared.code) setCustomCode(shared.code);
+    if (shared.args) setConstructorData(shared.args);
+    if (shared.from) setFrom(shared.from);
+  }, []);
+
   const buildTx = (decimals: number, tokenDecimals: number): DualTx | string => {
     try {
       if (!isH160(from)) return p.fromError;
@@ -180,8 +198,16 @@ export function FeeLabPanel() {
           return { kind: 'nativeTransfer', from, to, amountPlanck: parseUnits(amount, decimals) };
         case 'erc20':
           return { kind: 'erc20Transfer', from, token, to: tokenTo, amount: parseUnits(tokenAmount, tokenDecimals) };
-        case 'deploy':
-          return { kind: 'contractDeploy', from, bytecode: codeOf(codeChoice, customCode) };
+        case 'deploy': {
+          const code = codeOf(codeChoice, customCode);
+          if (codeChoice === 'custom') {
+            if (!/^0x[0-9a-fA-F]+$/.test(code)) return p.codeError;
+            if (constructorData.trim() !== '' && !/^0x[0-9a-fA-F]*$/.test(constructorData.trim())) {
+              return p.constructorError;
+            }
+          }
+          return { kind: 'contractDeploy', from, bytecode: code, constructorData: codeChoice === 'custom' ? (constructorData.trim() || undefined) : undefined };
+        }
         case 'calldata':
           return { kind: 'calldata', from, to: callTo.trim() || undefined, data: callData.trim() };
       }
@@ -281,6 +307,49 @@ export function FeeLabPanel() {
       setExportError(e instanceof Error ? e.message : String(e));
     } finally {
       setExporting(false);
+    }
+  }
+
+  async function uploadArtifact(file: File) {
+    setUploadError(null);
+    try {
+      const parsed = parseArtifactInput(await file.text());
+      setCustomCode(parsed.bytecode);
+      setConstructorData(parsed.constructorData);
+      setResult(null);
+    } catch (e) {
+      if (e instanceof ArtifactInputError) {
+        setUploadError(
+          e.code === 'invalid-json' ? p.uploadErrorJson
+          : e.code === 'no-bytecode' ? p.uploadErrorBytecode
+          : e.code === 'deployed-only' ? p.uploadErrorDeployed
+          : e.code === 'bad-args' ? p.constructorError
+          : p.uploadErrorHex,
+        );
+      } else {
+        setUploadError(e instanceof Error ? e.message : String(e));
+      }
+    }
+  }
+
+  async function copyShareLink() {
+    setShareNote(null);
+    const code = codeOf(codeChoice, customCode);
+    if (op !== 'deploy' || codeChoice !== 'custom' || !/^0x[0-9a-fA-F]+$/.test(code)) {
+      setShareNote(p.codeError);
+      return;
+    }
+    if (constructorData.trim() !== '' && !/^0x[0-9a-fA-F]*$/.test(constructorData.trim())) {
+      setShareNote(p.constructorError);
+      return;
+    }
+    const params = buildFeeLabShareParams({ from, code, args: constructorData.trim() || undefined });
+    const url = `${window.location.origin}${window.location.pathname}?${params}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareNote(p.shareCopied);
+    } catch {
+      setShareNote(p.shareFailed);
     }
   }
 
@@ -473,15 +542,43 @@ export function FeeLabPanel() {
               ))}
             </div>
             {codeChoice === 'custom' ? (
-              <div>
-                <label className="block text-sm font-medium text-slate-300">{p.codeLabel}</label>
-                <textarea
-                  value={customCode}
-                  onChange={(e) => setCustomCode(e.target.value)}
-                  spellCheck={false}
-                  placeholder="0x6080…"
-                  className="mt-1.5 w-full h-28 resize-y bg-black/30 border border-line rounded-lg px-4 py-2.5 text-sm text-white font-data placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#0181FB]/70"
-                />
+              <div className="grid gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300">{p.codeLabel}</label>
+                  <textarea
+                    value={customCode}
+                    onChange={(e) => setCustomCode(e.target.value)}
+                    spellCheck={false}
+                    placeholder="0x6080…"
+                    className="mt-1.5 w-full h-28 resize-y bg-black/30 border border-line rounded-lg px-4 py-2.5 text-sm text-white font-data placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#0181FB]/70"
+                  />
+                </div>
+                <Field label={p.constructorLabel} value={constructorData} onChange={setConstructorData} />
+                <p className="text-xs text-slate-500">{p.constructorHint}</p>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300">{p.uploadLabel}</label>
+                  <input
+                    type="file"
+                    accept=".json,application/json"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) void uploadArtifact(f);
+                      e.target.value = '';
+                    }}
+                    className="mt-1.5 w-full text-sm text-slate-400 file:mr-3 file:rounded-lg file:border file:border-line file:bg-black/30 file:px-3 file:py-2 file:text-sm file:text-slate-200"
+                  />
+                </div>
+                {uploadError && <p className="rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">{uploadError}</p>}
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => void copyShareLink()}
+                    className="rounded-lg border border-line px-4 py-2 text-sm text-slate-200 hover:text-white"
+                  >
+                    {p.shareLabel}
+                  </button>
+                  {shareNote && <span className="text-xs text-slate-400">{shareNote}</span>}
+                </div>
               </div>
             ) : (
               <pre className="font-data max-h-24 overflow-hidden rounded-xl border border-line bg-black/30 p-3 text-[11px] text-slate-500">{codeOf(codeChoice, '').slice(0, 400)}…</pre>
