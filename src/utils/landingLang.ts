@@ -243,6 +243,8 @@ export interface LandingCopy {
   lightboxClose: string;
   motionCaption: string;
   motionNote: string;
+  langGroupAria: string;
+  menuToggleAria: string;
 }
 
 const en: LandingCopy = {
@@ -496,11 +498,11 @@ const en: LandingCopy = {
   ],
   galleryLabel: 'NodeScope · screenshot',
   screenshots: [
-    { src: '/screenshots/01-endpoint-config.png', caption: '01 — Endpoint configuration' },
-    { src: '/screenshots/02-health-check-results.png', caption: '02 — Health check results' },
-    { src: '/screenshots/03-snapshot-comparison.png', caption: '03 — Snapshot comparison' },
-    { src: '/screenshots/04-findings-categorized.png', caption: '04 — Findings, categorized' },
-    { src: '/screenshots/05-report-export.png', caption: '05 — Report export' },
+    { src: '/screenshots/01-endpoint-config.jpg', caption: '01 — Endpoint configuration' },
+    { src: '/screenshots/02-health-check-results.jpg', caption: '02 — Health check results' },
+    { src: '/screenshots/03-snapshot-comparison.jpg', caption: '03 — Snapshot comparison' },
+    { src: '/screenshots/04-findings-categorized.jpg', caption: '04 — Findings, categorized' },
+    { src: '/screenshots/05-report-export.jpg', caption: '05 — Report export' },
   ],
   v3Title: 'Portaldot V3, as published',
   v3Right: 'Official references, not guesses',
@@ -681,6 +683,8 @@ const en: LandingCopy = {
   lightboxClose: 'Close',
   motionCaption: 'Watch the flow — five real screens, animated',
   motionNote: 'Screenshots from a real session on 25 Oct 2026, animated with a slow zoom and crossfade. This is not a live recording and it carries no live data — the stills below are the same screens.',
+  langGroupAria: 'Language',
+  menuToggleAria: 'Toggle navigation menu',
 };
 
 const id: LandingCopy = {
@@ -933,11 +937,11 @@ const id: LandingCopy = {
   ],
   galleryLabel: 'NodeScope · screenshot',
   screenshots: [
-    { src: '/screenshots/01-endpoint-config.png', caption: '01 — Konfigurasi endpoint' },
-    { src: '/screenshots/02-health-check-results.png', caption: '02 — Hasil health check' },
-    { src: '/screenshots/03-snapshot-comparison.png', caption: '03 — Perbandingan snapshot' },
-    { src: '/screenshots/04-findings-categorized.png', caption: '04 — Temuan, terkategori' },
-    { src: '/screenshots/05-report-export.png', caption: '05 — Ekspor laporan' },
+    { src: '/screenshots/01-endpoint-config.jpg', caption: '01 — Konfigurasi endpoint' },
+    { src: '/screenshots/02-health-check-results.jpg', caption: '02 — Hasil health check' },
+    { src: '/screenshots/03-snapshot-comparison.jpg', caption: '03 — Perbandingan snapshot' },
+    { src: '/screenshots/04-findings-categorized.jpg', caption: '04 — Temuan, terkategori' },
+    { src: '/screenshots/05-report-export.jpg', caption: '05 — Ekspor laporan' },
   ],
   v3Title: 'Portaldot V3, sesuai publikasi',
   v3Right: 'Referensi resmi, bukan tebakan',
@@ -1118,6 +1122,8 @@ const id: LandingCopy = {
   lightboxClose: 'Tutup',
   motionCaption: 'Lihat alurnya — lima layar nyata, dianimasikan',
   motionNote: 'Screenshot dari sesi nyata pada 25 Okt 2026, dianimasikan dengan zoom pelan dan crossfade. Ini bukan rekaman live dan tidak membawa data live — gambar diam di bawah adalah layar yang sama.',
+  langGroupAria: 'Bahasa',
+  menuToggleAria: 'Buka/tutup menu navigasi',
 };
 
 export const landingCopy: Record<Lang, LandingCopy> = { en, id };

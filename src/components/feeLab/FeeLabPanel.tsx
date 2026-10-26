@@ -450,12 +450,12 @@ export function FeeLabPanel() {
         </div>
         <div className="flex flex-wrap items-center gap-3 pb-1">
           <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">Portaldot V3 · Chain {PORTALDOT_CHAIN_ID}</p>
-          <span className="flex shrink-0 items-center gap-1 rounded-full border border-line bg-black/30 p-1" role="group" aria-label="Language">
+          <span className="flex shrink-0 items-center gap-1 rounded-full border border-line bg-black/30 p-1" role="group" aria-label={p.langGroupAria}>
             {(['en', 'id'] as Lang[]).map((l) => (
               <button
                 key={l}
                 type="button"
-                aria-label={l === 'en' ? 'English' : 'Bahasa Indonesia'}
+                aria-label={l === 'en' ? 'EN (English)' : 'ID (Bahasa Indonesia)'}
                 aria-pressed={lang === l}
                 onClick={() => setLang(l)}
                 className={`rounded-full px-2.5 py-1 font-data text-[10px] uppercase tracking-[0.14em] transition-colors ${lang === l ? 'bg-[#0181FB] text-white' : 'text-slate-400 hover:text-white'}`}

@@ -19,6 +19,8 @@ export function SiteHeader({
   variant,
   launchLabel,
   launchHref,
+  langGroupAria = 'Language',
+  menuToggleAria = 'Toggle navigation menu',
 }: {
   nav: SiteNavLink[];
   lang: Lang;
@@ -29,6 +31,12 @@ export function SiteHeader({
   /** Landing only: label and target of the Launch App button. */
   launchLabel?: string;
   launchHref?: string;
+  /** Screen-reader labels for the language group and the mobile menu
+   * toggle. English defaults keep older callers working; Landing and
+   * /fees pass their session language so the labels are never
+   * English-only on an Indonesian page. */
+  langGroupAria?: string;
+  menuToggleAria?: string;
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const headerClass =
@@ -41,7 +49,7 @@ export function SiteHeader({
     variant === 'landing'
       ? 'hidden font-display text-[17px] font-semibold tracking-tight text-white sm:inline'
       : 'font-display text-[17px] font-semibold tracking-tight text-white';
-  const toggleActive = accent === 'amber' ? 'bg-amber-400 text-black' : 'bg-[#0181FB] text-white';
+  const toggleActive = accent === 'amber' ? 'bg-amber-400 text-black' : 'bg-[#0063CC] text-white';
   return (
     <header className={headerClass}>
       <div className={containerClass}>
@@ -69,12 +77,15 @@ export function SiteHeader({
             ))}
           </nav>
         )}
-        <span className="flex shrink-0 items-center gap-1 rounded-full border border-line bg-black/30 p-1" role="group" aria-label="Language">
+        <span className="flex shrink-0 items-center gap-1 rounded-full border border-line bg-black/30 p-1" role="group" aria-label={langGroupAria}>
           {(['en', 'id'] as Lang[]).map((l) => (
             <button
               key={l}
               type="button"
-              aria-label={l === 'en' ? 'English' : 'Bahasa Indonesia'}
+              // The accessible name contains the visible label verbatim
+              // ("EN (English)"): a bare "English" fails axe's
+              // label-content-name-mismatch for the visible "EN".
+              aria-label={l === 'en' ? 'EN (English)' : 'ID (Bahasa Indonesia)'}
               aria-pressed={lang === l}
               onClick={() => setLang(l)}
               className={`rounded-full px-2.5 py-1 font-data text-[10px] uppercase tracking-[0.14em] transition-colors ${lang === l ? toggleActive : 'text-slate-400 hover:text-white'}`}
@@ -100,7 +111,7 @@ export function SiteHeader({
         )}
         <button
           type="button"
-          aria-label="Toggle navigation menu"
+          aria-label={menuToggleAria}
           aria-expanded={mobileMenuOpen}
           aria-controls={menuId}
           onClick={() => setMobileMenuOpen((v) => !v)}

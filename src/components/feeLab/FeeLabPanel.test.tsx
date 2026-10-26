@@ -157,7 +157,7 @@ describe('FeeLabPanel', () => {
   it('switches the panel language with its header toggle', () => {
     const { container, unmount } = render(<FeeLabPanel />);
     const scope = within(container);
-    fireEvent.click(scope.getByRole('button', { name: 'Bahasa Indonesia' }));
+    fireEvent.click(scope.getByRole('button', { name: 'ID (Bahasa Indonesia)' }));
     expect(scope.getByText('Operasi yang sama. Dua permukaan. Satu fee yang jujur.')).toBeTruthy();
     expect(window.sessionStorage.getItem('nodescope-lang')).toBe('id');
     unmount();

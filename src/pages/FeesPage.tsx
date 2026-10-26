@@ -4,6 +4,7 @@ import { feesCopy } from '../utils/feesLang';
 import { landingCopy, readStoredLang, storeLang, type Lang } from '../utils/landingLang';
 import { SiteFooter } from '../components/layout/SiteFooter';
 import { SiteHeader } from '../components/layout/SiteHeader';
+import { DeployCostCalculator } from '../components/fees/DeployCostCalculator';
 
 // /fees: the Fees sub-landing. Same design system, fonts, and footer as the
 // main landing, but its own hero layout and amber accent (amber already
@@ -36,7 +37,7 @@ function AnimatedBars({ t }: { t: (typeof feesCopy)['en'] }) {
       <div>
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-xs text-slate-400">{t.evmBarLabel}</span>
-          <span className="font-data text-sm text-slate-100">124.098 <span className="text-slate-500">tPOT</span></span>
+          <span className="font-data text-sm text-slate-100">124.098 <span className="text-slate-400">tPOT</span></span>
         </div>
         <div className="mt-2 flex h-5 w-full overflow-hidden rounded-md bg-white/[0.04]">
           <div className={`h-full bg-[#0181FB] ${anim}`} style={{ width: `${evmW}%` }} />
@@ -45,18 +46,18 @@ function AnimatedBars({ t }: { t: (typeof feesCopy)['en'] }) {
       <div>
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-xs text-slate-400">{t.nativeBarLabel}</span>
-          <span className="font-data text-sm text-slate-100">122.191 <span className="text-slate-500">tPOT</span></span>
+          <span className="font-data text-sm text-slate-100">122.191 <span className="text-slate-400">tPOT</span></span>
         </div>
         <div className="mt-2 flex h-5 w-full overflow-hidden rounded-md bg-white/[0.04]">
           <div className={`h-full bg-emerald-400 ${anim}`} style={{ width: `${nativeFeeW}%` }} title={`${t.nativeFeeSegment}: 0.154 tPOT`} />
           <div className={`h-full bg-amber-400 ${anim}`} style={{ width: `${nativeDepW}%` }} title={`${t.nativeDepositSegment}: 122.037 tPOT`} />
         </div>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500">
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-400">
           <span><span className="mr-1 inline-block h-2 w-2 rounded-sm bg-emerald-400" />{t.nativeFeeSegment}: 0.154 tPOT</span>
           <span><span className="mr-1 inline-block h-2 w-2 rounded-sm bg-amber-400" />{t.nativeDepositSegment}: 122.037 tPOT</span>
         </div>
       </div>
-      <p className="text-center text-xs text-slate-500">{t.barCaption}</p>
+      <p className="text-center text-xs text-slate-400">{t.barCaption}</p>
     </div>
   );
 }
@@ -78,8 +79,11 @@ export function FeesPage() {
         accent="amber"
         menuId="fees-mobile-menu"
         variant="fees"
+        langGroupAria={t.langGroupAria}
+        menuToggleAria={t.menuToggleAria}
       />
 
+      <main>
       {/* Hero: centered single column and amber accent, deliberately unlike
           the main landing's two-column blue hero. */}
       <section className="relative overflow-hidden px-4 pb-16 pt-20 md:pt-28">
@@ -101,7 +105,7 @@ export function FeesPage() {
         </div>
       </section>
 
-      <section className="border-t border-line px-4 py-16">
+      <section className="cv-auto border-t border-line px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <h2 className="font-display text-2xl font-semibold tracking-tight text-white">{t.howTitle}</h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -116,7 +120,7 @@ export function FeesPage() {
         </div>
       </section>
 
-      <section className="border-t border-line px-4 py-16">
+      <section className="cv-auto border-t border-line px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <h2 className="font-display text-2xl font-semibold tracking-tight text-white">{t.opsTitle}</h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -130,14 +134,14 @@ export function FeesPage() {
         </div>
       </section>
 
-      <section className="border-t border-line px-4 py-16">
+      <section className="cv-auto border-t border-line px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <h2 className="font-display text-2xl font-semibold tracking-tight text-white">{t.findingsTitle}</h2>
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">{t.findingsIntro}</p>
           <div className="mt-8 overflow-x-auto rounded-2xl border border-line">
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead>
-                <tr className="border-b border-line bg-black/25 font-data text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                <tr className="border-b border-line bg-black/25 font-data text-[11px] uppercase tracking-[0.16em] text-slate-400">
                   {t.findingsHead.map((h) => (
                     <th key={h} className="px-4 py-3 font-medium">{h}</th>
                   ))}
@@ -165,7 +169,17 @@ export function FeesPage() {
         </div>
       </section>
 
-      <section className="border-t border-line px-4 py-16">
+      <section className="cv-auto border-t border-line px-4 py-16">
+        <div className="mx-auto max-w-6xl">
+          <h2 className="font-display text-2xl font-semibold tracking-tight text-white">{t.calc.title}</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">{t.calc.intro}</p>
+          <div className="mt-8 rounded-2xl border border-line bg-panel p-5 md:p-6">
+            <DeployCostCalculator lang={lang} />
+          </div>
+        </div>
+      </section>
+
+      <section className="cv-auto border-t border-line px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <h2 className="font-display text-2xl font-semibold tracking-tight text-white">{t.limitsTitle}</h2>
           <ul className="mt-6 grid max-w-4xl gap-2.5 text-sm leading-relaxed text-slate-400">
@@ -190,6 +204,7 @@ export function FeesPage() {
         </div>
       </section>
 
+      </main>
       <SiteFooter t={footerCopy} />
     </div>
   );

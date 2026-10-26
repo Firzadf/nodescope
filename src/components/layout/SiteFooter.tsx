@@ -19,16 +19,16 @@ export function SiteFooter({ t }: { t: LandingCopy }) {
                 <img src="/logo.png" alt="" className="h-7 w-7 rounded-lg" />
                 <span className="font-display text-base font-semibold text-white">NodeScope</span>
               </div>
-              <p className="mt-3 max-w-xs text-[15px] leading-[1.85] text-slate-500">
+              <p className="mt-3 max-w-xs text-[15px] leading-[1.85] text-slate-400">
                 {t.footerDescription}
               </p>
-              <p className="mt-4 font-data text-[11px] uppercase tracking-[0.18em] text-slate-600">
+              <p className="mt-4 font-data text-[11px] uppercase tracking-[0.18em] text-slate-400">
                 {t.footerDisclaimer}
               </p>
             </div>
             {t.footerColumns.map((col) => (
               <div key={col.header}>
-                <p className="font-data text-[11px] uppercase tracking-[0.2em] text-slate-500">{col.header}</p>
+                <p className="font-data text-[11px] uppercase tracking-[0.2em] text-slate-400">{col.header}</p>
                 <ul className="mt-3.5 space-y-2.5 text-sm">
                   {col.links.map(({ label, href }) => (
                     <li key={label}>
@@ -41,7 +41,7 @@ export function SiteFooter({ t }: { t: LandingCopy }) {
                           {label}
                         </a>
                       ) : (
-                        <span className="text-slate-500">{label}</span>
+                        <span className="text-slate-400">{label}</span>
                       )}
                     </li>
                   ))}
@@ -65,7 +65,7 @@ export function SiteFooter({ t }: { t: LandingCopy }) {
           </p>
           <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-[58%] h-px bg-gradient-to-r from-transparent via-slate-400/40 to-transparent blur-[1px]" />
         </div>
-        <div className="relative mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-6 font-data text-[11px] uppercase tracking-[0.14em] text-slate-600">
+        <div className="relative mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-6 font-data text-[11px] uppercase tracking-[0.14em] text-slate-400">
           <span>{t.footerCopyright}</span>
           <span>{t.footerSchema}</span>
         </div>

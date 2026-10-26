@@ -59,6 +59,50 @@ function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; 
   );
 }
 
+/**
+ * Motion video, deferred until scrolled into view. The 3.2 MB file and
+ * its 74 KB poster used to download on first paint even though the
+ * figure sits far below the fold, competing with the hero on slow
+ * connections (Lighthouse flagged the video as the page's largest
+ * payload, and the poster as an eager below-fold image). Now only a
+ * same-aspect placeholder renders until viewport entry; the video
+ * (with poster and src, autoplay) and the reduced-motion poster image
+ * are mounted then. Where IntersectionObserver is missing (tests, old
+ * browsers) everything renders on first paint, exactly like before.
+ */
+function MotionVideo({ caption }: { caption: string }) {
+  const { ref, inView } = useInView<HTMLDivElement>(0.12);
+  return (
+    <div ref={ref} className="w-full">
+      {inView ? (
+        <>
+          <video
+            className="motion-video aspect-[16/10] w-full"
+            src="/motion/nodescope-flow.mp4"
+            poster="/screenshots/01-endpoint-config.jpg"
+            autoPlay
+            muted
+            loop
+            playsInline
+            aria-label={caption}
+          />
+          <img
+            src="/screenshots/01-endpoint-config.jpg"
+            alt={caption}
+            className="motion-poster aspect-[16/10] w-full object-cover object-top"
+          />
+        </>
+      ) : (
+        <div
+          className="aspect-[16/10] w-full bg-panel"
+          aria-hidden="true"
+          data-testid="motion-placeholder"
+        />
+      )}
+    </div>
+  );
+}
+
 /* -------------------------------- odometer -------------------------------- */
 
 function Odometer({ value }: { value: string }) {
@@ -714,8 +758,11 @@ export function Landing() {
         variant="landing"
         launchLabel={t.launchApp}
         launchHref={APP_URL}
+        langGroupAria={t.langGroupAria}
+        menuToggleAria={t.menuToggleAria}
       />
 
+      <main>
       {/* -------------------------------- hero ------------------------------ */}
       <section className="relative overflow-hidden px-4 pb-24 pt-32 md:pt-40">
         <HudArc />
@@ -768,9 +815,9 @@ export function Landing() {
             <LiveReadout lang={lang} />
             <div className="relative z-10 mx-3 -mt-3">
               <figure className="hero-media relative overflow-hidden rounded-[24px] border border-line bg-panel shadow-[0_32px_90px_rgba(0,0,0,0.55),0_0_60px_rgba(1,129,251,0.12)] transition-transform duration-500 [transform:perspective(1200px)_rotateY(-6deg)_rotateX(1.5deg)] hover:[transform:perspective(1200px)_rotateY(0deg)_rotateX(0deg)]" style={{ transitionTimingFunction: 'var(--ease-out)' }}>
-                <img src="/screenshots/03-snapshot-comparison.png" alt={t.heroFigureCaption} className="aspect-[16/9] w-full object-cover object-top" />
+                <img src="/screenshots/03-snapshot-comparison.jpg" alt={t.heroFigureCaption} fetchPriority="high" className="aspect-[16/9] w-full object-cover object-top" />
                 <div aria-hidden="true" className="scan-line pointer-events-none absolute inset-x-0 top-0 z-20 h-20" />
-                <figcaption className="border-t border-line bg-black/30 px-4 py-2.5 font-data text-[10px] uppercase tracking-[0.16em] text-slate-500">
+                <figcaption className="border-t border-line bg-black/30 px-4 py-2.5 font-data text-[10px] uppercase tracking-[0.16em] text-slate-400">
                   {t.heroFigureCaption}
                 </figcaption>
               </figure>
@@ -782,7 +829,7 @@ export function Landing() {
       </section>
 
       {/* ------------------------------ pillars ------------------------------- */}
-      <section className="border-b border-line px-4 py-16">
+      <section className="cv-auto border-b border-line px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <h2 className="font-display text-3xl font-semibold tracking-tight text-white md:text-4xl">{t.pillarSectionTitle}</h2>
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400 md:text-base">{t.pillarSectionIntro}</p>
@@ -796,7 +843,7 @@ export function Landing() {
               <span className="text-[#7DB4FF]">{t.feeBlockEvm}</span>
               <span className="text-amber-300">{t.feeBlockNative}</span>
             </div>
-            <p className="mt-4 text-xs text-slate-500">{t.feeBlockFootnote}</p>
+            <p className="mt-4 text-xs text-slate-400">{t.feeBlockFootnote}</p>
             <a href="/app/fee-lab" className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-slate-200 underline decoration-slate-600 underline-offset-4 transition-colors hover:text-white">
               {t.feeBlockCta} →
             </a>
@@ -816,7 +863,7 @@ export function Landing() {
       </div>
 
       {/* ------------------------------- stats ------------------------------ */}
-      <section className="border-y border-line bg-deep/60 px-4 py-14">
+      <section className="cv-auto border-y border-line bg-deep/60 px-4 py-14">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-4">
           {t.stats.map((s, i) => (
             <Reveal key={s.label} delay={i * 80}>
@@ -829,7 +876,7 @@ export function Landing() {
       </section>
 
       {/* ------------------------------ problem ----------------------------- */}
-      <section id="problem" className="scroll-mt-28 px-4 py-16">
+      <section id="problem" className="cv-auto scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading title={t.problemTitle} right={t.problemRight} />
@@ -866,7 +913,7 @@ export function Landing() {
       </section>
 
       {/* -------------------------------- how ------------------------------- */}
-      <section id="how" className="scroll-mt-28 px-4 py-16">
+      <section id="how" className="cv-auto scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading title={t.howTitle} right={t.howRight} />
@@ -910,7 +957,7 @@ export function Landing() {
       </section>
 
       {/* ------------------------------ tutorial ------------------------------ */}
-      <section id="tutorial" className="scroll-mt-28 px-4 py-16">
+      <section id="tutorial" className="cv-auto scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading title={t.tutorialTitle} right={t.tutorialRight} />
@@ -946,7 +993,7 @@ export function Landing() {
       </section>
 
       {/* ----------------------------- instrument ---------------------------- */}
-      <section id="instrument" className="scroll-mt-28 px-4 py-16">
+      <section id="instrument" className="cv-auto scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading title={t.instrumentTitle} right={t.instrumentRight} />
@@ -1042,7 +1089,7 @@ export function Landing() {
       </section>
 
       {/* ----------------------------- evidence ----------------------------- */}
-      <section id="evidence" className="scroll-mt-28 px-4 py-16">
+      <section id="evidence" className="cv-auto scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading title={t.evidenceTitle} right={t.evidenceRight} accent="emerald" />
@@ -1102,21 +1149,7 @@ export function Landing() {
               {t.evidenceFootnote}
             </p>
             <figure className="mt-8 overflow-hidden rounded-[20px] border border-line bg-panel shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
-              <video
-                className="motion-video aspect-[16/10] w-full"
-                src="/motion/nodescope-flow.mp4"
-                poster="/screenshots/01-endpoint-config.png"
-                autoPlay
-                muted
-                loop
-                playsInline
-                aria-label={t.motionCaption}
-              />
-              <img
-                src="/screenshots/01-endpoint-config.png"
-                alt={t.motionCaption}
-                className="motion-poster aspect-[16/10] w-full object-cover object-top"
-              />
+              <MotionVideo caption={t.motionCaption} />
               <figcaption className="px-5 py-3.5">
                 <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-300">{t.motionCaption}</p>
                 <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">{t.motionNote}</p>
@@ -1156,7 +1189,7 @@ export function Landing() {
       </section>
 
       {/* --------------------------- on-chain evidence --------------------------- */}
-      <section id="onchain" className="scroll-mt-28 px-4 py-16">
+      <section id="onchain" className="cv-auto scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading title={t.onchainTitle} right={t.onchainRight} accent="emerald" />
@@ -1201,7 +1234,7 @@ export function Landing() {
       </section>
 
       {/* ------------------------------ who uses ------------------------------ */}
-      <section id="who" className="scroll-mt-28 px-4 py-16">
+      <section id="who" className="cv-auto scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading title={t.whoTitle} right={t.whoRight} />
@@ -1218,7 +1251,7 @@ export function Landing() {
       </section>
 
       {/* ----------------------------- V3 references ------------------------------ */}
-      <section id="v3" className="scroll-mt-28 px-4 py-16">
+      <section id="v3" className="cv-auto scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading title={t.v3Title} right={t.v3Right} />
@@ -1246,7 +1279,7 @@ export function Landing() {
       </section>
 
       {/* ----------------------------- roadmap ------------------------------ */}
-      <section id="roadmap" className="scroll-mt-28 px-4 py-16">
+      <section id="roadmap" className="cv-auto scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading title={t.roadmapTitle} right={t.roadmapRight} accent="sky" />
@@ -1292,7 +1325,7 @@ export function Landing() {
       </section>
 
       {/* --------------------------- judge quickstart ------------------------ */}
-      <section id="judge" className="scroll-mt-28 px-4 py-16">
+      <section id="judge" className="cv-auto scroll-mt-28 px-4 py-16">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <SectionHeading title={t.judgeTitle} right={t.judgeRight} />
@@ -1315,7 +1348,7 @@ export function Landing() {
       </section>
 
       {/* ------------------------------- CTA -------------------------------- */}
-      <section className="relative overflow-hidden px-4 py-24">
+      <section className="cv-auto relative overflow-hidden px-4 py-24">
         <Reveal className="relative mx-auto max-w-3xl rounded-[32px] border border-line bg-panel/70 px-8 py-16 text-center shadow-[0_32px_90px_rgba(0,0,0,0.5)]">
           <Activity className="mx-auto h-8 w-8 text-slate-500" />
           <h2 className="mt-6 font-display text-4xl font-semibold leading-tight tracking-tight text-white md:text-5xl">
@@ -1331,6 +1364,7 @@ export function Landing() {
         </Reveal>
       </section>
 
+      </main>
       <SiteFooter t={t} />
 
       {/* ----------------------------- lightbox ----------------------------- */}

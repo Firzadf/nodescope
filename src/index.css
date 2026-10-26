@@ -50,7 +50,7 @@
 
   /* Primary action: one flat accent, reserved for the one action that matters per panel. */
   .btn-primary {
-    background-color: #0181fb;
+    background-color: #0063cc;
     color: #fff;
     /* Chamfered corners (ChainGPT-style cut) — clip-path removes the outer
        glow, so the button carries an inset highlight instead. */
@@ -603,10 +603,31 @@ select {
   .ribbon-streak {
     animation: none;
   }
+  /* Tailwind motion utilities used anywhere (live dot ping, typing
+   * cursor pulse, loading spinners) are not covered by the scoped rules
+   * above, so they get the same treatment: freeze, never hide. */
+  .animate-ping,
+  .animate-pulse,
+  .animate-spin {
+    animation: none;
+  }
 }
 
 .motion-poster { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .motion-video { display: none; }
   .motion-poster { display: block; }
+}
+
+/* Below-fold sections skip style/layout/paint until scrolled near
+ * (content-visibility: auto). The landing page is ~23,000px tall, so
+ * rendering every section's layout upfront costs first-paint time for
+ * content nobody sees yet. The DOM stays complete (search, anchors,
+ * and IntersectionObserver entry measurement all still work); only the
+ * browser's layout/paint work is deferred. contain-intrinsic-size
+ * keeps the scrollbar roughly stable before a section first renders.
+ * The hero is deliberately excluded: it is the LCP region. */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
 }

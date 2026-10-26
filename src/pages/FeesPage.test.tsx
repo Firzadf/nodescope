@@ -32,7 +32,7 @@ describe('FeesPage', () => {
   it('switches language with the header toggle', async () => {
     const { container, unmount } = render(<FeesPage />);
     const root = within(container);
-    fireEvent.click(root.getByRole('button', { name: 'Bahasa Indonesia' }));
+    fireEvent.click(root.getByRole('button', { name: 'ID (Bahasa Indonesia)' }));
     expect(root.getByRole('heading', { name: 'Apakah 800x lebih murah itu nyata?' })).toBeTruthy();
     expect(window.sessionStorage.getItem('nodescope-lang')).toBe('id');
     unmount();
@@ -56,6 +56,49 @@ describe('FeesPage', () => {
     fireEvent.click(links[0]!);
     expect(container.querySelector('#fees-mobile-menu')).toBeNull();
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    unmount();
+  });
+
+  it('renders the animated bars at their final widths under prefers-reduced-motion', () => {
+    const original: typeof window.matchMedia | undefined = window.matchMedia;
+    window.matchMedia = ((query: string) =>
+      ({
+        matches: query === '(prefers-reduced-motion: reduce)',
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }) as unknown as MediaQueryList) as typeof window.matchMedia;
+    try {
+      const { container, unmount } = render(<FeesPage />);
+      // Reduced-motion visitors get final widths on first paint, no
+      // timeout and no width transition: EVM 100%, native fee 0.4%,
+      // native deposit 98.3%.
+      const widths = Array.from(container.querySelectorAll<HTMLElement>('div[style]'))
+        .map((el) => el.style.width)
+        .filter(Boolean);
+      expect(widths).toContain('100%');
+      expect(widths).toContain('0.4%');
+      expect(widths).toContain('98.3%');
+      unmount();
+    } finally {
+      if (original) window.matchMedia = original;
+      else delete (window as Partial<Window>).matchMedia;
+    }
+  });
+
+  it('renders the calculator section and localizes the header labels', () => {
+    window.sessionStorage.setItem('nodescope-lang', 'id');
+    const { container, unmount } = render(<FeesPage />);
+    const root = within(container);
+    expect(root.getByRole('heading', { name: 'Hitung biaya deploy kontrakmu' })).toBeTruthy();
+    expect(root.getByRole('button', { name: 'Estimasi deploy ini' })).toBeTruthy();
+    const header = within(container.querySelector('header') as HTMLElement);
+    expect(header.getByRole('group', { name: 'Bahasa' })).toBeTruthy();
+    expect(header.getByRole('button', { name: 'Buka/tutup menu navigasi' })).toBeTruthy();
     unmount();
   });
 });

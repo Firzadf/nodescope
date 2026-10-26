@@ -32,13 +32,13 @@ describe('Landing language switcher', () => {
     // Nav label and section heading share the string, so count, don't single out.
     expect(screen.getAllByText('The Problem').length).toBeGreaterThanOrEqual(2);
     expect(screen.getByRole('group', { name: 'Language' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'English' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: 'Bahasa Indonesia' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'EN (English)' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'ID (Bahasa Indonesia)' })).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('switches to Indonesian and back to English, persisting to sessionStorage', () => {
     render(<Landing />);
-    fireEvent.click(screen.getByRole('button', { name: 'Bahasa Indonesia' }));
+    fireEvent.click(screen.getByRole('button', { name: 'ID (Bahasa Indonesia)' }));
     // Nav label is "Masalah", the section heading is "Masalahnya".
     expect(screen.getByText('Masalah')).toBeInTheDocument();
     expect(screen.getByText('Masalahnya')).toBeInTheDocument();
@@ -47,13 +47,13 @@ describe('Landing language switcher', () => {
     ).toBeInTheDocument();
     // Navbar, hero, and CTA buttons all read "Buka App" in ID.
     expect(screen.getAllByText('Buka App').length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByRole('button', { name: 'Bahasa Indonesia' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'ID (Bahasa Indonesia)' })).toHaveAttribute('aria-pressed', 'true');
     try {
       expect(sessionStorage.getItem('nodescope-lang')).toBe('id');
     } catch {
       // Storage unavailable in this environment; the visible switch above is the assertion.
     }
-    fireEvent.click(screen.getByRole('button', { name: 'English' }));
+    fireEvent.click(screen.getByRole('button', { name: 'EN (English)' }));
     expect(screen.getAllByText('The Problem').length).toBeGreaterThanOrEqual(2);
     expect(
       screen.getByText(/Opening NodeScope for the first time\?/i),

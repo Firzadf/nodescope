@@ -17,10 +17,16 @@
     <meta name="twitter:description" content="Independent, read-only diagnostics for Portaldot nodes. Snapshots, comparisons, and SHA-256 receipts you can verify yourself, with an optional on-chain anchor." />
     <meta name="twitter:image" content="https://nodescope.vercel.app/og-image.png" />
 
-    <!-- Fonts -->
+    <!-- Fonts: static instances of only the weights the app uses
+      (400/500/600/700, plus Inter italic 400). The stylesheet loads
+      non-render-blocking (media=print swapped to all on load): text
+      paints with the fallback font immediately and swaps when the
+      webfonts arrive, which display=swap already allows. No-JS
+      visitors get the blocking stylesheet via noscript. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
   </head>
   <body style="background-color: #060b1d">
     <div id="root"></div>

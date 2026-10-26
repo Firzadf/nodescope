@@ -101,6 +101,38 @@ export interface FeesPanelCopy {
   exporting: string;
   exportNote: string;
   exportError: string;
+  langGroupAria: string;
+}
+
+export interface FeesCalcCopy {
+  title: string;
+  intro: string;
+  sourceLabel: string;
+  sourceSample: string;
+  sourceRegistry: string;
+  sourceCustom: string;
+  codeLabel: string;
+  codeHint: string;
+  codePlaceholder: string;
+  argsLabel: string;
+  argsHint: string;
+  uploadLabel: string;
+  codeErrJson: string;
+  codeErrBytecode: string;
+  codeErrDeployed: string;
+  codeErrHex: string;
+  codeErrArgs: string;
+  fromNote: string;
+  measure: string;
+  measureBusy: string;
+  methodNote: string;
+  triggeredNote: string;
+  empty: string;
+  depositTitle: string;
+  depositBody: string;
+  depositBarFee: string;
+  depositBarDeposit: string;
+  depositNote: string;
 }
 
 export interface FeesCopy {
@@ -130,6 +162,9 @@ export interface FeesCopy {
   ctaBody: string;
   ctaLab: string;
   ctaLanding: string;
+  langGroupAria: string;
+  menuToggleAria: string;
+  calc: FeesCalcCopy;
   panel: FeesPanelCopy;
 }
 
@@ -209,6 +244,43 @@ export const feesCopy: Record<Lang, FeesCopy> = {
     ctaBody: 'Pick an operation and ask both surfaces for a live estimate. No account, no wallet, no signing.',
     ctaLab: 'Open Fee Lab',
     ctaLanding: 'Back to landing',
+    langGroupAria: 'Language',
+    menuToggleAria: 'Toggle navigation menu',
+    calc: {
+      title: 'Price your own deploy',
+      intro:
+        'Paste creation bytecode or upload a solc artifact, and NodeScope asks both surfaces for a live deploy estimate of your contract. No signing, no transaction, just the same read-only dry-run Fee Lab uses.',
+      sourceLabel: 'Contract source',
+      sourceSample: 'SampleToken · {bytes} B',
+      sourceRegistry: 'FeeRegistry · {bytes} B',
+      sourceCustom: 'Paste or upload my own',
+      codeLabel: 'Creation bytecode (0x…) or solc artifact JSON',
+      codeHint:
+        'Raw 0x creation bytecode, or the full solc artifact JSON. Runtime (deployed) bytecode alone cannot price a deploy and is rejected.',
+      codePlaceholder: '0x6080… or { "bytecode": … }',
+      argsLabel: 'Constructor args (0x…, ABI-encoded, optional)',
+      argsHint: 'Appended to the creation bytecode. Leave empty for constructors with no arguments.',
+      uploadLabel: 'Upload artifact JSON (solc output)',
+      codeErrJson: 'Not valid JSON and not raw 0x bytecode. Paste creation bytecode (0x…) or a solc artifact JSON.',
+      codeErrBytecode: 'No creation bytecode found. Expected bytecode, bytecode.object, or evm.bytecode.object.',
+      codeErrDeployed: 'This contains only deployedBytecode (runtime code). A deploy price needs creation bytecode.',
+      codeErrHex: 'Bytecode must be 0x-prefixed hex.',
+      codeErrArgs: 'Constructor args must be 0x-prefixed hex (ABI-encoded).',
+      fromNote: 'Dry-run origin: {from}. Used only as the estimate origin; nothing signs or sends.',
+      measure: 'Estimate this deploy',
+      measureBusy: 'Estimating this deploy…',
+      methodNote: 'EVM: eth_estimateGas × eth_gasPrice. Native: ReviveApi dry-run + TransactionPaymentApi.query_info.',
+      triggeredNote:
+        'User-triggered only. No connection opens until you estimate, nothing polls, and the Substrate connection closes when you leave this page.',
+      empty: 'No estimate yet. Choose a contract above and press "{measure}".',
+      depositTitle: 'What the storage deposit is',
+      depositBody:
+        'Deploying stores the whole contract code on-chain, and pallet-revive charges a deposit for every byte and item a call leaves in state. That deposit is a hold, not a fee and not burned: when the contract is terminated, the accumulated storage deposit is refunded to the origin, and removing stored code refunds its code deposit to the owner. The EVM gas figure folds the same deposit in, so it never appears as a separate line there, which is exactly why a fee-only comparison misleads.',
+      depositBarFee: 'weight fee (partialFee)',
+      depositBarDeposit: 'storage deposit',
+      depositNote:
+        'Dry-run estimate, not an executed deploy. The refund itself happens on termination or code removal, which this page never executes.',
+    },
   panel: {
     kicker: 'NodeScope / Fee Lab',
     title: 'Same operation. Two surfaces. One honest fee.',
@@ -281,6 +353,7 @@ export const feesCopy: Record<Lang, FeesCopy> = {
     exporting: 'Exporting…',
     exportNote: 'Downloads a SHA-256 stamped report (nodescope.diagnostic-report.v1) you can verify on /verify and anchor to the same registry as Health reports.',
     exportError: 'Failed to export the fee report. Please try again.',
+    langGroupAria: 'Language',
   },
   },
   id: {
@@ -358,6 +431,43 @@ export const feesCopy: Record<Lang, FeesCopy> = {
     ctaBody: 'Pilih satu operasi dan minta estimasi live dari kedua permukaan. Tanpa akun, tanpa wallet, tanpa signing.',
     ctaLab: 'Buka Fee Lab',
     ctaLanding: 'Kembali ke landing',
+    langGroupAria: 'Bahasa',
+    menuToggleAria: 'Buka/tutup menu navigasi',
+    calc: {
+      title: 'Hitung biaya deploy kontrakmu',
+      intro:
+        'Tempel creation bytecode atau unggah artifact solc, dan NodeScope meminta estimasi deploy live dari kedua permukaan untuk kontrakmu. Tanpa signing, tanpa transaksi, hanya dry-run read-only yang sama dengan yang dipakai Fee Lab.',
+      sourceLabel: 'Sumber kontrak',
+      sourceSample: 'SampleToken · {bytes} B',
+      sourceRegistry: 'FeeRegistry · {bytes} B',
+      sourceCustom: 'Tempel atau unggah punyaku sendiri',
+      codeLabel: 'Creation bytecode (0x…) atau artifact JSON solc',
+      codeHint:
+        'Bytecode creation 0x mentah, atau artifact JSON solc lengkap. Bytecode runtime (deployed) saja tidak bisa dihargai sebagai deploy dan ditolak.',
+      codePlaceholder: '0x6080… atau { "bytecode": … }',
+      argsLabel: 'Argumen constructor (0x…, ABI-encoded, opsional)',
+      argsHint: 'Ditambahkan ke akhir creation bytecode. Kosongkan untuk constructor tanpa argumen.',
+      uploadLabel: 'Unggah artifact JSON (output solc)',
+      codeErrJson: 'Bukan JSON yang valid dan bukan bytecode 0x mentah. Tempel creation bytecode (0x…) atau artifact JSON solc.',
+      codeErrBytecode: 'Tidak ada creation bytecode. Harus ada bytecode, bytecode.object, atau evm.bytecode.object.',
+      codeErrDeployed: 'Ini hanya berisi deployedBytecode (runtime code). Harga deploy butuh creation bytecode.',
+      codeErrHex: 'Bytecode harus hex berawalan 0x.',
+      codeErrArgs: 'Argumen constructor harus hex berawalan 0x (ABI-encoded).',
+      fromNote: 'Origin dry-run: {from}. Hanya dipakai sebagai origin estimasi; tidak ada yang di-sign atau dikirim.',
+      measure: 'Estimasi deploy ini',
+      measureBusy: 'Mengestimasi deploy ini…',
+      methodNote: 'EVM: eth_estimateGas × eth_gasPrice. Native: dry-run ReviveApi + TransactionPaymentApi.query_info.',
+      triggeredNote:
+        'Hanya atas perintah pengguna. Tidak ada koneksi yang dibuka sampai kamu mengestimasi, tidak ada polling, dan koneksi Substrate ditutup saat kamu meninggalkan halaman ini.',
+      empty: 'Belum ada estimasi. Pilih kontrak di atas dan tekan "{measure}".',
+      depositTitle: 'Apa itu storage deposit',
+      depositBody:
+        'Deploy menyimpan seluruh kode kontrak on-chain, dan pallet-revive membebankan deposit untuk setiap byte dan item yang ditinggalkan sebuah call di state. Deposit itu adalah hold, bukan fee dan bukan uang hangus: saat kontrak di-terminate, akumulasi storage deposit dikembalikan ke origin, dan menghapus stored code mengembalikan code deposit ke pemiliknya. Angka gas EVM sudah melipat deposit yang sama ke dalam, sehingga ia tidak pernah muncul sebagai baris terpisah di sana, dan justru itulah yang membuat perbandingan fee-only menyesatkan.',
+      depositBarFee: 'weight fee (partialFee)',
+      depositBarDeposit: 'storage deposit',
+      depositNote:
+        'Estimasi dry-run, bukan deploy yang dieksekusi. Refund sendiri terjadi saat terminasi atau penghapusan code, yang tidak pernah dieksekusi halaman ini.',
+    },
   panel: {
     kicker: 'NodeScope / Fee Lab',
     title: 'Operasi yang sama. Dua permukaan. Satu fee yang jujur.',
@@ -430,6 +540,7 @@ export const feesCopy: Record<Lang, FeesCopy> = {
     exporting: 'Mengekspor…',
     exportNote: 'Mengunduh laporan berstempel SHA-256 (nodescope.diagnostic-report.v1) yang bisa diverifikasi di /verify dan di-anchor ke registry yang sama dengan laporan Health.',
     exportError: 'Gagal mengekspor laporan fee. Silakan coba lagi.',
+    langGroupAria: 'Bahasa',
   },
   },
 };

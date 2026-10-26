@@ -25,4 +25,21 @@ describe('Landing motion video', () => {
     expect(screen.getByText(/Watch the flow/i)).toBeInTheDocument();
     expect(screen.getByText(/not a live recording/i)).toBeInTheDocument();
   });
+
+  it('defers the video and its poster until scrolled into view', () => {
+    // An observer that never fires: the figure is below the fold, so
+    // only a same-aspect placeholder renders, and neither the 3.2 MB
+    // file nor its 74 KB poster is fetched on first paint.
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      },
+    );
+    const { container } = render(<Landing />);
+    expect(container.querySelector('[data-testid="motion-placeholder"]')).not.toBeNull();
+    expect(container.querySelector('video')).toBeNull();
+    expect(container.querySelector('img.motion-poster')).toBeNull();
+  });
 });
