@@ -105,4 +105,25 @@ describe('FeeLabPanel', () => {
     expect(document.activeElement).toBe(calldataTab);
     expect(calldataTab.getAttribute('aria-selected')).toBe('true');
   });
+
+  it('renders in Indonesian when the stored language is id', () => {
+    window.sessionStorage.setItem('nodescope-lang', 'id');
+    const { container, unmount } = render(<FeeLabPanel />);
+    const scope = within(container);
+    expect(scope.getByText('Operasi yang sama. Dua permukaan. Satu fee yang jujur.')).toBeTruthy();
+    expect(scope.getByRole('button', { name: 'Estimasi di kedua permukaan' })).toBeTruthy();
+    expect(scope.getByRole('tab', { name: 'Deploy kontrak' })).toBeTruthy();
+    unmount();
+    window.sessionStorage.clear();
+  });
+
+  it('switches the panel language with its header toggle', () => {
+    const { container, unmount } = render(<FeeLabPanel />);
+    const scope = within(container);
+    fireEvent.click(scope.getByRole('button', { name: 'Bahasa Indonesia' }));
+    expect(scope.getByText('Operasi yang sama. Dua permukaan. Satu fee yang jujur.')).toBeTruthy();
+    expect(window.sessionStorage.getItem('nodescope-lang')).toBe('id');
+    unmount();
+    window.sessionStorage.clear();
+  });
 });

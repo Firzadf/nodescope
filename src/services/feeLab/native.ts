@@ -211,7 +211,7 @@ export async function liveDecimals(api: ApiPromise): Promise<LiveDecimals> {
 }
 
 /**
- * NodeScope adaptation (not in DualFee): close the memoized ApiPromise so the
+ * Close the memoized ApiPromise so the
  * Fee Lab leaves no live connection behind when its panel unmounts. Nothing
  * polls in NodeScope; this only tears down a connection that a
  * user-triggered measurement opened. A later measurement reconnects lazily.

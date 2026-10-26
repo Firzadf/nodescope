@@ -20,7 +20,7 @@ Judges and operators do not need to trust any number in this README. `docs/REPRO
 
 ---
 
-**Current Status:** Phase 1 (Health Check Snapshots) and Phase 2 (Snapshot Comparison) complete, plus Trends & Verdict, Multi-Endpoint Comparison, a V3 era marker (Pre-V3/Post-V3 against go-live 24 Oct 2026, 06:00 WIB), a Substrate WebSocket probe, a combined EVM + Substrate verdict, a public /verify page, a Mainnet Profile info page that claims no mainnet EVM check, and sidebar links to /verify and /mainnet plus a palette jump to the Combined Verdict. Portaldot V3.0 EVM endpoint verified and integrated. 296 passing tests across 26 test files, verified 25 Oct 2026.
+**Current Status:** Phase 1 (Health Check Snapshots) and Phase 2 (Snapshot Comparison) complete, plus Trends & Verdict, Multi-Endpoint Comparison, a V3 era marker (Pre-V3/Post-V3 against go-live 24 Oct 2026, 06:00 WIB), a Substrate WebSocket probe, a combined EVM + Substrate verdict, a public /verify page, a Mainnet Profile info page that claims no mainnet EVM check, and sidebar links to /verify and /mainnet plus a palette jump to the Combined Verdict. Portaldot V3.0 EVM endpoint verified and integrated. 415 passing tests across 59 test files, verified 26 Oct 2026.
 
 ## Project Overview
 
@@ -165,14 +165,25 @@ npm run preview
 
 ### Fee Lab — EVM vs Native Fee Comparison (Complete ✅)
 
-Ported from DualFee (merged into NodeScope; one build per account, so DualFee is a module here, not a separate submission). Lives in the app sidebar as **Fee Lab** (`/app/fee-lab`).
+The Fee Lab module lives in the app sidebar as **Fee Lab** (`/app/fee-lab`), with its own sub-landing at `/fees`.
 
 - **Same operation, both surfaces** — native transfer, ERC-20 transfer, contract deploy (sample, registry, or custom bytecode), and pasted calldata. The From address is only a dry-run origin; nothing signs.
 - **EVM leg** — `eth_estimateGas` × `eth_gasPrice`. The gas figure already folds the storage deposit in.
 - **Native leg** — `ReviveApi` dry-run plus `TransactionPaymentApi.query_info` over the Substrate WebSocket (via `@polkadot/api`, lazy-loaded on first measure), reported as partialFee + storage deposit separately.
 - **Honest comparison** — all-in ratio (EVM ÷ native fee + deposit) next to the fee-only ratio (EVM ÷ native fee), which is how "~800×" headlines are usually produced. Within 2% all-in, the recommendation reads "either".
 - **Doctrine kept** — user-triggered only: no connection opens until you measure, nothing polls, and the Substrate connection closes when you leave the section. No placeholder numbers; a surface that fails reports `unavailable` with its reason instead of a dressed-up value.
-- **Deferred to phase 2** — DualFee's Calculator, Address converter, History recording, Leaderboard, on-chain Verify, and optional wallet Deploy pages. They were not ported in phase 1 to keep the merge clean.
+- **Deferred to phase 2** — Calculator, Address converter, History recording, Leaderboard, on-chain Verify, and optional wallet Deploy pages. They were not built in phase 1 to keep the release clean.
+
+### Fees methodology
+
+How a Fee Lab number is produced, and what it does and does not claim:
+
+- **EVM leg** — `eth_estimateGas` × `eth_gasPrice` for the same operation, converted to tPOT at 18 decimals. On pallet-revive the EVM gas figure already folds the storage deposit in.
+- **Native leg** — `ReviveApi` dry-run plus `TransactionPaymentApi.query_info` over the Substrate WebSocket, reported as two separate numbers: `partialFee` (weight fee) and `storageDeposit` (reserved hold, refundable when the storage it paid for is freed). All-in native cost = partialFee + storage deposit, at 14 decimals.
+- **Two ratios, always shown together** — all-in (EVM ÷ native fee + deposit, the like-with-like comparison) next to fee-only (EVM ÷ native partialFee, the denominator most "~800×" headlines use). Within 2% all-in, the recommendation reads "either".
+- **One measured run, dated** — 26 Oct 2026 (~13:13 UTC), runtime `portaldot-v3` spec 3002: deploy of the 1,414-byte SampleToken measured EVM 124.098219 tPOT against native all-in 122.191411 tPOT (fee 0.154411 + deposit 122.037), i.e. 804x fee-only versus 1.016x all-in. Plain transfers in the same run measured EVM 7-12% cheaper all-in (0.880x and 0.933x), because they add no new storage and therefore carry no deposit.
+- **Timeouts, no polling** — native connect 10s with no auto-reconnect, native estimate 15s, EVM request 10s with one retry on network failure. Nothing opens until the visitor presses Measure; a failed leg reports `unavailable` with its reason.
+- **Honest limits** — the claim "EVM gas folds the deposit in" is an inference from the numbers (EVM total matching native fee + deposit within ~1.6%), not a statement read in pallet-revive documentation. Gas prices move, so a ratio measured today is a measurement, not a permanent property of the chain. Re-measure live in Fee Lab before quoting a number.
 
 ## Portaldot Integration & Deployment Evidence
 
@@ -242,6 +253,31 @@ A report's SHA-256 hash can be anchored on the Portaldot V3 testnet with the use
 
 ## Architecture
 
+NodeScope is one build with two pillars, one brand, and one honesty doctrine (live numbers, no polling, no keys held, no score):
+
+- **NodeScope Health** — is the node honest about its condition? Diagnostics, snapshots, trends, and the combined EVM + Substrate verdict, with on-chain attestation of exported reports. Lives in the app sidebar group **Health** (Overview, RPC Diagnostics, History) and on the landing page.
+- **NodeScope Fees** — are its fees honest? The same operation priced on EVM and native, fee-only versus all-in, with the storage deposit shown separately. Lives in the app sidebar group **Fees** (Fee Lab, `/app/fee-lab`) and on the sub-landing `/fees`.
+
+```mermaid
+flowchart TB
+  Visitor --> Landing["Landing /"]
+  Visitor --> Fees["Sub-landing /fees"]
+  Landing -->|pillar cards, one-shot proofs| EVM["Portaldot V3 EVM RPC
+eth_blockNumber / eth_estimateGas"]
+  Landing -->|pillar cards, one-shot proofs| WSS["Portaldot V3 Substrate WSS
+ReviveApi dry-run + query_info"]
+  Fees -->|CTA| App["App /app"]
+  App --> Health["Health panels
+Overview / Diagnostics / History"]
+  App --> FeeLab["Fee Lab /app/fee-lab"]
+  Health --> EVM
+  Health --> WSS
+  FeeLab --> EVM
+  FeeLab --> WSS
+  Health --> Verify["/verify
+SHA-256 report + registry anchor"]
+```
+
 See [docs/architecture.md](docs/architecture.md) for component and data-flow diagrams.
 
 ### Project Structure
@@ -285,7 +321,7 @@ src/
 
 **Test Framework:** Vitest 5 with @testing-library/react  
 **Coverage Target:** 80%+  
-**Current Status:** 296 passing tests across 26 test files, verified 25 Oct 2026
+**Current Status:** 415 passing tests across 59 test files, verified 26 Oct 2026
 
 ### Test Files
 
@@ -311,7 +347,7 @@ src/
 | `SessionTrendsPanel.test.tsx` | Trends panel rendering, including the V3 era note |
 | `SnapshotStrip.test.tsx` | Session strip rendering, including era in tooltips |
 | 6 files not listed above | Component and utility tests added in later phases, including Landing and Command Palette |
-| **Total** | **396 passing tests, 55 test files** (suite verified 26 Oct 2026; the landing page, /judges, and this README are checked against one constants file by `src/utils/siteConsistency.test.tsx` and `npm run check:consistency`) |
+| **Total** | **415 passing tests, 59 test files** (suite verified 26 Oct 2026; the landing page, /judges, and this README are checked against one constants file by `src/utils/siteConsistency.test.tsx` and `npm run check:consistency`) |
 
 ### Running Tests
 
@@ -425,6 +461,6 @@ MIT (as per Portaldot Hacker House requirements).
 
 **Project Status:** Check-in submitted Oct 22, 2026. Repository public with 42 commits as of 25 Oct 2026, development records retained. Final sprint to the 6 Nov 2026 code freeze is in progress.
 
-- ✅ Phase 1 & Phase 2 complete, plus Trends & Verdict, Multi-Endpoint Comparison, V3 era marker, and Substrate WebSocket probe, 296 tests across 26 files
+- ✅ Phase 1 & Phase 2 complete, plus Trends & Verdict, Multi-Endpoint Comparison, V3 era marker, and Substrate WebSocket probe, 415 tests across 59 files
 - ✅ Portaldot V3.0 EVM integration verified, chain ID 420420777 validated, methods documented
 - ✅ Demo video, live deployment, and screenshots published

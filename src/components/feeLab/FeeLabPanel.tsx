@@ -1,5 +1,5 @@
 /**
- * Fee Lab (ported from DualFee, phase 1 of the merge).
+ * Fee Lab.
  *
  * Measures the same operation on both Portaldot V3 surfaces, from the
  * browser, and compares the all-in cost:
@@ -8,13 +8,11 @@
  * - Native: ReviveApi dry-run + TransactionPaymentApi.query_info, reported
  *   as partialFee + storage deposit separately.
  *
- * NodeScope adaptations, all deliberate:
- * - User-triggered only. DualFee opened both connections at boot and polled
- *   them every 12s; this panel opens nothing until you press Measure, never
- *   polls, and closes the shared Substrate connection when it unmounts.
- * - No share URL and no DualFee history recording in phase 1: NodeScope's
- *   report schema is diagnostic records, and DualFee's history format does
- *   not belong in it. The comparison is shown, not stored.
+ * Design rules, all deliberate:
+ * - User-triggered only. This panel opens nothing until you press Measure,
+ *   never polls, and closes the shared Substrate connection when it unmounts.
+ * - No history recording: NodeScope's report schema is diagnostic records,
+ *   and the comparison is shown, not stored.
  * - No framer-motion: plain divs, NodeScope tokens (bg-panel, border-line,
  *   font-data, btn-primary).
  * - Timeouts, so a dead endpoint can never hang Measure: native connect
@@ -29,6 +27,7 @@ import {
   DEFAULT_NETWORK,
   FeeRegistryBytecode,
   SampleTokenBytecode,
+  TIE_BAND,
   compareLegs,
   disconnectApi,
   erc20Decimals,
@@ -47,16 +46,30 @@ import {
   type NativeLeg,
   type NetworkConfig,
 } from '../../services/feeLab/estimate';
+import { feesCopy, type FeesPanelCopy } from '../../utils/feesLang';
+import { readStoredLang, storeLang, type Lang } from '../../utils/landingLang';
 import { PORTALDOT_CHAIN_ID } from '../../utils/siteConstants';
 
 type OpId = 'transfer' | 'erc20' | 'deploy' | 'calldata';
 
-const OPS: { id: OpId; label: string }[] = [
-  { id: 'transfer', label: 'Native transfer' },
-  { id: 'erc20', label: 'ERC-20 transfer' },
-  { id: 'deploy', label: 'Contract deploy' },
-  { id: 'calldata', label: 'Paste calldata' },
-];
+// The comparison reason is rendered from the comparison's structured fields
+// (recommendation, savings, totals, deposit) rather than from the service's
+// English reason string, so the panel can translate it. The raw leg error
+// (e.g. "timed out") stays verbatim inside the parentheses: it is a
+// technical detail, not prose.
+function displayReason(c: Comparison, p: FeesPanelCopy): string {
+  if (c.evm.status !== 'ok' && c.native.status !== 'ok') return p.reasonNeither;
+  if (c.evm.status !== 'ok') return `${p.reasonOnlyNative} (EVM: ${c.evm.reason}).`;
+  if (c.native.status !== 'ok') return `${p.reasonOnlyEvm} (native: ${c.native.reason}).`;
+  const bigger = c.evm.totalPlanck > c.native.totalPlanck ? c.evm.totalPlanck : c.native.totalPlanck;
+  const rel = bigger === 0n ? 0 : Number((c.savingsPlanck * 1_000_000n) / bigger) / 1_000_000;
+  let r: string;
+  if (c.recommended === 'either') r = p.reasonTie.replace('{pct}', (TIE_BAND * 100).toFixed(0));
+  else if (c.recommended === 'evm') r = p.reasonEvmCheaper.replace('{pct}', (rel * 100).toFixed(1));
+  else r = p.reasonNativeCheaper.replace('{pct}', (rel * 100).toFixed(1));
+  if (c.native.storageDeposit > 0n) r += ` ${p.reasonDepositSuffix}`;
+  return r;
+}
 
 type CodeChoice = 'sample' | 'registry' | 'custom';
 
@@ -119,6 +132,18 @@ function BreakdownBar({ label, total, parts, d }: { label: string; total: bigint
 }
 
 export function FeeLabPanel() {
+  const [lang, setLangState] = useState<Lang>(() => readStoredLang());
+  const setLang = (l: Lang) => {
+    setLangState(l);
+    storeLang(l);
+  };
+  const p = feesCopy[lang].panel;
+  const OPS: { id: OpId; label: string }[] = [
+    { id: 'transfer', label: p.ops.transfer },
+    { id: 'erc20', label: p.ops.erc20 },
+    { id: 'deploy', label: p.ops.deploy },
+    { id: 'calldata', label: p.ops.calldata },
+  ];
   const [op, setOp] = useState<OpId>('deploy');
   const [from, setFrom] = useState<string>(SAMPLE.holder);
   const [to, setTo] = useState<string>(SAMPLE.existingEoa);
@@ -145,7 +170,7 @@ export function FeeLabPanel() {
 
   const buildTx = (decimals: number, tokenDecimals: number): DualTx | string => {
     try {
-      if (!isH160(from)) return 'From must be a 0x… EVM address (used only as the dry-run origin; nothing is signed).';
+      if (!isH160(from)) return p.fromError;
       switch (op) {
         case 'transfer':
           return { kind: 'nativeTransfer', from, to, amountPlanck: parseUnits(amount, decimals) };
@@ -163,7 +188,7 @@ export function FeeLabPanel() {
 
   async function run() {
     if (!isH160(from)) {
-      setError('From must be a 0x… EVM address (used only as the dry-run origin; nothing is signed).');
+      setError(p.fromError);
       return;
     }
     setBusy(true);
@@ -231,7 +256,7 @@ export function FeeLabPanel() {
   }
 
   const resultView = (c: Comparison, d: number) => {
-    const rec = c.recommended === 'evm' ? 'EVM' : c.recommended === 'native' ? 'Native' : c.recommended === 'either' ? 'Either (tie)' : 'No recommendation';
+    const rec = c.recommended === 'evm' ? p.recEvm : c.recommended === 'native' ? p.recNative : c.recommended === 'either' ? p.recEither : p.recNone;
     const max = c.evm.status === 'ok' && c.native.status === 'ok'
       ? [c.evm.totalPlanck, c.native.totalPlanck].reduce((a, b) => (a > b ? a : b), 0n)
       : 0n;
@@ -241,8 +266,8 @@ export function FeeLabPanel() {
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-line bg-black/25 p-4">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-[#7DB4FF]">EVM surface</span>
-              {c.recommended === 'evm' && <span className="rounded-full bg-[#0181FB]/15 px-2 py-0.5 text-[11px] font-semibold text-[#7DB4FF]">cheaper</span>}
+              <span className="text-sm font-semibold text-[#7DB4FF]">{p.evmSurface}</span>
+              {c.recommended === 'evm' && <span className="rounded-full bg-[#0181FB]/15 px-2 py-0.5 text-[11px] font-semibold text-[#7DB4FF]">{p.cheaper}</span>}
             </div>
             {c.evm.status === 'ok' ? (
               <>
@@ -257,15 +282,15 @@ export function FeeLabPanel() {
               </>
             ) : (
               <div className="mt-2">
-                <div className="text-2xl font-semibold text-slate-500">unavailable</div>
+                <div className="text-2xl font-semibold text-slate-500">{p.unavailable}</div>
                 <p className="mt-2 text-xs text-slate-400"><span className="font-data">{c.evm.method}</span>: {c.evm.reason}</p>
               </div>
             )}
           </div>
           <div className="rounded-2xl border border-line bg-black/25 p-4">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-emerald-300">Native surface</span>
-              {c.recommended === 'native' && <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">cheaper</span>}
+              <span className="text-sm font-semibold text-emerald-300">{p.nativeSurface}</span>
+              {c.recommended === 'native' && <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">{p.cheaper}</span>}
             </div>
             {c.native.status === 'ok' ? (
               <>
@@ -280,7 +305,7 @@ export function FeeLabPanel() {
               </>
             ) : (
               <div className="mt-2">
-                <div className="text-2xl font-semibold text-slate-500">unavailable</div>
+                <div className="text-2xl font-semibold text-slate-500">{p.unavailable}</div>
                 <p className="mt-2 text-xs text-slate-400"><span className="font-data">{c.native.method}</span>: {c.native.reason}</p>
               </div>
             )}
@@ -288,36 +313,34 @@ export function FeeLabPanel() {
         </div>
         <div className="bg-panel border border-line rounded-xl p-4 grid gap-3 sm:grid-cols-3">
           <div>
-            <div className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">Recommended path</div>
+            <div className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">{p.recPath}</div>
             <div className="text-lg font-semibold text-white">{rec}</div>
           </div>
           <div>
-            <div className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">EVM ÷ native, all-in</div>
+            <div className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">{p.ratioAllIn}</div>
             <div className="text-lg font-semibold tabular-nums text-white">{fmtRatio(c.ratioAllIn)}</div>
-            <div className="text-[11px] text-slate-500">native fee + storage deposit</div>
+            <div className="text-[11px] text-slate-500">{p.ratioAllInNote}</div>
           </div>
           <div>
-            <div className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">EVM ÷ native fee only</div>
+            <div className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">{p.ratioFeeOnly}</div>
             <div className="text-lg font-semibold tabular-nums text-white">{fmtRatio(c.ratioVsNativeFeeOnly)}</div>
-            <div className="text-[11px] text-slate-500">how headline multiples are usually measured</div>
+            <div className="text-[11px] text-slate-500">{p.ratioFeeOnlyNote}</div>
           </div>
-          <p className="text-xs text-slate-400 sm:col-span-3">{c.reason} Measured {new Date(c.measuredAt).toLocaleString()}.</p>
+          <p className="text-xs text-slate-400 sm:col-span-3">{displayReason(c, p)} {p.measured} {new Date(c.measuredAt).toLocaleString()}.</p>
         </div>
         {c.evm.status === 'ok' && c.native.status === 'ok' && (
           <div className="bg-panel border border-line rounded-xl p-4 grid gap-4">
-            <div className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">Fee breakdown</div>
-            <BreakdownBar label="EVM · gas × gasPrice" total={c.evm.totalPlanck} d={d} parts={[mk(c.evm.totalPlanck, 'bg-[#0181FB]', 'EVM gas cost')]} />
-            <BreakdownBar label="Native · partialFee only (the headline denominator)" total={c.native.partialFee} d={d} parts={[mk(c.native.partialFee, 'bg-emerald-400', 'native fee')]} />
-            <BreakdownBar label="Native · fee + storage deposit (all-in)" total={c.native.totalPlanck} d={d} parts={[mk(c.native.partialFee, 'bg-emerald-400', 'native fee'), mk(c.native.storageDeposit, 'bg-amber-400', 'storage deposit')]} />
+            <div className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">{p.breakTitle}</div>
+            <BreakdownBar label={p.breakEvm} total={c.evm.totalPlanck} d={d} parts={[mk(c.evm.totalPlanck, 'bg-[#0181FB]', p.breakEvmGas)]} />
+            <BreakdownBar label={p.breakNativeFee} total={c.native.partialFee} d={d} parts={[mk(c.native.partialFee, 'bg-emerald-400', p.breakNativeFeePart)]} />
+            <BreakdownBar label={p.breakNativeAllIn} total={c.native.totalPlanck} d={d} parts={[mk(c.native.partialFee, 'bg-emerald-400', p.breakNativeFeePart), mk(c.native.storageDeposit, 'bg-amber-400', p.breakDepositPart)]} />
             <p className="text-sm text-slate-400">
               {c.native.storageDeposit > 0n ? (
-                <>The storage deposit is <b className="text-amber-300">{(frac(c.native.storageDeposit, c.native.totalPlanck) * 100).toFixed(1)}%</b> of the native all-in cost here. </>
+                <>{p.breakDepositPct.replace('{pct}', (frac(c.native.storageDeposit, c.native.totalPlanck) * 100).toFixed(1))} </>
               ) : (
-                <>This op adds no new storage, so the native side has no deposit and the comparison is fee vs fee. </>
+                <>{p.breakNoDeposit} </>
               )}
-              pallet-revive charges a deposit for every byte and item a call leaves in state. A deploy
-              stores the whole contract code, so the deposit dwarfs the weight fee. The EVM gas
-              estimate already folds that deposit in; the native path reports it separately as a hold.
+              {p.breakExplain}
             </p>
           </div>
         )}
@@ -329,18 +352,31 @@ export function FeeLabPanel() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3 pt-1">
         <div>
-          <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">NodeScope / Fee Lab</p>
+          <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">{p.kicker}</p>
           <h2 className="text-3xl font-bold tracking-tight text-white mt-1.5">
-            Same operation. Two surfaces. One honest fee.
+            {p.title}
           </h2>
         </div>
-        <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500 pb-1">Portaldot V3 · Chain {PORTALDOT_CHAIN_ID}</p>
+        <div className="flex flex-wrap items-center gap-3 pb-1">
+          <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">Portaldot V3 · Chain {PORTALDOT_CHAIN_ID}</p>
+          <span className="flex shrink-0 items-center gap-1 rounded-full border border-line bg-black/30 p-1" role="group" aria-label="Language">
+            {(['en', 'id'] as Lang[]).map((l) => (
+              <button
+                key={l}
+                type="button"
+                aria-label={l === 'en' ? 'English' : 'Bahasa Indonesia'}
+                aria-pressed={lang === l}
+                onClick={() => setLang(l)}
+                className={`rounded-full px-2.5 py-1 font-data text-[10px] uppercase tracking-[0.14em] transition-colors ${lang === l ? 'bg-[#0181FB] text-white' : 'text-slate-400 hover:text-white'}`}
+              >
+                {l.toUpperCase()}
+              </button>
+            ))}
+          </span>
+        </div>
       </div>
       <p className="text-sm leading-relaxed text-slate-400 max-w-3xl">
-        Pick an operation. NodeScope asks both surfaces for a live estimate of the same thing, in
-        parallel, from your browser. The EVM figure already includes the storage deposit; the
-        native figure reports it separately as a refundable hold. That is why a fee-only
-        comparison can read ~800× while the all-in comparison lands near 1×.
+        {p.intro}
       </p>
       <div className="bg-panel border border-line rounded-xl p-4 grid gap-4">
         <div
@@ -374,21 +410,21 @@ export function FeeLabPanel() {
             </button>
           ))}
         </div>
-        <Field label="From (dry-run origin, never signs)" value={from} onChange={setFrom} />
+        <Field label={p.fromLabel} value={from} onChange={setFrom} />
         {op === 'transfer' && (
           <div className="grid gap-4 sm:grid-cols-[1fr,10rem]">
-            <Field label="To" value={to} onChange={setTo} />
-            <Field label="Amount (tPOT)" value={amount} onChange={setAmount} />
+            <Field label={p.toLabel} value={to} onChange={setTo} />
+            <Field label={p.amountLabel} value={amount} onChange={setAmount} />
           </div>
         )}
         {op === 'erc20' && (
           <>
-            <Field label={`Token (default: ${SAMPLE.erc20Symbol}, ${SAMPLE.erc20Decimals} dp)`} value={token} onChange={setToken} />
+            <Field label={p.tokenLabel.replace('{symbol}', SAMPLE.erc20Symbol).replace('{decimals}', String(SAMPLE.erc20Decimals))} value={token} onChange={setToken} />
             <div className="grid gap-4 sm:grid-cols-[1fr,10rem]">
-              <Field label="Recipient" value={tokenTo} onChange={setTokenTo} />
-              <Field label="Amount (tokens)" value={tokenAmount} onChange={setTokenAmount} />
+              <Field label={p.recipientLabel} value={tokenTo} onChange={setTokenTo} />
+              <Field label={p.tokenAmountLabel} value={tokenAmount} onChange={setTokenAmount} />
             </div>
-            <p className="text-xs text-slate-500">Tip: a recipient that never held the token (e.g. <button type="button" className="font-data underline" onClick={() => setTokenTo('0x2222222222222222222222222222222222222222')}>0x2222…2222</button>) creates a new storage slot, so a storage deposit appears.</p>
+            <p className="text-xs text-slate-500">{p.tipPrefix}<button type="button" className="font-data underline" onClick={() => setTokenTo('0x2222222222222222222222222222222222222222')}>0x2222…2222</button>{p.tipSuffix}</p>
           </>
         )}
         {op === 'deploy' && (
@@ -403,13 +439,13 @@ export function FeeLabPanel() {
                     codeChoice === choice ? 'border-[#0181FB] text-white font-medium' : 'border-line text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  {choice === 'sample' ? `SampleToken.sol · ${(SampleTokenBytecode.length - 2) / 2} B` : choice === 'registry' ? `FeeRegistry.sol · ${(FeeRegistryBytecode.length - 2) / 2} B` : 'Custom bytecode'}
+                  {choice === 'sample' ? p.codeSample.replace('{bytes}', String((SampleTokenBytecode.length - 2) / 2)) : choice === 'registry' ? p.codeRegistry.replace('{bytes}', String((FeeRegistryBytecode.length - 2) / 2)) : p.codeCustom}
                 </button>
               ))}
             </div>
             {codeChoice === 'custom' ? (
               <div>
-                <label className="block text-sm font-medium text-slate-300">Creation bytecode (0x…)</label>
+                <label className="block text-sm font-medium text-slate-300">{p.codeLabel}</label>
                 <textarea
                   value={customCode}
                   onChange={(e) => setCustomCode(e.target.value)}
@@ -425,9 +461,9 @@ export function FeeLabPanel() {
         )}
         {op === 'calldata' && (
           <>
-            <Field label="To (leave empty for a create)" value={callTo} onChange={setCallTo} />
+            <Field label={p.callToLabel} value={callTo} onChange={setCallTo} />
             <div>
-              <label className="block text-sm font-medium text-slate-300">Calldata</label>
+              <label className="block text-sm font-medium text-slate-300">{p.callDataLabel}</label>
               <textarea
                 value={callData}
                 onChange={(e) => setCallData(e.target.value)}
@@ -439,17 +475,17 @@ export function FeeLabPanel() {
         )}
         <div className="flex flex-wrap items-center gap-3">
           <button type="button" onClick={() => void run()} disabled={busy} className="btn-primary rounded-lg px-4 py-2.5 text-sm font-medium">
-            {busy ? 'Estimating on both surfaces…' : 'Estimate on both surfaces'}
+            {busy ? p.measureBusy : p.measure}
           </button>
-          <span className="text-xs text-slate-500">EVM: eth_estimateGas × eth_gasPrice. Native: ReviveApi dry-run + TransactionPaymentApi.query_info.</span>
+          <span className="text-xs text-slate-500">{p.methodNote}</span>
         </div>
-        <p className="text-xs text-slate-500">User-triggered only. No connection opens until you measure, nothing polls in the background, and the Substrate connection closes when you leave this section.</p>
+        <p className="text-xs text-slate-500">{p.triggeredNote}</p>
         {error && <p className="rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</p>}
       </div>
       {result && resultView(result.c, result.net.nativeDecimals)}
       {!result && !error && (
         <div className="empty-shell p-4">
-          <p className="text-sm text-slate-400">No measurement yet. Press “Estimate on both surfaces” to ask both surfaces for a live estimate of the operation above.</p>
+          <p className="text-sm text-slate-400">{p.empty.replace('{measure}', p.measure)}</p>
         </div>
       )}
     </div>

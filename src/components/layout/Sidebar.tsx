@@ -4,13 +4,26 @@ type NavItem = {
   id: string;
   label: string;
   icon: typeof Activity;
+  num: string;
 };
 
-const navItems: NavItem[] = [
-  { id: 'overview', label: 'Overview', icon: Activity },
-  { id: 'diagnostics', label: 'RPC Diagnostics', icon: Terminal },
-  { id: 'history', label: 'History', icon: Clock },
-  { id: 'fee-lab', label: 'Fee Lab', icon: Scale },
+// The two pillars of the suite. Health holds the original diagnostic
+// panels; Fees holds Fee Lab (Calculator and History are phase 2 and are
+// deliberately not listed here yet). Numbering runs continuously across
+// groups so Fee Lab keeps its 04 slot.
+const navGroups: { label: string; items: NavItem[] }[] = [
+  {
+    label: 'Health',
+    items: [
+      { id: 'overview', label: 'Overview', icon: Activity, num: '01' },
+      { id: 'diagnostics', label: 'RPC Diagnostics', icon: Terminal, num: '02' },
+      { id: 'history', label: 'History', icon: Clock, num: '03' },
+    ],
+  },
+  {
+    label: 'Fees',
+    items: [{ id: 'fee-lab', label: 'Fee Lab', icon: Scale, num: '04' }],
+  },
 ];
 
 interface SidebarProps {
@@ -68,35 +81,47 @@ export function Sidebar({ activeSection, onSectionChange, onOpenPalette, collaps
         </button>
       </div>
       <nav className={rowWrap}>
-        {navItems.map((item, i) => {
-          const Icon = item.icon;
-          const isActive = activeSection === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => onSectionChange(item.id)}
-              title={item.label}
-              className={`relative ${row} text-sm transition-colors ${
-                isActive
-                  ? 'bg-white/[0.06] text-white font-medium shadow-[0_0_20px_rgba(1,129,251,0.15)]'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]'
-              }`}
-            >
-              {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-[#0181FB]" />
-              )}
-              <Icon className={`h-[18px] w-[18px] ${isActive ? 'text-white' : 'text-slate-500'}`} />
-              {!collapsed && (
-                <>
-                  {item.label}
-                  <span className={`ml-auto font-data text-[10px] ${isActive ? 'text-slate-400' : 'text-slate-600'}`}>
-                    0{i + 1}
-                  </span>
-                </>
-              )}
-            </button>
-          );
-        })}
+        {navGroups.map((group, gi) => (
+          <div key={group.label} className={gi > 0 ? 'pt-1.5' : undefined}>
+            {!collapsed && (
+              <p className="px-2 pb-1.5 font-data text-[10px] uppercase tracking-[0.24em] text-slate-600">{group.label}</p>
+            )}
+            {collapsed && gi > 0 && (
+              <div aria-hidden="true" className="mx-auto my-1.5 h-px w-6 bg-line" />
+            )}
+            <div className="space-y-1.5">
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeSection === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => onSectionChange(item.id)}
+                    title={item.label}
+                    className={`relative ${row} text-sm transition-colors ${
+                      isActive
+                        ? 'bg-white/[0.06] text-white font-medium shadow-[0_0_20px_rgba(1,129,251,0.15)]'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]'
+                    }`}
+                  >
+                    {isActive && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-[#0181FB]" />
+                    )}
+                    <Icon className={`h-[18px] w-[18px] ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                    {!collapsed && (
+                      <>
+                        {item.label}
+                        <span className={`ml-auto font-data text-[10px] ${isActive ? 'text-slate-400' : 'text-slate-600'}`}>
+                          {item.num}
+                        </span>
+                      </>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {!collapsed && (
@@ -128,6 +153,14 @@ export function Sidebar({ activeSection, onSectionChange, onOpenPalette, collaps
         >
           <Globe className="h-[18px] w-[18px] text-slate-500" />
           {!collapsed && 'Mainnet Profile'}
+        </a>
+        <a
+          href="/fees"
+          title="Fees"
+          className={`${row} text-sm text-slate-400 transition-colors hover:text-slate-200 hover:bg-white/[0.03]`}
+        >
+          <Scale className="h-[18px] w-[18px] text-slate-500" />
+          {!collapsed && 'Fees'}
         </a>
       </nav>
 

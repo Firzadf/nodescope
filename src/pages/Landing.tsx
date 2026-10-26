@@ -5,6 +5,8 @@ import { BackToTop } from '../components/BackToTop';
 import { IntroSplash } from '../components/common/IntroSplash';
 import { DEFAULT_PORTALDOT_V3_EVM_RPC } from '../types/endpoint';
 import { landingCopy, readStoredLang, storeLang, type Lang } from '../utils/landingLang';
+import { PillarCards } from '../components/landing/PillarCards';
+import { SiteFooter } from '../components/layout/SiteFooter';
 import {
   ANCHOR_BLOCK,
   ANCHOR_TX,
@@ -809,6 +811,9 @@ export function Landing() {
             <p className="mt-6 font-data text-[11px] uppercase tracking-[0.16em] text-slate-600">
               {t.heroFactLine}
             </p>
+            <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-400">
+              {t.heroPillarLine}
+            </p>
             <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-t border-line pt-4 font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">
               {t.heroMeta.map((m) => (
                 <span key={m}>{m}</span>
@@ -831,6 +836,29 @@ export function Landing() {
               <span aria-hidden="true" className="absolute -left-4 top-6 rounded-full border border-line bg-black/80 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-slate-200 shadow-lg">{t.heroChipEvm}</span>
               <span aria-hidden="true" className="absolute -right-3 bottom-12 rounded-full border border-line bg-black/80 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-slate-200 shadow-lg">{t.heroChipSchema}</span>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ------------------------------ pillars ------------------------------- */}
+      <section className="border-b border-line px-4 py-16">
+        <div className="mx-auto max-w-6xl">
+          <h2 className="font-display text-3xl font-semibold tracking-tight text-white md:text-4xl">{t.pillarSectionTitle}</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400 md:text-base">{t.pillarSectionIntro}</p>
+          <div className="mt-8">
+            <PillarCards health={t.pillarHealth} fees={t.pillarFees} />
+          </div>
+          <div className="mt-8 rounded-3xl border border-amber-400/30 bg-amber-400/[0.05] p-6 md:p-7">
+            <h3 className="font-display text-xl font-semibold tracking-tight text-white">{t.feeBlockTitle}</h3>
+            <p className="mt-2.5 max-w-3xl text-sm leading-relaxed text-slate-300">{t.feeBlockBody}</p>
+            <div className="mt-5 flex flex-wrap gap-x-8 gap-y-2 font-data text-sm tabular-nums">
+              <span className="text-[#7DB4FF]">{t.feeBlockEvm}</span>
+              <span className="text-amber-300">{t.feeBlockNative}</span>
+            </div>
+            <p className="mt-4 text-xs text-slate-500">{t.feeBlockFootnote}</p>
+            <a href="/app/fee-lab" className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-slate-200 underline decoration-slate-600 underline-offset-4 transition-colors hover:text-white">
+              {t.feeBlockCta} →
+            </a>
           </div>
         </div>
       </section>
@@ -1362,73 +1390,7 @@ export function Landing() {
         </Reveal>
       </section>
 
-      {/* ------------------------------ footer ------------------------------ */}
-      <footer className="relative overflow-hidden border-t border-line bg-deep px-4 pb-0 pt-12">
-        <div className="relative mx-auto max-w-6xl">
-          <p className="flex flex-wrap items-center gap-2.5 font-data text-[11px] uppercase tracking-[0.18em] text-slate-400">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-            </span>
-            {t.footerLive}
-          </p>
-          <div className="mt-10 grid gap-10 md:grid-cols-2 lg:grid-cols-5">
-            <div className="lg:col-span-2">
-              <div className="flex items-center gap-2.5">
-                <img src="/logo.png" alt="" className="h-7 w-7 rounded-lg" />
-                <span className="font-display text-base font-semibold text-white">NodeScope</span>
-              </div>
-              <p className="mt-3 max-w-xs text-[15px] leading-[1.85] text-slate-500">
-                {t.footerDescription}
-              </p>
-              <p className="mt-4 font-data text-[11px] uppercase tracking-[0.18em] text-slate-600">
-                {t.footerDisclaimer}
-              </p>
-            </div>
-            {t.footerColumns.map((col) => (
-              <div key={col.header}>
-                <p className="font-data text-[11px] uppercase tracking-[0.2em] text-slate-500">{col.header}</p>
-                <ul className="mt-3.5 space-y-2.5 text-sm">
-                  {col.links.map(({ label, href }) => (
-                    <li key={label}>
-                      {href ? (
-                        <a
-                          href={href}
-                          {...(href.startsWith('http') ? { target: '_blank', rel: 'noreferrer' } : {})}
-                          className="inline-block text-slate-400 transition-all hover:translate-x-0.5 hover:text-white"
-                        >
-                          {label}
-                        </a>
-                      ) : (
-                        <span className="text-slate-500">{label}</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="relative">
-          <p
-            aria-hidden="true"
-            className="pointer-events-none -mb-[0.28em] mt-8 select-none text-center font-display text-[18vw] font-bold leading-none tracking-tight"
-            style={{
-              background: 'linear-gradient(to bottom, rgba(51, 82, 130, 0.95) 0%, rgba(30, 50, 90, 0.55) 55%, rgba(8, 12, 24, 0.15) 100%)',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              color: 'transparent',
-            }}
-          >
-            NODESCOPE
-          </p>
-          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-[58%] h-px bg-gradient-to-r from-transparent via-slate-400/40 to-transparent blur-[1px]" />
-        </div>
-        <div className="relative mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-6 font-data text-[11px] uppercase tracking-[0.14em] text-slate-600">
-          <span>{t.footerCopyright}</span>
-          <span>{t.footerSchema}</span>
-        </div>
-      </footer>
+      <SiteFooter t={t} />
 
       {/* ----------------------------- lightbox ----------------------------- */}
       {lightbox !== null && (

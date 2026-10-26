@@ -28,9 +28,11 @@ describe('Landing mobile menu', () => {
     const menu = container.querySelector('#landing-mobile-menu');
     expect(menu).not.toBeNull();
     const links = menu?.querySelectorAll('a') ?? [];
-    expect(links.length).toBe(7);
+    expect(links.length).toBe(8);
     expect(links[0]?.getAttribute('href')).toBe('#problem');
     expect(links[0]?.textContent).toBe('The Problem');
+    expect(links[4]?.getAttribute('href')).toBe('/fees');
+    expect(links[4]?.textContent).toBe('Fees');
 
     // Clicking a link closes the menu again.
     fireEvent.click(links[0]!);

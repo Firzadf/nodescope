@@ -1,4 +1,4 @@
-// Pure-logic tests for the ported DualFee fee-estimation code. No network:
+// Pure-logic tests for the fee-estimation code. No network:
 // every case here runs on constants and bigint math only.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import {

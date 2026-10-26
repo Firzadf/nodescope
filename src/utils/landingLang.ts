@@ -83,6 +83,18 @@ export interface FooterColumn {
   links: { label: string; href: string | null }[];
 }
 
+export interface PillarCardCopy {
+  kicker: string;
+  title: string;
+  body: string;
+  ctaLabel: string;
+  ctaHref: string;
+  measureLabel: string;
+  measuringLabel: string;
+  unavailableLabel: string;
+  measuredLabel: string;
+}
+
 export interface LandingCopy {
   nav: NavLink[];
   heroPill: string;
@@ -194,6 +206,17 @@ export interface LandingCopy {
   judgeIntro: string;
   judgeSteps: StepItem[];
   judgeFootnote: string;
+  heroPillarLine: string;
+  pillarSectionTitle: string;
+  pillarSectionIntro: string;
+  pillarHealth: PillarCardCopy;
+  pillarFees: PillarCardCopy;
+  feeBlockTitle: string;
+  feeBlockBody: string;
+  feeBlockEvm: string;
+  feeBlockNative: string;
+  feeBlockFootnote: string;
+  feeBlockCta: string;
   ctaTitleA: string;
   ctaTitleB: string;
   ctaBody: string;
@@ -228,6 +251,7 @@ const en: LandingCopy = {
     { href: '#how', label: 'How It Works' },
     { href: '#instrument', label: 'The Instrument' },
     { href: '#evidence', label: 'Evidence' },
+    { href: '/fees', label: 'Fees' },
     { href: '#roadmap', label: 'Roadmap' },
     { href: '/mainnet', label: 'Mainnet' },
     { href: '/verify', label: 'Verify' },
@@ -562,6 +586,37 @@ const en: LandingCopy = {
   ],
   judgeFootnote:
     'If any step fails, that failure is itself the result: NodeScope reports a node that did not answer, it does not dress it up as success.',
+  heroPillarLine: 'Two questions, one suite: is the node honest about its condition, and are its fees honest?',
+  pillarSectionTitle: 'One suite, two pillars',
+  pillarSectionIntro: 'Health asks whether the node tells the truth about its condition. Fees asks whether its prices tell the truth. Each card below measures one live number, once, when you open this section or press Measure. Nothing polls, and a failed measurement shows as unavailable, never as a made-up number.',
+  pillarHealth: {
+    kicker: 'Pillar 01 · Health',
+    title: 'NodeScope Health',
+    body: 'Live diagnostics across the EVM and Substrate surfaces, with a verdict you can verify on-chain. Press Measure for the latest block the EVM RPC reports right now.',
+    ctaLabel: 'Open the app',
+    ctaHref: '/app',
+    measureLabel: 'Measure live block',
+    measuringLabel: 'Reading the chain…',
+    unavailableLabel: 'Block unavailable right now',
+    measuredLabel: 'Measured at',
+  },
+  pillarFees: {
+    kicker: 'Pillar 02 · Fees',
+    title: 'NodeScope Fees',
+    body: 'The same operation priced on EVM and native, fee-only versus all-in, with the storage deposit shown separately. Press Measure for a fresh deploy estimate on both surfaces.',
+    ctaLabel: 'Open the Fees page',
+    ctaHref: '/fees',
+    measureLabel: 'Measure live deploy',
+    measuringLabel: 'Estimating on both surfaces…',
+    unavailableLabel: 'Estimate unavailable right now',
+    measuredLabel: 'Measured at',
+  },
+  feeBlockTitle: 'The number that started the Fees pillar',
+  feeBlockBody: 'One measured deploy of the sample token: EVM 124.098219 tPOT against native 122.191411 tPOT all-in. Compared fee-only, the gap reads 804x; compared all-in, it is 1.016x. The difference is the storage deposit, refundable when storage is freed.',
+  feeBlockEvm: 'EVM total: 124.098219 tPOT',
+  feeBlockNative: 'Native all-in: 122.191411 tPOT (fee 0.154411 + deposit 122.037)',
+  feeBlockFootnote: 'Measured 26 Oct 2026, the same run as the /fees findings table. Re-measure it live in Fee Lab.',
+  feeBlockCta: 'See how fees are measured',
   ctaTitleA: 'Put your node ',
   ctaTitleB: 'under the scope.',
   ctaBody: 'Open the live toolkit, run a health check against the Portaldot V3 testnet, and keep the receipt.',
@@ -579,6 +634,7 @@ const en: LandingCopy = {
         { label: 'Live Evidence', href: '#evidence' },
         { label: 'Verify a Report', href: '/verify' },
         { label: 'Mainnet Profile', href: '/mainnet' },
+        { label: 'Fees', href: '/fees' },
         { label: 'Docs', href: '/docs' },
         { label: 'For Judges', href: '/judges' },
       ],
@@ -633,6 +689,7 @@ const id: LandingCopy = {
     { href: '#how', label: 'Cara Kerja' },
     { href: '#instrument', label: 'Instrumen' },
     { href: '#evidence', label: 'Bukti' },
+    { href: '/fees', label: 'Fees' },
     { href: '#roadmap', label: 'Roadmap' },
     { href: '/mainnet', label: 'Mainnet' },
     { href: '/verify', label: 'Verifikasi' },
@@ -966,6 +1023,37 @@ const id: LandingCopy = {
   ],
   judgeFootnote:
     'Jika ada langkah yang gagal, kegagalan itu sendiri adalah hasilnya: NodeScope melaporkan node yang tidak menjawab, bukan menyulapnya menjadi sukses.',
+  heroPillarLine: 'Dua pertanyaan, satu suite: apakah node jujur soal kondisinya, dan apakah biayanya jujur?',
+  pillarSectionTitle: 'Satu suite, dua pilar',
+  pillarSectionIntro: 'Health bertanya apakah node berkata jujur soal kondisinya. Fees bertanya apakah harganya berkata jujur. Setiap kartu di bawah mengukur satu angka live, sekali, saat bagian ini dibuka atau saat tombol Ukur ditekan. Tidak ada polling, dan pengukuran yang gagal tampil sebagai tidak tersedia, bukan angka karangan.',
+  pillarHealth: {
+    kicker: 'Pilar 01 · Health',
+    title: 'NodeScope Health',
+    body: 'Diagnostik live di permukaan EVM dan Substrate, dengan verdict yang bisa diverifikasi on-chain. Tekan Ukur untuk blok terbaru yang dilaporkan RPC EVM saat ini.',
+    ctaLabel: 'Buka aplikasi',
+    ctaHref: '/app',
+    measureLabel: 'Ukur blok live',
+    measuringLabel: 'Membaca chain…',
+    unavailableLabel: 'Blok tidak tersedia saat ini',
+    measuredLabel: 'Diukur pada',
+  },
+  pillarFees: {
+    kicker: 'Pilar 02 · Fees',
+    title: 'NodeScope Fees',
+    body: 'Operasi yang sama dihargai di EVM dan native, fee-only versus all-in, dengan storage deposit ditampilkan terpisah. Tekan Ukur untuk estimasi deploy baru di kedua permukaan.',
+    ctaLabel: 'Buka halaman Fees',
+    ctaHref: '/fees',
+    measureLabel: 'Ukur deploy live',
+    measuringLabel: 'Mengestimasi di kedua permukaan…',
+    unavailableLabel: 'Estimasi tidak tersedia saat ini',
+    measuredLabel: 'Diukur pada',
+  },
+  feeBlockTitle: 'Angka yang melahirkan pilar Fees',
+  feeBlockBody: 'Satu deploy terukur dari token sampel: EVM 124,098219 tPOT berbanding native 122,191411 tPOT all-in. Dibandingkan fee-only, selisihnya terbaca 804x; dibandingkan all-in, selisihnya 1,016x. Selisih itu adalah storage deposit, yang bisa dikembalikan saat storage dibebaskan.',
+  feeBlockEvm: 'Total EVM: 124,098219 tPOT',
+  feeBlockNative: 'Native all-in: 122,191411 tPOT (fee 0,154411 + deposit 122,037)',
+  feeBlockFootnote: 'Diukur 26 Okt 2026, run yang sama dengan tabel temuan /fees. Ukur ulang secara live di Fee Lab.',
+  feeBlockCta: 'Lihat cara fee diukur',
   ctaTitleA: 'Letakkan node-mu ',
   ctaTitleB: 'di bawah scope.',
   ctaBody: 'Buka toolkit live, jalankan health check terhadap testnet Portaldot V3, dan simpan receipt-nya.',
@@ -983,6 +1071,7 @@ const id: LandingCopy = {
         { label: 'Bukti Live', href: '#evidence' },
         { label: 'Verifikasi Laporan', href: '/verify' },
         { label: 'Profil Mainnet', href: '/mainnet' },
+        { label: 'Fees', href: '/fees' },
         { label: 'Docs', href: '/docs' },
         { label: 'Untuk Juri', href: '/judges' },
       ],

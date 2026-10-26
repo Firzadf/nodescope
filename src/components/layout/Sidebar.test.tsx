@@ -23,4 +23,21 @@ describe('Sidebar collapse', () => {
     fireEvent.click(screen.getByRole('button', { name: /collapse sidebar/i }));
     expect(onToggle).toHaveBeenCalledTimes(1);
   });
+
+  it('groups nav into Health and Fees, with Fee Lab under Fees', () => {
+    const props = { activeSection: 'fee-lab', onSectionChange: vi.fn(), onOpenPalette: vi.fn() };
+    const { container, rerender } = render(<Sidebar {...props} />);
+    expect(screen.getByText('Health')).toBeTruthy();
+    // Two "Fees" texts when expanded: the group label and the public link.
+    expect(screen.getAllByText('Fees').length).toBe(2);
+    // Fee Lab keeps its 04 slot across the group boundary.
+    const feeLab = screen.getByTitle('Fee Lab');
+    expect(feeLab.textContent).toContain('04');
+    // Group labels hide when collapsed, like the Public pages header.
+    rerender(<Sidebar {...props} collapsed />);
+    expect(screen.queryByText('Health')).toBeNull();
+    expect(screen.queryByText('Fees')).toBeNull();
+    expect(screen.getByTitle('Fee Lab')).toBeTruthy();
+    expect(container.querySelector('a[href="/fees"]')).not.toBeNull();
+  });
 });
