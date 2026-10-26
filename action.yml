@@ -1,0 +1,126 @@
+# nodescope — check the node + price the deploy before you deploy.
+#
+# A composite Action that wraps the nodescope CLI (cli/nodescope.mjs) so a
+# team's CI can gate a deploy on two facts, both measured live, never
+# invented:
+#   1. the EVM RPC answers and reports chain id 420420777 (healthy verdict),
+#   2. the contract deploy costs no more than max-tpot on the cheapest
+#      priced surface (EVM vs native, all-in).
+#
+# The Action fails the job when the node is unhealthy, when the EVM leg
+# cannot be priced, or when the cost exceeds the budget — exactly the
+# CLI's exit codes. A native leg that is unavailable is a warning in the
+# CLI output, not a failure (see cli/README.md for why).
+#
+# Usage in a workflow (see the README for a full example):
+#   - uses: Firzadf/nodescope@v1
+#     with:
+#       rpc: https://test-evm-rpc-v3.portaldot.dev
+#       artifact: out/MyContract.sol/MyContract.json
+#       max-tpot: '200'
+#
+# No signing, no key, no wallet: the from address is only a dry-run
+# origin. The Action never publishes anything and never writes to the
+# caller's repo.
+name: 'NodeScope pre-deploy gate'
+description: 'Check a Portaldot V3 node and price a contract deploy (EVM vs native) before deploying.'
+branding:
+  icon: 'activity'
+  color: 'blue'
+inputs:
+  rpc:
+    description: 'EVM RPC URL to check (default: Portaldot V3 testnet).'
+    required: false
+    default: 'https://test-evm-rpc-v3.portaldot.dev'
+  wss:
+    description: 'Substrate WebSocket URL for the native leg (default: Portaldot V3 testnet).'
+    required: false
+    default: 'wss://test-node-v3.portaldot.dev'
+  artifact:
+    description: 'Path to a solc artifact JSON (or raw 0x creation bytecode file). Empty skips the fees step and only checks the node.'
+    required: false
+    default: ''
+  from:
+    description: 'Dry-run origin address (0x… H160). Nothing is signed.'
+    required: false
+    default: '0x03c502abb79e8eee50135c91933d059d982dd912'
+  max-tpot:
+    description: 'Budget in tPOT: fail the job when the cheapest priced all-in deploy cost exceeds it. Empty means no budget check.'
+    required: false
+    default: ''
+  node-version:
+    description: 'Node.js version for the CLI run.'
+    required: false
+    default: '20'
+outputs:
+  verdict:
+    description: 'Node health verdict: healthy, degraded, or down.'
+    value: ${{ steps.check.outputs.verdict }}
+  evm-tpot:
+    description: 'EVM deploy cost in tPOT, or empty when the EVM leg was unavailable or the fees step was skipped.'
+    value: ${{ steps.fees.outputs.evm_tpot }}
+  native-tpot:
+    description: 'Native deploy cost in tPOT (all-in), or empty when the native leg was unavailable or the fees step was skipped.'
+    value: ${{ steps.fees.outputs.native_tpot }}
+  ratio-all-in:
+    description: 'EVM all-in cost divided by native all-in cost, or empty when either leg was unavailable or the fees step was skipped.'
+    value: ${{ steps.fees.outputs.ratio_all_in }}
+  recommended:
+    description: 'Recommended surface (evm, native, either), or empty when the fees step was skipped.'
+    value: ${{ steps.fees.outputs.recommended }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+    - name: Check the node
+      id: check
+      shell: bash
+      run: |
+        node "$GITHUB_ACTION_PATH/cli/nodescope.mjs" check "${{ inputs.rpc }}" --json > /tmp/nodescope-check.json || true
+        node -e "
+          const fs = require('node:fs');
+          const out = JSON.parse(fs.readFileSync('/tmp/nodescope-check.json', 'utf8'));
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, 'verdict=' + out.verdict + '\n');
+          console.log('NodeScope verdict: ' + out.verdict);
+          if (out.verdict !== 'healthy') {
+            console.log('NodeScope check failed: node is ' + out.verdict + ', not healthy.');
+            process.exit(1);
+          }
+        "
+    - name: Price the deploy
+      id: fees
+      if: inputs.artifact != ''
+      shell: bash
+      run: |
+        ARGS=(fees --artifact "${{ inputs.artifact }}" --evm-rpc "${{ inputs.rpc }}" --wss "${{ inputs.wss }}" --from "${{ inputs.from }}" --json)
+        if [ -n "${{ inputs.max-tpot }}" ]; then ARGS+=(--max-tpot "${{ inputs.max-tpot }}"); fi
+        node "$GITHUB_ACTION_PATH/cli/nodescope.mjs" "${ARGS[@]}" > /tmp/nodescope-fees.json || true
+        node -e "
+          const fs = require('node:fs');
+          const out = JSON.parse(fs.readFileSync('/tmp/nodescope-fees.json', 'utf8'));
+          const tpot = (planck) => {
+            if (planck === undefined || planck === null) return '';
+            const d = 14n;
+            const v = BigInt(planck);
+            const whole = v / (10n ** d);
+            const frac = (v % (10n ** d)).toString().padStart(14, '0').replace(/0+$/, '');
+            return frac ? whole.toString() + '.' + frac : whole.toString();
+          };
+          const append = (k, v) => fs.appendFileSync(process.env.GITHUB_OUTPUT, k + '=' + v + '\n');
+          if (out.evm.status === 'ok') append('evm_tpot', tpot(out.evm.totalPlanck));
+          if (out.native.status === 'ok') append('native_tpot', tpot(out.native.totalPlanck));
+          if (out.ratioAllIn !== null) append('ratio_all_in', String(out.ratioAllIn));
+          if (out.recommended) append('recommended', out.recommended);
+          console.log('NodeScope fees: ' + out.reason);
+          if (out.evm.status !== 'ok') {
+            console.log('NodeScope fees failed: EVM leg unavailable (' + out.evm.reason + ').');
+            process.exit(1);
+          }
+          if (out.budget && out.budget.over) {
+            console.log('NodeScope budget exceeded: max ' + out.budget.maxTpot + ' tPOT.');
+            process.exit(1);
+          }
+        "
