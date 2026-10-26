@@ -1,0 +1,57 @@
+# CI — build, tests, lint, consistency, and contract checks.
+#
+# Two jobs, split by OS on purpose:
+# - `node` runs on ubuntu-latest AND windows-latest, because reviewers
+#   rerun the suite on Windows too. Everything this job runs is
+#   cross-platform by construction: npm scripts, vitest, oxlint, and the
+#   node consistency script (path.join everywhere, no shell scripts, no
+#   process spawning in the app suite). If a test ever assumes a POSIX
+#   path or shell, the Windows leg fails loudly instead of shipping quietly.
+# - `forge` stays on ubuntu-latest: Foundry is a build tool, not app
+#   behavior, and the byte-identical recompile check is already covered
+#   locally by `npm run verify:evidence`.
+#
+# Deliberately NOT here: `npm run verify:evidence`. It needs a deployment
+# record (deployments/portaldot-v3.json) that does not exist in the repo
+# yet — the user deploys by hand — so running it in CI would report SKIP
+# on every run. It runs locally after the user deploys.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  node:
+    name: node (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npx vitest run
+      - run: npm run lint
+      - run: npm run check:consistency
+
+  forge:
+    name: forge (ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Foundry
+        run: |
+          curl -L https://foundry.paradigm.xyz | bash
+          "$HOME/.foundry/bin/foundryup"
+      - name: Add Foundry to PATH
+        run: echo "$HOME/.foundry/bin" >> "$GITHUB_PATH"
+      - run: forge build
+      - run: forge test

@@ -2,6 +2,8 @@
 
 ![NodeScope logo](logo.png)
 
+[![CI](https://github.com/Firzadf/nodescope/actions/workflows/ci.yml/badge.svg)](https://github.com/Firzadf/nodescope/actions/workflows/ci.yml)
+
 A professional blockchain node health diagnostic dashboard for inspecting node connectivity, JSON-RPC responses, block height, latency, and node errors. **NodeScope proves node health over time** through timestamped snapshots, before/after comparison, and exportable diagnostic reports.
 
 ## Reproduce the evidence
@@ -10,7 +12,7 @@ Judges and operators do not need to trust any number in this README. `docs/REPRO
 
 ## Demo Materials
 
-- **Demo video:** [Watch on YouTube](https://www.youtube.com/watch?v=qne3_eZdcKA)
+- **Demo video:** [Watch on YouTube](https://youtu.be/TyTudF3MUaI)
 - **Live app:** [nodescope.vercel.app](https://nodescope.vercel.app/)
 - **DoraHacks BUIDL:** [NodeScope project](https://dorahacks.io/build/50146/)
 - **Screenshots:** [Representative screenshots](docs/screenshots/README.md)
@@ -20,7 +22,7 @@ Judges and operators do not need to trust any number in this README. `docs/REPRO
 
 ---
 
-**Current Status:** Phase 1 (Health Check Snapshots) and Phase 2 (Snapshot Comparison) complete, plus Trends & Verdict, Multi-Endpoint Comparison, a V3 era marker (Pre-V3/Post-V3 against go-live 24 Oct 2026, 06:00 WIB), a Substrate WebSocket probe, a combined EVM + Substrate verdict, a public /verify page, a Mainnet Profile info page that claims no mainnet EVM check, and sidebar links to /verify and /mainnet plus a palette jump to the Combined Verdict. Portaldot V3.0 EVM endpoint verified and integrated. 419 passing tests across 60 test files, verified 27 Oct 2026.
+**Current Status:** Phase 1 (Health Check Snapshots) and Phase 2 (Snapshot Comparison) complete, plus Trends & Verdict, Multi-Endpoint Comparison, a V3 era marker (Pre-V3/Post-V3 against go-live 24 Oct 2026, 06:00 WIB), a Substrate WebSocket probe, a combined EVM + Substrate verdict, a public /verify page, a Mainnet Profile info page that claims no mainnet EVM check, and sidebar links to /verify and /mainnet plus a palette jump to the Combined Verdict. Portaldot V3.0 EVM endpoint verified and integrated. 424 passing tests across 61 test files, verified 27 Oct 2026.
 
 ## Project Overview
 
@@ -321,7 +323,7 @@ src/
 
 **Test Framework:** Vitest 5 with @testing-library/react  
 **Coverage Target:** 80%+  
-**Current Status:** 419 passing tests across 60 test files, verified 27 Oct 2026
+**Current Status:** 424 passing tests across 61 test files, verified 27 Oct 2026
 
 ### Test Files
 
@@ -347,7 +349,7 @@ src/
 | `SessionTrendsPanel.test.tsx` | Trends panel rendering, including the V3 era note |
 | `SnapshotStrip.test.tsx` | Session strip rendering, including era in tooltips |
 | 6 files not listed above | Component and utility tests added in later phases, including Landing and Command Palette |
-| **Total** | **419 passing tests, 60 test files** (suite verified 27 Oct 2026; the landing page, /judges, and this README are checked against one constants file by `src/utils/siteConsistency.test.tsx` and `npm run check:consistency`) |
+| **Total** | **424 passing tests, 61 test files** (suite verified 27 Oct 2026; the landing page, /judges, and this README are checked against one constants file by `src/utils/siteConsistency.test.tsx` and `npm run check:consistency`) |
 
 ### Running Tests
 
@@ -461,6 +463,6 @@ MIT (as per Portaldot Hacker House requirements).
 
 **Project Status:** Check-in submitted Oct 22, 2026. Repository public with 42 commits as of 25 Oct 2026, development records retained. Final sprint to the 6 Nov 2026 code freeze is in progress.
 
-- ✅ Phase 1 & Phase 2 complete, plus Trends & Verdict, Multi-Endpoint Comparison, V3 era marker, and Substrate WebSocket probe, 419 tests across 60 files
+- ✅ Phase 1 & Phase 2 complete, plus Trends & Verdict, Multi-Endpoint Comparison, V3 era marker, and Substrate WebSocket probe, 424 tests across 61 files
 - ✅ Portaldot V3.0 EVM integration verified, chain ID 420420777 validated, methods documented
 - ✅ Demo video, live deployment, and screenshots published

@@ -85,6 +85,10 @@ export interface FeesPanelCopy {
   breakDepositPct: string;
   breakNoDeposit: string;
   breakExplain: string;
+  exportReport: string;
+  exporting: string;
+  exportNote: string;
+  exportError: string;
 }
 
 export interface FeesCopy {
@@ -249,6 +253,10 @@ export const feesCopy: Record<Lang, FeesCopy> = {
     breakDepositPct: 'The storage deposit is {pct}% of the native all-in cost here.',
     breakNoDeposit: 'This op adds no new storage, so the native side has no deposit and the comparison is fee vs fee.',
     breakExplain: 'pallet-revive charges a deposit for every byte and item a call leaves in state. A deploy stores the whole contract code, so the deposit dwarfs the weight fee. The EVM gas estimate already folds that deposit in; the native path reports it separately as a hold.',
+    exportReport: 'Export fee report',
+    exporting: 'Exporting…',
+    exportNote: 'Downloads a SHA-256 stamped report (nodescope.diagnostic-report.v1) you can verify on /verify and anchor to the same registry as Health reports.',
+    exportError: 'Failed to export the fee report. Please try again.',
   },
   },
   id: {
@@ -382,6 +390,10 @@ export const feesCopy: Record<Lang, FeesCopy> = {
     breakDepositPct: 'Storage deposit adalah {pct}% dari biaya all-in native di sini.',
     breakNoDeposit: 'Operasi ini tidak menambah storage baru, jadi sisi native tidak punya deposit dan perbandingannya adalah fee vs fee.',
     breakExplain: 'pallet-revive membebankan deposit untuk setiap byte dan item yang ditinggalkan sebuah call di state. Deploy menyimpan seluruh kode kontrak, sehingga deposit jauh melampaui weight fee. Estimasi gas EVM sudah melipat deposit itu ke dalam; jalur native melaporkannya terpisah sebagai hold.',
+    exportReport: 'Ekspor laporan fee',
+    exporting: 'Mengekspor…',
+    exportNote: 'Mengunduh laporan berstempel SHA-256 (nodescope.diagnostic-report.v1) yang bisa diverifikasi di /verify dan di-anchor ke registry yang sama dengan laporan Health.',
+    exportError: 'Gagal mengekspor laporan fee. Silakan coba lagi.',
   },
   },
 };

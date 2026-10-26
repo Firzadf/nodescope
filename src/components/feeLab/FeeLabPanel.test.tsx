@@ -4,6 +4,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, fireEvent, cleanup, within, waitFor } from '@testing-library/react';
 import { FeeLabPanel } from './FeeLabPanel';
 import { SAMPLE, estimateEvm, getApi } from '../../services/feeLab/estimate';
+import { verifyReportText } from '../../utils/reportIntegrity';
 
 // The timeout test below drives Measure with a dead native connection and
 // a working EVM leg. Only those two seams are mocked; everything else
@@ -81,6 +82,42 @@ describe('FeeLabPanel', () => {
     // comparison reason that names the unavailable leg.
     expect(scope.getAllByText(/timed out/).length).toBeGreaterThanOrEqual(2);
     expect(vi.mocked(getApi)).toHaveBeenCalledTimes(1);
+  });
+
+  it('exports the measured comparison as a stamped v1 report', async () => {
+    vi.mocked(getApi).mockRejectedValue(new Error('timed out'));
+    vi.mocked(estimateEvm).mockResolvedValue({
+      status: 'ok',
+      method: 'eth_estimateGas (create)',
+      gas: 100000n,
+      gasPrice: 1000n,
+      feeWei: 100000000n,
+      totalPlanck: 10n ** 14n,
+      blockNumber: 1,
+    });
+    let captured: Blob | null = null;
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((obj: Blob | MediaSource) => {
+      captured = obj as Blob;
+      return 'blob:test';
+    });
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const { container } = render(<FeeLabPanel />);
+    const scope = within(container);
+    fireEvent.click(scope.getByRole('button', { name: 'Estimate on both surfaces' }));
+    await waitFor(() => {
+      expect(scope.getByRole('button', { name: 'Estimate on both surfaces' })).toBeEnabled();
+    });
+    const exportButton = scope.getByRole('button', { name: 'Export fee report' });
+    fireEvent.click(exportButton);
+    await waitFor(() => {
+      expect(captured).not.toBeNull();
+    });
+    const text = await (captured as unknown as Blob).text();
+    const v = await verifyReportText(text);
+    expect(v.status).toBe('verified');
+    const parsed = JSON.parse(text) as { feeOperation: string; feeComparison: { recommended: string } };
+    expect(parsed.feeOperation).toBe('deploy');
+    expect(parsed.feeComparison.recommended).toBe('evm');
   });
 
   it('moves between op tabs with arrow keys, wrapping at the ends', () => {

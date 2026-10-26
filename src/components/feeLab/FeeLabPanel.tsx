@@ -47,6 +47,8 @@ import {
   type NetworkConfig,
 } from '../../services/feeLab/estimate';
 import { feesCopy, type FeesPanelCopy } from '../../utils/feesLang';
+import { buildFeeReport } from '../../utils/feeReport';
+import { stampReportIntegrity } from '../../utils/reportIntegrity';
 import { readStoredLang, storeLang, type Lang } from '../../utils/landingLang';
 import { PORTALDOT_CHAIN_ID } from '../../utils/siteConstants';
 
@@ -158,6 +160,8 @@ export function FeeLabPanel() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ c: Comparison; net: NetworkConfig } | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   const aliveRef = useRef(true);
 
   useEffect(() => {
@@ -252,6 +256,31 @@ export function FeeLabPanel() {
       if (aliveRef.current) setError(e instanceof Error ? e.message : String(e));
     } finally {
       if (aliveRef.current) setBusy(false);
+    }
+  }
+
+  async function exportFeeReport() {
+    if (!result) return;
+    setExporting(true);
+    setExportError(null);
+    try {
+      const report = await stampReportIntegrity(buildFeeReport(result.c, op));
+      const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const now = new Date();
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const localDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+      link.download = `nodescope-fee-report-${localDate}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setExportError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setExporting(false);
     }
   }
 
@@ -483,6 +512,20 @@ export function FeeLabPanel() {
         {error && <p className="rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</p>}
       </div>
       {result && resultView(result.c, result.net.nativeDecimals)}
+      {result && (
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => void exportFeeReport()}
+            disabled={exporting}
+            className="rounded-lg border border-line px-4 py-2.5 text-sm text-slate-200 hover:text-white disabled:opacity-50"
+          >
+            {exporting ? p.exporting : p.exportReport}
+          </button>
+          <span className="text-xs text-slate-500">{p.exportNote}</span>
+        </div>
+      )}
+      {exportError && <p className="rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">{p.exportError}</p>}
       {!result && !error && (
         <div className="empty-shell p-4">
           <p className="text-sm text-slate-400">{p.empty.replace('{measure}', p.measure)}</p>
