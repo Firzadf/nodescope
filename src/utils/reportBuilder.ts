@@ -10,6 +10,7 @@ import {
   parseBlockHeight,
 } from './metricParsers';
 import { BLOCK_INTERVAL_NOTE, computeSessionTrends, type SessionTrends } from './sessionTrends';
+import { computeHealthScore, type HealthScore } from './healthScore';
 
 export const REPORT_SCHEMA_VERSION = 'nodescope.diagnostic-report.v1';
 
@@ -73,8 +74,23 @@ export interface DiagnosticReportExport {
    * is never merged into an EVM record.
    */
   substrateWsProbe?: SubstrateWsProbeResult;
+  /**
+   * Optional Health Score block (formula nodescope.health-score.v1),
+   * attached additively to NEW exports only, before the integrity stamp,
+   * so the SHA-256 hash covers it. Reports exported before this field
+   * existed (including the anchored evidence files) are unchanged and
+   * still verify: v1 consumers ignore unknown fields.
+   */
+  healthScore?: HealthScoreExport;
   integrity?: ReportIntegrity;
 }
+
+export interface HealthScoreExport extends HealthScore {
+  /** Published formula location, so a reader can recompute every point. */
+  methodology: string;
+}
+
+export const HEALTH_SCORE_METHODOLOGY_URL = '/docs#health-score';
 
 export function sanitizeEndpointOrigin(endpoint: string): string {
   try {
@@ -221,4 +237,21 @@ export function attachSessionTrends(
     ...report,
     sessionTrends: { ...trends, blockIntervalNote: BLOCK_INTERVAL_NOTE },
   };
+}
+
+/**
+ * Attach the Health Score block to a report, additively. Returns a NEW
+ * report; with no snapshot and no probe the report is returned unchanged,
+ * so an export never claims a score that was not computed. A score below
+ * the coverage floor is attached as score: null with its components, so
+ * the reader still sees exactly what was and was not measured.
+ */
+export function attachHealthScore(
+  report: DiagnosticReportExport,
+  snapshots: HealthCheckSnapshot[],
+  wsProbe: SubstrateWsProbeResult | null,
+): DiagnosticReportExport {
+  if (snapshots.length === 0 && !wsProbe) return report;
+  const score = computeHealthScore({ snapshots, wsProbe });
+  return { ...report, healthScore: { ...score, methodology: HEALTH_SCORE_METHODOLOGY_URL } };
 }

@@ -6,6 +6,7 @@ import type { DiagnosticHistoryItem } from '../../types/rpc';
 import type { Finding } from '../../types/diagnostic';
 import type { HealthCheckSnapshot } from '../../types/healthCheck';
 import {
+  attachHealthScore,
   attachSessionTrends,
   attachSubstrateWsProbe,
   buildDiagnosticReport,
@@ -37,8 +38,12 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
       const exportRuleConfig = latencyThresholdMs !== undefined ? { latencyThresholdMs } : {};
       const exportFindings: Finding[] = evaluateHistoryFindings(history, exportRuleConfig);
       const report = await stampReportIntegrity(
-        attachSubstrateWsProbe(
-          attachSessionTrends(buildDiagnosticReport(history, exportFindings), healthSnapshots),
+        attachHealthScore(
+          attachSubstrateWsProbe(
+            attachSessionTrends(buildDiagnosticReport(history, exportFindings), healthSnapshots),
+            wsProbeResult,
+          ),
+          healthSnapshots,
           wsProbeResult,
         ),
       );
