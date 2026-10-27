@@ -446,3 +446,58 @@ export function budgetCheck(allInPlanck, maxTpot) {
   const maxPlanck = parseTpot(maxTpot);
   return { maxTpot: String(maxTpot), maxPlanck: maxPlanck.toString(), over: allInPlanck > maxPlanck };
 }
+
+/* ------------------------------------------------------------------------ */
+/* Alert webhooks (port of src/utils/alertWebhook.ts, Node side: no CORS).  */
+/* ------------------------------------------------------------------------ */
+
+const VERDICT_RANK = { healthy: 2, degraded: 1, down: 0 };
+
+export function detectWebhookKind(raw) {
+  let u;
+  try {
+    u = new URL(String(raw).trim());
+  } catch {
+    return null;
+  }
+  if (u.protocol !== 'https:') return null;
+  const host = u.hostname.toLowerCase();
+  if (['discord.com', 'discordapp.com', 'ptb.discord.com', 'canary.discord.com'].includes(host) && u.pathname.startsWith('/api/webhooks/')) return 'discord';
+  if (host === 'hooks.slack.com' && /^\/(services|workflows|triggers)\//.test(u.pathname)) return 'slack';
+  return null;
+}
+
+/** degrade / recover / null — same rule as the app: the first observation is the baseline. */
+export function detectTransition(prev, next) {
+  if (prev == null || !(prev in VERDICT_RANK) || !(next in VERDICT_RANK)) return null;
+  if (VERDICT_RANK[next] < VERDICT_RANK[prev]) return 'degrade';
+  if (VERDICT_RANK[next] > VERDICT_RANK[prev]) return 'recover';
+  return null;
+}
+
+export function checkAlertText(kind, prev, result, at = new Date()) {
+  const head =
+    kind === 'degrade'
+      ? `NodeScope: node DEGRADED (${prev} → ${result.verdict})`
+      : kind === 'recover'
+        ? `NodeScope: node RECOVERED (${prev} → ${result.verdict})`
+        : `NodeScope: node ${String(result.verdict).toUpperCase()}`;
+  const failed = result.checks.filter((c) => !c.ok).map((c) => c.method);
+  return [
+    head,
+    `Endpoint: ${result.rpc}`,
+    `Block: ${result.blockNumber ?? 'not observed'}`,
+    `Failed checks: ${failed.length ? failed.join(', ') : 'none'}${result.chainMismatch ? ' (chain id mismatch)' : ''}`,
+    `At: ${at.toISOString()}`,
+    'Read-only check from the nodescope CLI. Nothing was signed.',
+  ].join('\n');
+}
+
+export async function postWebhook(url, text, fetchImpl = globalThis.fetch) {
+  const kind = detectWebhookKind(url);
+  if (!kind) throw new Error('not a Discord or Slack webhook URL (https only)');
+  const body = kind === 'discord' ? { username: 'NodeScope', content: text, allowed_mentions: { parse: [] } } : { text };
+  const res = await fetchImpl(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(`webhook answered HTTP ${res.status}`);
+  return { kind, status: res.status };
+}

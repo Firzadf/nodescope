@@ -1,0 +1,81 @@
+# NodeScope cost gate — price a contract deploy before you deploy, and fail
+# the job when it costs more than your budget.
+#
+# Minimal, single-purpose sibling of the root action.yml (which also checks
+# node health). Same pricing as the Fee Lab, run headless by
+# scripts/cost-gate.mjs:
+#   EVM: eth_estimateGas (create) × eth_gasPrice — the gas figure already
+#        folds the pallet-revive storage deposit in.
+#   Native (surface: cheapest): ReviveApi dry-run + paymentInfo, fee +
+#        refundable storage deposit.
+# Read-only: the `from` address is a dry-run origin; nothing is signed or
+# sent. An unpriceable deploy never passes the gate.
+#
+#   - uses: Firzadf/nodescope/.github/actions/cost-gate@main
+#     with:
+#       artifact: out/MyContract.sol/MyContract.json
+#       max-tpot: '150'
+name: 'NodeScope cost gate'
+description: 'Fail a CI job when a Portaldot V3 contract deploy would cost more than max-tpot (Fee Lab pricing, read-only).'
+branding:
+  icon: 'shield'
+  color: 'orange'
+inputs:
+  artifact:
+    description: 'Path to a solc artifact JSON (creation bytecode) or a raw 0x bytecode file.'
+    required: true
+  max-tpot:
+    description: 'Budget in tPOT. The job fails when the gated deploy cost is above it.'
+    required: true
+  rpc:
+    description: 'EVM RPC URL.'
+    required: false
+    default: 'https://test-evm-rpc-v3.portaldot.dev'
+  surface:
+    description: 'evm (gate the EVM deploy cost) or cheapest (also price native and gate the cheaper all-in leg).'
+    required: false
+    default: 'evm'
+  wss:
+    description: 'Substrate WebSocket URL, used only when surface is cheapest.'
+    required: false
+    default: 'wss://test-node-v3.portaldot.dev'
+  from:
+    description: 'Dry-run origin address (0x… H160). Nothing is signed.'
+    required: false
+    default: '0x03c502abb79e8eee50135c91933d059d982dd912'
+outputs:
+  cost-tpot:
+    description: 'Gated deploy cost in tPOT (empty when the deploy could not be priced).'
+    value: ${{ steps.gate.outputs.cost_tpot }}
+  over:
+    description: 'true when the cost is above max-tpot, false when within, unknown when unpriceable.'
+    value: ${{ steps.gate.outputs.over }}
+  surface:
+    description: 'Which leg was gated: evm or native.'
+    value: ${{ steps.gate.outputs.surface }}
+  block:
+    description: 'EVM block number the price was read at.'
+    value: ${{ steps.gate.outputs.block }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Install native-leg dependency
+      if: inputs.surface == 'cheapest'
+      shell: bash
+      run: npm ci --omit=dev --ignore-scripts --no-audit --no-fund --prefix "$GITHUB_ACTION_PATH/../../.."
+    - name: Price the deploy and gate it
+      id: gate
+      shell: bash
+      env:
+        INPUT_ARTIFACT: ${{ inputs.artifact }}
+        INPUT_MAX_TPOT: ${{ inputs.max-tpot }}
+        INPUT_RPC: ${{ inputs.rpc }}
+        INPUT_SURFACE: ${{ inputs.surface }}
+        INPUT_WSS: ${{ inputs.wss }}
+        INPUT_FROM: ${{ inputs.from }}
+      run: |
+        node "$GITHUB_ACTION_PATH/../../../scripts/cost-gate.mjs"

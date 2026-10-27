@@ -1,0 +1,23 @@
+# Example workflow: block a merge when the contract deploy got too expensive.
+# Copy to .github/workflows/cost-gate.yml in YOUR contract repo.
+name: Deploy cost gate
+
+on:
+  pull_request:
+
+jobs:
+  cost-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+      - run: forge build
+      - name: Price the deploy on Portaldot V3 (read-only)
+        id: gate
+        uses: Firzadf/nodescope/.github/actions/cost-gate@main
+        with:
+          artifact: out/MyContract.sol/MyContract.json
+          max-tpot: '150'
+          # surface: cheapest   # also price native (fee + refundable deposit), gate the cheaper leg
+      - if: always()
+        run: echo "deploy costs ${{ steps.gate.outputs.cost-tpot }} tPOT (over budget: ${{ steps.gate.outputs.over }})"

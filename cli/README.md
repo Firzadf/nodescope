@@ -30,6 +30,40 @@ and prints a verdict in the app's vocabulary:
 
 Exit code: 0 healthy, 1 degraded/down, 2 usage error.
 
+### Alerts: `--webhook` and `--watch`
+
+```bash
+nodescope check <rpc-url> --webhook https://discord.com/api/webhooks/…
+nodescope check <rpc-url> --webhook https://hooks.slack.com/services/… --watch 60
+```
+
+- `--webhook URL` — an https Discord (`discord.com/api/webhooks/…`) or
+  Slack (`hooks.slack.com/…`) incoming webhook. Anything else is a usage
+  error (exit 2). The URL is never printed.
+- One-shot (no `--watch`): posts one message only when the verdict is
+  `degraded` or `down`. A healthy node sends nothing.
+- `--watch N` (N ≥ 30 seconds): repeats the check every N seconds until
+  Ctrl-C. The first check is the baseline; after that a message goes out
+  only on a transition — **degrade** (healthy → degraded/down, degraded →
+  down) or **recover** (back up). Steady state sends nothing.
+- Same transition rule as the app's Watch & alerts panel. Read-only toward
+  the chain: the only writes are the webhook POSTs.
+
+## Cost gate (`scripts/cost-gate.mjs` + `.github/actions/cost-gate`)
+
+```bash
+node scripts/cost-gate.mjs --artifact out/MyContract.sol/MyContract.json --max-tpot 150
+```
+
+A single-purpose pre-deploy gate: prices the deploy with the Fee Lab's
+EVM formula (`eth_estimateGas` × `eth_gasPrice`; add `--surface cheapest`
+to also price native fee + refundable deposit and gate the cheaper leg)
+and exits 1 when the cost is above `--max-tpot`, or when the deploy
+cannot be priced at all. Inside GitHub Actions it writes `cost_tpot`,
+`over`, `surface`, and `block` outputs plus a step-summary table. See
+`docs/COST-GATE.md` and the example workflow in
+`docs/examples/cost-gate.yml`.
+
 ## fees
 
 ```bash
