@@ -4,7 +4,30 @@
 
 [![CI](https://github.com/Firzadf/nodescope/actions/workflows/ci.yml/badge.svg)](https://github.com/Firzadf/nodescope/actions/workflows/ci.yml)
 
-A professional blockchain node health diagnostic dashboard for inspecting node connectivity, JSON-RPC responses, block height, latency, and node errors. **NodeScope proves node health over time** through timestamped snapshots, before/after comparison, and exportable diagnostic reports.
+NodeScope is a node truth suite for Portaldot V3: two pillars, one evidence
+discipline. **Health** proves a node stayed healthy over time through
+timestamped snapshots, deterministic before/after comparison, and
+SHA-256-verifiable reports. **Fees** prices one operation on the EVM
+surface and the native surface side by side, so the real cost is visible
+instead of the headline multiple.
+
+## Evidence, in short
+
+- Registry (ownerless, Portaldot V3 testnet, chain 420420777):
+  `0xd48da7eff3264bdd51a86b873da9ff6997aae99c`
+- Deploy tx `0x1c2a055523a4cf8b73d771df4d3c54d21392a85f86a14a4d68213bf6db5f4904`
+  (block 216268). Three anchors: Health #1 (block 216341), Fees (block
+  216343), Health #2 (block 216346, latest anchor tx
+  `0xc74a08f3835b0c5b7d813ab15597488affa1987bce79a88d843dfdc31a9ec913`,
+  report hash
+  `0x528f38d58920b2c7fef730c27e95200e429a126874746e8cead5c1146c768a5b`).
+  Check any anchor at https://nodescope.vercel.app/verify.
+- Fees finding, measured 27 Oct 2026: a contract deploy costs 124.098 tPOT
+  on EVM vs 122.191 tPOT native all-in — 1.016x all-in, not the 804x
+  fee-only headline. Most of the gap is a refundable storage deposit.
+- 467 passing tests across 67 test files. CI green on Ubuntu and Windows
+  (Foundry on Ubuntu), plus a `verify:evidence` job that rechecks every
+  anchor on chain.
 
 ## Reproduce the evidence
 
@@ -19,10 +42,6 @@ Judges and operators do not need to trust any number in this README. `docs/REPRO
 
 ![Health check results](docs/screenshots/02-health-check-results.png)
 ![Snapshot comparison](docs/screenshots/03-snapshot-comparison.png)
-
----
-
-**Current Status:** Phase 1 (Health Check Snapshots) and Phase 2 (Snapshot Comparison) complete, plus Trends & Verdict, Multi-Endpoint Comparison, a V3 era marker (Pre-V3/Post-V3 against go-live 24 Oct 2026, 06:00 WIB), a Substrate WebSocket probe, a combined EVM + Substrate verdict, a public /verify page, a Mainnet Profile info page that claims no mainnet EVM check, and sidebar links to /verify and /mainnet plus a palette jump to the Combined Verdict. Portaldot V3.0 EVM endpoint verified and integrated. 467 passing tests across 67 test files, verified 27 Oct 2026.
 
 ## Project Overview
 
