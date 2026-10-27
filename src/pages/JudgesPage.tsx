@@ -10,11 +10,7 @@ import sampleReport from '../../public/sample-report.json';
 import { DEFAULT_PORTALDOT_V3_EVM_RPC } from '../types/endpoint';
 import { REPORT_SCHEMA_VERSION } from '../utils/reportBuilder';
 import {
-  ANCHOR_BLOCK,
-  ANCHOR_TX,
-  ANCHORED_REPORT_EXPORTED_AT,
-  ANCHORED_REPORT_HASH,
-  ANCHORED_REPORT_RECORDS,
+  ANCHORED_REPORTS,
   PORTALDOT_CHAIN_ID,
   PORTALDOT_SUBSTRATE_WSS,
   REGISTRY_CONTRACT,
@@ -97,31 +93,38 @@ export function JudgesPage() {
 
         <section className="mt-10">
           <h2 className="text-xl font-semibold text-white">On-chain evidence</h2>
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            <div className="rounded-xl border border-line bg-panel/60 p-4">
-              <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-500">Registry contract</p>
-              <p className="mt-2 break-all font-data text-[13px] text-slate-200">{REGISTRY_CONTRACT}</p>
-              <p className="mt-1 text-xs text-slate-500">Portaldot V3 testnet · chain {PORTALDOT_CHAIN_ID} · ownerless</p>
-            </div>
-            <div className="rounded-xl border border-line bg-panel/60 p-4">
-              <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-500">Anchor transaction</p>
-              <p className="mt-2 break-all font-data text-[13px] text-slate-200">{ANCHOR_TX}</p>
-              <p className="mt-1 text-xs text-slate-500">Anchor block {ANCHOR_BLOCK} · receipt status success</p>
-            </div>
-            <div className="rounded-xl border border-line bg-panel/60 p-4">
-              <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-500">Anchored report hash</p>
-              <p className="mt-2 break-all font-data text-[13px] text-slate-200">{ANCHORED_REPORT_HASH}</p>
-              <p className="mt-1 text-xs text-slate-500">Exported {ANCHORED_REPORT_EXPORTED_AT} · {ANCHORED_REPORT_RECORDS} records</p>
-            </div>
-          </div>
-          <p className="mt-3 text-sm">
-            <a
-              href={`/verify?hash=${ANCHORED_REPORT_HASH}&contract=${REGISTRY_CONTRACT}&tx=${ANCHOR_TX}`}
-              className="text-[#7DB4FF] hover:text-white"
-            >
-              Check this anchor on /verify
-            </a>
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
+            Three reports are anchored on the current registry. Each one has its own
+            /verify link, and its report file is committed in the repo so anyone can
+            recompute its SHA-256.
           </p>
+          <div className="mt-4 rounded-xl border border-line bg-panel/60 p-4">
+            <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-500">Registry contract</p>
+            <p className="mt-2 break-all font-data text-[13px] text-slate-200">{REGISTRY_CONTRACT}</p>
+            <p className="mt-1 text-xs text-slate-500">Portaldot V3 testnet · chain {PORTALDOT_CHAIN_ID} · ownerless</p>
+          </div>
+          <div className="mt-4 space-y-3">
+            {ANCHORED_REPORTS.map((anchor) => (
+              <div key={anchor.hash} className="rounded-xl border border-line bg-panel/60 p-4">
+                <p className="text-sm font-semibold text-white">{anchor.label}</p>
+                <p className="mt-2 break-all font-data text-[13px] text-slate-200">{anchor.hash}</p>
+                <p className="mt-2 text-xs text-slate-500">
+                  Anchor tx <span className="break-all font-data text-slate-300">{anchor.tx}</span>
+                  {' '}· Anchor block {anchor.block} · Exported {anchor.exportedAt} · {anchor.records} records
+                </p>
+                <p className="mt-3 text-sm">
+                  <a
+                    href={`/verify?hash=${anchor.hash}&contract=${REGISTRY_CONTRACT}&tx=${anchor.tx}`}
+                    className="text-[#7DB4FF] hover:text-white"
+                  >
+                    Check this anchor on /verify
+                  </a>
+                  <span className="text-slate-500"> · </span>
+                  <a href={anchor.reportFile} className="text-[#7DB4FF] hover:text-white">Download the anchored report</a>
+                </p>
+              </div>
+            ))}
+          </div>
         </section>
 
         <section className="mt-10">
@@ -181,8 +184,8 @@ export function JudgesPage() {
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-slate-400">
             <li>Testnet only. No public mainnet EVM RPC for Portaldot has been verified, so NodeScope makes no mainnet claim; the <a href="/mainnet" className="text-[#7DB4FF] hover:text-white">/mainnet</a> page is a profile of public links, not a live check.</li>
             <li>Anchoring is optional and covers the report hash only. It proves a report existed at anchor time; it does not prove the node was healthy.</li>
-            <li>Exactly one report is anchored so far. The sample report above is not anchored.</li>
-            <li>The registry&apos;s deploy transaction is not listed because it was not recorded when the contract was deployed. The anchor transaction above is the verifiable on-chain fact.</li>
+            <li>Three reports are anchored on the current registry (see above). The sample report above is not anchored.</li>
+            <li>The 25 Oct 2026 registry&apos;s deploy transaction is not listed because it was not recorded when that contract was deployed. The anchor transaction in the supplement section is the verifiable on-chain fact for that registry.</li>
             <li>Browser CORS applies: an endpoint that does not allow cross-origin requests cannot be checked directly from the browser. The Substrate probe uses {PORTALDOT_SUBSTRATE_WSS}.</li>
             <li>No background polling. A verdict is only as fresh as its last-checked time, which is always shown next to it.</li>
           </ul>

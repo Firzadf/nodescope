@@ -9,7 +9,7 @@ status notes. Every number on it is a verified fact, not a claim:
 - the fee figures come from the anchored Fee Lab report
   (evidence/reports/fee-2026-10-27.json): EVM 124.098 tPOT, native
   all-in 122.191 tPOT, all-in ratio 1.0156, fee-only ratio 803.68;
-- test counts come from the suite itself (464 tests, 66 files).
+- test counts come from the suite itself (467 tests, 67 files).
 
 Regenerate with:  python3 deck/build_deck.py
 Requires fpdf2 (pip install fpdf2). DejaVu fonts are used when present
@@ -333,7 +333,7 @@ def slide_tech(d: Deck) -> None:
     d.kicker("Engineering")
     d.headline("Built to be rechecked, not to be believed.")
     items = [
-        ("464 tests across 66 files", "Vitest, run on every push."),
+        ("467 tests across 67 files", "Vitest, run on every push."),
         ("5/5 Foundry contract tests", "The attestation contract, tested in isolation."),
         ("CI on Ubuntu and Windows", "Node on both; Foundry on Ubuntu."),
         ("CLI and GitHub Action", "check and fees without the browser; a pre-deploy "
