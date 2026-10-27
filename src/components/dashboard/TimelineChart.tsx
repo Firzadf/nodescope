@@ -63,9 +63,9 @@ function LineChart({
         aria-label={`${title}: ${series.length} points from ${clock(first.timestamp)} to ${clock(last.timestamp)}`}
       >
         <title>{`${title}: ${series.length} points`}</title>
-        <path d={path} fill="none" stroke="#0181FB" strokeWidth="2" />
+        <path d={path} fill="none" stroke="#ff5b14" strokeWidth="2" />
         {series.map((p) => (
-          <circle key={`${p.timestamp}-${p.value}`} cx={x(p.timestamp)} cy={y(p.value)} r="4" fill="#0181FB" />
+          <circle key={`${p.timestamp}-${p.value}`} cx={x(p.timestamp)} cy={y(p.value)} r="4" fill="#ff5b14" />
         ))}
         <text x={padLeft} y={height - 6} fill="#64748b" fontSize="11">
           {clock(first.timestamp)}

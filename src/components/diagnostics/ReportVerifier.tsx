@@ -177,7 +177,7 @@ function ReportContents({ report, attested }: { report: DiagnosticReportExport; 
                         ? 'text-red-400'
                         : finding.severity === 'warning'
                           ? 'text-amber-400'
-                          : 'text-[#7DB4FF]'
+                          : 'text-signal-ink'
                     }`}
                   >
                     {finding.severity.toUpperCase()}
@@ -276,7 +276,7 @@ export function ReportVerifier() {
             if (file) void handleFile(file);
           }}
           className={`empty-shell px-5 py-6 text-center cursor-pointer transition-colors ${
-            dragOver ? 'border-[#7DB4FF]/60 bg-white/[0.03]' : ''
+            dragOver ? 'border-signal-soft/60 bg-white/[0.03]' : ''
           }`}
         >
           <Upload className="w-5 h-5 text-slate-500 mx-auto" />
@@ -330,7 +330,7 @@ export function ReportVerifier() {
                 onChange={(e) => setPasteText(e.target.value)}
                 placeholder='{"schemaVersion": "nodescope.diagnostic-report.v1", …}'
                 rows={6}
-                className="w-full bg-black/25 border border-line rounded-lg p-3 text-xs font-data text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-[#7DB4FF]/60"
+                className="w-full bg-black/25 border border-line rounded-lg p-3 text-xs font-data text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-signal-soft/60"
               />
               <button
                 type="button"

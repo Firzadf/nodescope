@@ -40,7 +40,7 @@ function AnimatedBars({ t }: { t: (typeof feesCopy)['en'] }) {
           <span className="font-data text-sm text-slate-100">124.098 <span className="text-slate-400">tPOT</span></span>
         </div>
         <div className="mt-2 flex h-5 w-full overflow-hidden rounded-md bg-white/[0.04]">
-          <div className={`h-full bg-[#0181FB] ${anim}`} style={{ width: `${evmW}%` }} />
+          <div className={`h-full bg-signal ${anim}`} style={{ width: `${evmW}%` }} />
         </div>
       </div>
       <div>
@@ -71,7 +71,7 @@ export function FeesPage() {
   const t = feesCopy[lang];
   const footerCopy = landingCopy[lang];
   return (
-    <div className="landing-root min-h-screen bg-ink font-sans text-slate-200 antialiased">
+    <div className="paper landing-root min-h-screen bg-ink font-sans text-slate-200 antialiased">
       <SiteHeader
         nav={t.nav}
         lang={lang}

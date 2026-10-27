@@ -13,7 +13,7 @@ import { DEFAULT_PORTALDOT_V3_EVM_RPC } from '../types/endpoint';
 export function VerifyPage() {
   const share = typeof window !== 'undefined' ? parseShareParams(window.location.search) : {};
   return (
-    <div className="min-h-screen bg-ink text-slate-200">
+    <div className="paper min-h-screen bg-ink text-slate-200">
       <header className="border-b border-line px-4 py-4">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3">
           <a href="/" className="flex items-center gap-2.5">

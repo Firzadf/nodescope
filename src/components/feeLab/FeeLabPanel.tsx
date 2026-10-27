@@ -104,7 +104,7 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
         onChange={(e) => onChange(e.target.value)}
         spellCheck={false}
         autoComplete="off"
-        className="mt-1.5 w-full bg-black/30 border border-line rounded-lg px-4 py-2.5 text-sm text-white font-data placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#0181FB]/70"
+        className="mt-1.5 w-full bg-black/30 border border-line rounded-lg px-4 py-2.5 text-sm text-white font-data placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-signal/70"
       />
     </div>
   );
@@ -357,8 +357,8 @@ export function FeeLabPanel() {
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-line bg-black/25 p-4">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-[#7DB4FF]">{p.evmSurface}</span>
-              {c.recommended === 'evm' && <span className="rounded-full bg-[#0181FB]/15 px-2 py-0.5 text-[11px] font-semibold text-[#7DB4FF]">{p.cheaper}</span>}
+              <span className="text-sm font-semibold text-signal-ink">{p.evmSurface}</span>
+              {c.recommended === 'evm' && <span className="rounded-full bg-signal/15 px-2 py-0.5 text-[11px] font-semibold text-signal-ink">{p.cheaper}</span>}
             </div>
             {c.evm.status === 'ok' ? (
               <>
@@ -422,7 +422,7 @@ export function FeeLabPanel() {
         {c.evm.status === 'ok' && c.native.status === 'ok' && (
           <div className="bg-panel border border-line rounded-xl p-4 grid gap-4">
             <div className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">{p.breakTitle}</div>
-            <BreakdownBar label={p.breakEvm} total={c.evm.totalPlanck} d={d} parts={[mk(c.evm.totalPlanck, 'bg-[#0181FB]', p.breakEvmGas)]} />
+            <BreakdownBar label={p.breakEvm} total={c.evm.totalPlanck} d={d} parts={[mk(c.evm.totalPlanck, 'bg-signal', p.breakEvmGas)]} />
             <BreakdownBar label={p.breakNativeFee} total={c.native.partialFee} d={d} parts={[mk(c.native.partialFee, 'bg-emerald-400', p.breakNativeFeePart)]} />
             <BreakdownBar label={p.breakNativeAllIn} total={c.native.totalPlanck} d={d} parts={[mk(c.native.partialFee, 'bg-emerald-400', p.breakNativeFeePart), mk(c.native.storageDeposit, 'bg-amber-400', p.breakDepositPart)]} />
             <p className="text-sm text-slate-400">
@@ -458,7 +458,7 @@ export function FeeLabPanel() {
                 aria-label={l === 'en' ? 'EN (English)' : 'ID (Bahasa Indonesia)'}
                 aria-pressed={lang === l}
                 onClick={() => setLang(l)}
-                className={`rounded-full px-2.5 py-1 font-data text-[10px] uppercase tracking-[0.14em] transition-colors ${lang === l ? 'bg-[#0181FB] text-white' : 'text-slate-400 hover:text-white'}`}
+                className={`rounded-full px-2.5 py-1 font-data text-[10px] uppercase tracking-[0.14em] transition-colors ${lang === l ? 'bg-signal text-graphite' : 'text-slate-400 hover:text-graphite'}`}
               >
                 {l.toUpperCase()}
               </button>
@@ -494,7 +494,7 @@ export function FeeLabPanel() {
               tabIndex={op === o.id ? 0 : -1}
               onClick={() => { setOp(o.id); setResult(null); }}
               className={`rounded-xl px-3 py-2 text-sm transition ${
-                op === o.id ? 'bg-[#0181FB] font-semibold text-white' : 'border border-line text-slate-400 hover:text-slate-200'
+                op === o.id ? 'bg-signal font-semibold text-graphite' : 'border border-line text-slate-400 hover:text-slate-200'
               }`}
             >
               {o.label}
@@ -527,7 +527,7 @@ export function FeeLabPanel() {
                   type="button"
                   onClick={() => { setCodeChoice(choice); setResult(null); }}
                   className={`rounded-full border px-3 py-1.5 text-xs transition ${
-                    codeChoice === choice ? 'border-[#0181FB] text-white font-medium' : 'border-line text-slate-400 hover:text-slate-200'
+                    codeChoice === choice ? 'border-signal text-white font-medium' : 'border-line text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   {choice === 'sample' ? p.codeSample.replace('{bytes}', String((SampleTokenBytecode.length - 2) / 2)) : choice === 'registry' ? p.codeRegistry.replace('{bytes}', String((FeeRegistryBytecode.length - 2) / 2)) : p.codeCustom}
@@ -543,7 +543,7 @@ export function FeeLabPanel() {
                     onChange={(e) => setCustomCode(e.target.value)}
                     spellCheck={false}
                     placeholder="0x6080…"
-                    className="mt-1.5 w-full h-28 resize-y bg-black/30 border border-line rounded-lg px-4 py-2.5 text-sm text-white font-data placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#0181FB]/70"
+                    className="mt-1.5 w-full h-28 resize-y bg-black/30 border border-line rounded-lg px-4 py-2.5 text-sm text-white font-data placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-signal/70"
                   />
                 </div>
                 <Field label={p.constructorLabel} value={constructorData} onChange={setConstructorData} />
@@ -587,7 +587,7 @@ export function FeeLabPanel() {
                 value={callData}
                 onChange={(e) => setCallData(e.target.value)}
                 spellCheck={false}
-                className="mt-1.5 w-full h-24 resize-y bg-black/30 border border-line rounded-lg px-4 py-2.5 text-sm text-white font-data placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#0181FB]/70"
+                className="mt-1.5 w-full h-24 resize-y bg-black/30 border border-line rounded-lg px-4 py-2.5 text-sm text-white font-data placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-signal/70"
               />
             </div>
           </>

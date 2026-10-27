@@ -30,7 +30,7 @@ const SAMPLE_RECORDS: number = sampleReport.recordCount;
 
 export function JudgesPage() {
   return (
-    <div className="min-h-screen bg-ink text-slate-200">
+    <div className="paper min-h-screen bg-ink text-slate-200">
       <header className="border-b border-line px-4 py-4">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3">
           <a href="/" className="flex items-center gap-2.5">
@@ -61,11 +61,11 @@ export function JudgesPage() {
         <section className="mt-10">
           <h2 className="text-xl font-semibold text-white">The 60-second test path</h2>
           <ol className="mt-3 space-y-2 text-sm leading-relaxed text-slate-400">
-            <li><span className="font-data text-slate-500">01 · </span>Open <a href="/app" className="text-[#7DB4FF] hover:text-white">/app</a>. The testnet endpoint is already filled in.</li>
+            <li><span className="font-data text-slate-500">01 · </span>Open <a href="/app" className="text-signal-ink hover:text-white">/app</a>. The testnet endpoint is already filled in.</li>
             <li><span className="font-data text-slate-500">02 · </span>Press <strong className="text-slate-200">Run full diagnostic</strong> at the top of Overview. It runs connect, health check, capability discovery, the Substrate WSS probe, a snapshot, and the combined verdict, in that order.</li>
             <li><span className="font-data text-slate-500">03 · </span>Read the sticky verdict bar: overall verdict, EVM checks passed, WSS status, latency, and last-checked time.</li>
             <li><span className="font-data text-slate-500">04 · </span>Try the degraded endpoint preset, run a health check on it, and compare the two snapshots in panel 04.</li>
-            <li><span className="font-data text-slate-500">05 · </span>Export the report from History, then drop it at <a href="/verify" className="text-[#7DB4FF] hover:text-white">/verify</a> — or press Load sample report there for a one-click verification.</li>
+            <li><span className="font-data text-slate-500">05 · </span>Export the report from History, then drop it at <a href="/verify" className="text-signal-ink hover:text-white">/verify</a> — or press Load sample report there for a one-click verification.</li>
           </ol>
         </section>
 
@@ -84,9 +84,9 @@ export function JudgesPage() {
               Exported {SAMPLE_EXPORTED_AT} · {SAMPLE_RECORDS} records · schema {REPORT_SCHEMA_VERSION} · every record origin {DEFAULT_PORTALDOT_V3_EVM_RPC}
             </p>
             <p className="mt-3 text-sm">
-              <a href="/sample-report.json" className="text-[#7DB4FF] hover:text-white">Download the sample file</a>
+              <a href="/sample-report.json" className="text-signal-ink hover:text-white">Download the sample file</a>
               <span className="text-slate-500"> · </span>
-              <a href="/verify" className="text-[#7DB4FF] hover:text-white">Verify it on /verify</a>
+              <a href="/verify" className="text-signal-ink hover:text-white">Verify it on /verify</a>
             </p>
           </div>
         </section>
@@ -115,12 +115,12 @@ export function JudgesPage() {
                 <p className="mt-3 text-sm">
                   <a
                     href={`/verify?hash=${anchor.hash}&contract=${REGISTRY_CONTRACT}&tx=${anchor.tx}`}
-                    className="text-[#7DB4FF] hover:text-white"
+                    className="text-signal-ink hover:text-white"
                   >
                     Check this anchor on /verify
                   </a>
                   <span className="text-slate-500"> · </span>
-                  <a href={anchor.reportFile} className="text-[#7DB4FF] hover:text-white">Download the anchored report</a>
+                  <a href={anchor.reportFile} className="text-signal-ink hover:text-white">Download the anchored report</a>
                 </p>
               </div>
             ))}
@@ -155,7 +155,7 @@ export function JudgesPage() {
           <p className="mt-3 text-sm">
             <a
               href={`/verify?hash=${SUPPLEMENT_REPORT_HASH}&contract=${SUPPLEMENT_REGISTRY}&tx=${SUPPLEMENT_ANCHOR_TX}`}
-              className="text-[#7DB4FF] hover:text-white"
+              className="text-signal-ink hover:text-white"
             >
               Check this earlier anchor on /verify
             </a>
@@ -168,21 +168,21 @@ export function JudgesPage() {
             <strong className="text-slate-200">{SITE_TESTS} tests passing</strong> across{' '}
             <strong className="text-slate-200">{SITE_TEST_FILES} files</strong>, run with Vitest. Tests live next to
             the code they cover, not in a separate tests folder:{' '}
-            <a href="https://github.com/Firzadf/nodescope/tree/main/src" target="_blank" rel="noreferrer" className="text-[#7DB4FF] hover:text-white">
+            <a href="https://github.com/Firzadf/nodescope/tree/main/src" target="_blank" rel="noreferrer" className="text-signal-ink hover:text-white">
               github.com/Firzadf/nodescope/tree/main/src
             </a>. The full test count is also on the landing page, and a consistency test fails the
             suite if the two ever disagree.
           </p>
           <p className="mt-3 text-sm leading-relaxed text-slate-400">
-            DoraHacks BUIDL: <a href="https://dorahacks.io/build/50146" target="_blank" rel="noreferrer" className="text-[#7DB4FF] hover:text-white">dorahacks.io/build/50146</a> ·
-            Docs: <a href="/docs" className="text-[#7DB4FF] hover:text-white">/docs</a>
+            DoraHacks BUIDL: <a href="https://dorahacks.io/build/50146" target="_blank" rel="noreferrer" className="text-signal-ink hover:text-white">dorahacks.io/build/50146</a> ·
+            Docs: <a href="/docs" className="text-signal-ink hover:text-white">/docs</a>
           </p>
         </section>
 
         <section className="mt-10">
           <h2 className="text-xl font-semibold text-white">Known limitations, stated honestly</h2>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-slate-400">
-            <li>Testnet only. No public mainnet EVM RPC for Portaldot has been verified, so NodeScope makes no mainnet claim; the <a href="/mainnet" className="text-[#7DB4FF] hover:text-white">/mainnet</a> page is a profile of public links, not a live check.</li>
+            <li>Testnet only. No public mainnet EVM RPC for Portaldot has been verified, so NodeScope makes no mainnet claim; the <a href="/mainnet" className="text-signal-ink hover:text-white">/mainnet</a> page is a profile of public links, not a live check.</li>
             <li>Anchoring is optional and covers the report hash only. It proves a report existed at anchor time; it does not prove the node was healthy.</li>
             <li>Three reports are anchored on the current registry (see above). The sample report above is not anchored.</li>
             <li>The 25 Oct 2026 registry&apos;s deploy transaction is not listed because it was not recorded when that contract was deployed. The anchor transaction in the supplement section is the verifiable on-chain fact for that registry.</li>

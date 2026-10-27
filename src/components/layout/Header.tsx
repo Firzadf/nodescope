@@ -47,12 +47,12 @@ export function Header({ connectionStatus, liveBlock }: HeaderProps) {
             <img
               src="/logo.png"
               alt="NodeScope"
-              className="h-9 w-9 rounded-lg shadow-[0_0_24px_rgba(1,129,251,0.35)] ring-1 ring-[#0181FB]/40"
+              className="h-9 w-9 rounded-lg shadow-[0_0_24px_rgba(1,129,251,0.35)] ring-1 ring-signal/40"
             />
             <div>
               <div className="flex items-baseline gap-2">
                 <h1 className="text-xl font-bold tracking-tight text-white">
-                  Node<span className="text-[#0181FB]">Scope</span>
+                  Node<span className="text-signal-ink">Scope</span>
                 </h1>
                 <span className="hidden font-data text-[11px] uppercase tracking-[0.18em] text-slate-400 sm:inline">
                   Proves node health over time
@@ -65,7 +65,7 @@ export function Header({ connectionStatus, liveBlock }: HeaderProps) {
               only, it carries no live data; the real state stays in the one
               status pill on the right. */}
           <div aria-hidden="true" className="pointer-events-none relative mx-8 hidden flex-1 lg:block">
-            <div className="h-px bg-gradient-to-r from-transparent via-[#0181FB]/40 to-transparent" />
+            <div className="h-px bg-gradient-to-r from-transparent via-signal/40 to-transparent" />
             <svg
               className="absolute -top-[7px] left-0 h-[15px] w-full overflow-visible"
               viewBox="0 0 600 15"
@@ -74,13 +74,13 @@ export function Header({ connectionStatus, liveBlock }: HeaderProps) {
             >
               <path
                 d="M 0,7 L 240,7 L 260,1 L 280,13 L 300,3 L 320,7 L 600,7"
-                stroke="#0181FB"
+                stroke="#ff5b14"
                 strokeOpacity="0.5"
                 strokeWidth="1"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
-              <circle r="2.5" fill="#0181FB">
+              <circle r="2.5" fill="#ff5b14">
                 <animateMotion
                   dur="9s"
                   repeatCount="indefinite"
@@ -112,7 +112,7 @@ export function Header({ connectionStatus, liveBlock }: HeaderProps) {
               </span>
             </div>
 
-            <span className="hidden rounded-full border border-[#0181FB]/40 bg-[#0181FB]/10 px-3 py-1.5 font-data text-[11px] uppercase tracking-[0.18em] text-sky-200 shadow-[0_0_20px_rgba(1,129,251,0.15)] md:block">
+            <span className="hidden rounded-full border border-signal/40 bg-signal/10 px-3 py-1.5 font-data text-[11px] uppercase tracking-[0.18em] text-sky-200 shadow-[0_0_20px_rgba(1,129,251,0.15)] md:block">
               V3 Testnet · 420420777
             </span>
           </div>
@@ -120,7 +120,7 @@ export function Header({ connectionStatus, liveBlock }: HeaderProps) {
       </div>
       <div
         aria-hidden="true"
-        className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[#0181FB]/60 to-transparent"
+        className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-signal/60 to-transparent"
       />
     </header>
   );

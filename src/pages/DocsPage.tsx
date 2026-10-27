@@ -13,7 +13,7 @@ import {
 
 export function DocsPage() {
   return (
-    <div className="min-h-screen bg-ink text-slate-200">
+    <div className="paper min-h-screen bg-ink text-slate-200">
       <header className="border-b border-line px-4 py-4">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3">
           <a href="/" className="flex items-center gap-2.5">
@@ -44,11 +44,11 @@ export function DocsPage() {
         <section className="mt-10">
           <h2 className="text-xl font-semibold text-white">Quick start</h2>
           <ol className="mt-3 space-y-2 text-sm leading-relaxed text-slate-400">
-            <li><span className="font-data text-slate-500">01 · </span>Open <a href="/app" className="text-[#7DB4FF] hover:text-white">/app</a>. The Portaldot V3 EVM testnet endpoint is already filled in: <code className="font-data text-slate-300">https://test-evm-rpc-v3.portaldot.dev</code> (chain 420420777).</li>
+            <li><span className="font-data text-slate-500">01 · </span>Open <a href="/app" className="text-signal-ink hover:text-white">/app</a>. The Portaldot V3 EVM testnet endpoint is already filled in: <code className="font-data text-slate-300">https://test-evm-rpc-v3.portaldot.dev</code> (chain 420420777).</li>
             <li><span className="font-data text-slate-500">02 · </span>Press <strong className="text-slate-200">Run full diagnostic</strong> for the whole flow at once, or run the panels one by one: Connect &amp; Test, then Run Health Check.</li>
             <li><span className="font-data text-slate-500">03 · </span>Run the Substrate WSS probe (panel 06). Panel 07 then reads the EVM snapshot and the Substrate probe together as one combined verdict.</li>
             <li><span className="font-data text-slate-500">04 · </span>Compare any two snapshots in panel 04. To see a degraded endpoint, use the “Try a degraded endpoint” preset, run a health check on it, and compare it with the healthy snapshot.</li>
-            <li><span className="font-data text-slate-500">05 · </span>In History, export the diagnostic report, then drop the same file at <a href="/verify" className="text-[#7DB4FF] hover:text-white">/verify</a>. Or press Load sample report there to verify a real export in one click.</li>
+            <li><span className="font-data text-slate-500">05 · </span>In History, export the diagnostic report, then drop the same file at <a href="/verify" className="text-signal-ink hover:text-white">/verify</a>. Or press Load sample report there to verify a real export in one click.</li>
           </ol>
         </section>
 
@@ -108,18 +108,18 @@ export function DocsPage() {
         <section className="mt-10">
           <h2 className="text-xl font-semibold text-white">How to verify a report and its anchor</h2>
           <ol className="mt-3 space-y-2 text-sm leading-relaxed text-slate-400">
-            <li><span className="font-data text-slate-500">01 · </span>At <a href="/verify" className="text-[#7DB4FF] hover:text-white">/verify</a>, drop a report file, paste report JSON, or press Load sample report. A VERIFIED banner means the file matches its stamp.</li>
+            <li><span className="font-data text-slate-500">01 · </span>At <a href="/verify" className="text-signal-ink hover:text-white">/verify</a>, drop a report file, paste report JSON, or press Load sample report. A VERIFIED banner means the file matches its stamp.</li>
             <li><span className="font-data text-slate-500">02 · </span>For the on-chain step, enter the report hash, the registry contract address, and the anchor transaction hash, then press Verify anchor on chain. A shareable link can pre-fill all three.</li>
             <li><span className="font-data text-slate-500">03 · </span>The panel asks the testnet RPC for the transaction receipt (<code className="font-data text-slate-300">eth_getTransactionReceipt</code>) and checks three things: the receipt succeeded, it was sent to the registry contract, and one of its logs carries the report hash as a topic. The anchor block is shown next to the result.</li>
             <li><span className="font-data text-slate-500">04 · </span>There is no public EVM explorer for this chain, so no “view on explorer” link is offered for EVM transactions. The RPC is the source of truth, and the panel reads it directly.</li>
-            <li><span className="font-data text-slate-500">05 · </span>The anchors verified so far are listed on <a href="/judges" className="text-[#7DB4FF] hover:text-white">/judges</a>; the latest is: registry contract <code className="font-data text-slate-300 break-all">{REGISTRY_CONTRACT}</code>, anchor transaction <code className="font-data text-slate-300 break-all">{ANCHOR_TX}</code>, anchor block {ANCHOR_BLOCK}, anchored report hash <code className="font-data text-slate-300 break-all">{ANCHORED_REPORT_HASH}</code>. The same values are on the landing page and on <a href="/judges" className="text-[#7DB4FF] hover:text-white">/judges</a>, and a consistency test fails the suite if they ever disagree.</li>
+            <li><span className="font-data text-slate-500">05 · </span>The anchors verified so far are listed on <a href="/judges" className="text-signal-ink hover:text-white">/judges</a>; the latest is: registry contract <code className="font-data text-slate-300 break-all">{REGISTRY_CONTRACT}</code>, anchor transaction <code className="font-data text-slate-300 break-all">{ANCHOR_TX}</code>, anchor block {ANCHOR_BLOCK}, anchored report hash <code className="font-data text-slate-300 break-all">{ANCHORED_REPORT_HASH}</code>. The same values are on the landing page and on <a href="/judges" className="text-signal-ink hover:text-white">/judges</a>, and a consistency test fails the suite if they ever disagree.</li>
           </ol>
         </section>
 
         <section className="mt-10">
           <h2 className="text-xl font-semibold text-white">Fee Lab: the same operation on both surfaces</h2>
           <p className="mt-3 text-sm leading-relaxed text-slate-400">
-            The Fee Lab section in <a href="/app/fee-lab" className="text-[#7DB4FF] hover:text-white">/app</a> measures
+            The Fee Lab section in <a href="/app/fee-lab" className="text-signal-ink hover:text-white">/app</a> measures
             one operation twice, live, from your browser: once through the EVM endpoint
             (<code className="font-data text-slate-300">eth_estimateGas</code> ×{' '}
             <code className="font-data text-slate-300">eth_gasPrice</code>) and once natively through the
@@ -136,7 +136,7 @@ export function DocsPage() {
         <section className="mt-10 border-t border-line pt-6">
           <h2 className="text-xl font-semibold text-white">Honest scope</h2>
           <ul className="mt-3 space-y-1.5 text-sm leading-relaxed text-slate-400">
-            <li>Testnet only. Portaldot V3 mainnet is live, but no public mainnet EVM RPC has been published, so NodeScope runs no mainnet EVM check and claims none. See <a href="/mainnet" className="text-[#7DB4FF] hover:text-white">/mainnet</a>.</li>
+            <li>Testnet only. Portaldot V3 mainnet is live, but no public mainnet EVM RPC has been published, so NodeScope runs no mainnet EVM check and claims none. See <a href="/mainnet" className="text-signal-ink hover:text-white">/mainnet</a>.</li>
             <li>Read-only by default. The app signs nothing and never asks for a private key. Anchoring happens in your own wallet tool; NodeScope only verifies the resulting transaction.</li>
             <li>Independent build. NodeScope is not built by Portaldot and does not speak for it.</li>
           </ul>

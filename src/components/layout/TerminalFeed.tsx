@@ -24,7 +24,7 @@ export function TerminalFeed({ history }: TerminalFeedProps) {
         aria-expanded={open}
         className="flex w-full items-center gap-3 px-6 py-3 text-left transition-colors hover:bg-white/[0.02]"
       >
-        <Terminal className="h-4 w-4 shrink-0 text-[#0181FB]" />
+        <Terminal className="h-4 w-4 shrink-0 text-signal-ink" />
         <span className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-300">
           Terminal — session ledger
         </span>

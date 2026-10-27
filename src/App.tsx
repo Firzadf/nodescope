@@ -386,7 +386,7 @@ function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-ink text-slate-200">
+    <div className="instrument min-h-screen bg-ink text-slate-200">
       <IntroSplash scope="app" />
       <Header
         connectionStatus={connectionStatus}

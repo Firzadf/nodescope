@@ -336,7 +336,7 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
                           ? 'bg-red-500/20 text-red-400 border-red-500/30'
                           : f.severity === 'warning'
                           ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                          : 'bg-[#0181FB]/15 text-[#7DB4FF] border-[#0181FB]/30'
+                          : 'bg-signal/15 text-signal-ink border-signal/30'
                       }`}
                     >
                       {f.severity}
@@ -574,7 +574,7 @@ export function SnapshotComparison({ snapshots }: SnapshotComparisonProps) {
                                 ? 'bg-red-500/20 text-red-400 border-red-500/30'
                                 : currentFinding.severity === 'warning'
                                 ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                                : 'bg-[#0181FB]/15 text-[#7DB4FF] border-[#0181FB]/30'
+                                : 'bg-signal/15 text-signal-ink border-signal/30'
                             }`}
                           >
                             {currentFinding.severity}

@@ -70,7 +70,7 @@ function CollapsedPanelRow({
         type="button"
         onClick={onRun}
         disabled={running}
-        className="rounded-lg bg-[#0181FB] px-3 py-1.5 text-sm font-medium text-white transition-opacity disabled:opacity-50"
+        className="rounded-lg bg-signal px-3 py-1.5 text-sm font-medium text-graphite transition-opacity disabled:opacity-50"
       >
         {running ? 'Running…' : 'Run health check'}
       </button>
@@ -228,7 +228,7 @@ export function Overview({
       {connectionStatus !== 'connected' && (
         <div className="bg-panel border border-line rounded-xl p-4">
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-[#0181FB] flex items-center justify-center">
+            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-signal flex items-center justify-center">
               <span className="text-white text-sm font-bold">i</span>
             </div>
             <div>

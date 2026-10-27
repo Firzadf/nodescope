@@ -80,23 +80,25 @@ function PillarCard({
     // run is stable-by-ref-guard (startedRef); intentionally not a dep.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const accentText = accent === 'amber' ? 'text-amber-300' : 'text-[#7DB4FF]';
-  const accentBorder = accent === 'amber' ? 'border-amber-400/30' : 'border-[#0181FB]/30';
+  const numeral = accent === 'amber' ? '02' : '01';
   return (
-    <div ref={ref} className={`min-w-0 rounded-3xl border ${accentBorder} bg-panel p-6 md:p-7`}>
-      <p className={`font-data text-[11px] uppercase tracking-[0.22em] ${accentText}`}>{copy.kicker}</p>
-      <h3 className="mt-3 font-display text-2xl font-semibold tracking-tight text-white">{copy.title}</h3>
-      <p className="mt-2.5 text-sm leading-relaxed text-slate-400">{copy.body}</p>
-      <div className="mt-5 min-h-[64px] rounded-2xl border border-line bg-black/25 px-4 py-3.5">
+    <div ref={ref} className="relative min-w-0 bg-panel p-6 md:p-8">
+      <span aria-hidden="true" className="pointer-events-none absolute right-5 top-3 font-data text-[64px] font-medium leading-none tracking-[-0.06em] text-slate-800 md:text-[88px]">
+        {numeral}
+      </span>
+      <p className="relative font-data text-[11px] uppercase tracking-[0.22em] text-signal-ink">{copy.kicker}</p>
+      <h3 className="relative mt-4 font-display text-[34px] leading-none tracking-[-0.01em] text-white">{copy.title}</h3>
+      <p className="relative mt-4 max-w-[46ch] text-[15px] leading-relaxed text-slate-400">{copy.body}</p>
+      <div className="mt-6 min-h-[72px] border-y border-line py-4">
         {state.kind === 'idle' && (
-          <button type="button" onClick={run} className="btn-primary rounded-lg px-4 py-2 text-sm font-medium">
+          <button type="button" onClick={run} className="btn-primary px-4 py-2 text-sm font-semibold">
             {copy.measureLabel}
           </button>
         )}
         {state.kind === 'measuring' && <p className="text-sm text-slate-400">{copy.measuringLabel}</p>}
         {state.kind === 'done' && (
           <div>
-            <p data-testid={valueTestId} className="font-data text-2xl font-semibold tabular-nums text-white">
+            <p data-testid={valueTestId} className="font-data text-[30px] font-medium tracking-[-0.03em] tabular-nums text-white">
               {state.value}
             </p>
             <p className="mt-1 text-[11px] text-slate-500">
@@ -107,13 +109,13 @@ function PillarCard({
         {state.kind === 'error' && (
           <div className="flex flex-wrap items-center gap-3">
             <p className="text-sm text-amber-300">{copy.unavailableLabel}</p>
-            <button type="button" onClick={run} className="btn-ghost rounded-lg px-3 py-1.5 text-sm">
+            <button type="button" onClick={run} className="btn-ghost px-3 py-1.5 text-sm">
               {copy.measureLabel}
             </button>
           </div>
         )}
       </div>
-      <a href={copy.ctaHref} className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-slate-200 underline decoration-slate-600 underline-offset-4 transition-colors hover:text-white">
+      <a href={copy.ctaHref} className="mt-5 inline-flex items-center gap-1.5 font-data text-[12px] uppercase tracking-[0.16em] text-white underline decoration-signal underline-offset-4 transition-colors hover:text-signal-ink">
         {copy.ctaLabel} →
       </a>
     </div>
@@ -132,7 +134,7 @@ export function PillarCards({
   feesMeasure?: () => Promise<string>;
 }) {
   return (
-    <div className="grid min-w-0 gap-5 md:grid-cols-2">
+    <div className="grid min-w-0 gap-px border border-line bg-line md:grid-cols-2">
       <PillarCard copy={health} accent="blue" measure={healthMeasure} valueTestId="health-proof-value" />
       <PillarCard copy={fees} accent="amber" measure={feesMeasure} valueTestId="fees-proof-value" autoMeasure={false} />
     </div>

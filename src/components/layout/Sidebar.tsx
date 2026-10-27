@@ -105,7 +105,7 @@ export function Sidebar({ activeSection, onSectionChange, onOpenPalette, collaps
                     }`}
                   >
                     {isActive && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-[#0181FB]" />
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-signal" />
                     )}
                     <Icon className={`h-[18px] w-[18px] ${isActive ? 'text-white' : 'text-slate-500'}`} />
                     {!collapsed && (

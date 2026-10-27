@@ -219,7 +219,7 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
                   </div>
                   <div>
                     <div className="text-xs text-slate-500">Info</div>
-                    <div className="text-lg font-semibold text-[#7DB4FF] font-data">{infoFindings}</div>
+                    <div className="text-lg font-semibold text-signal-ink font-data">{infoFindings}</div>
                   </div>
                 </div>
                 <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
@@ -235,7 +235,7 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
                       </div>
                       <div className="text-slate-300 mb-1">{finding.evidence}</div>
                       <div className="text-slate-500 mb-1">{finding.explanation}</div>
-                      <div className="text-[#7DB4FF] font-medium">{finding.recommendation}</div>
+                      <div className="text-signal-ink font-medium">{finding.recommendation}</div>
                     </div>
                   ))}
                 </div>
@@ -261,7 +261,7 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
 function getSeverityColor(severity: Finding['severity']): string {
   if (severity === 'error') return 'text-red-400';
   if (severity === 'warning') return 'text-amber-400';
-  return 'text-[#7DB4FF]';
+  return 'text-signal-ink';
 }
 
 function getOutcomeLabel(item: DiagnosticHistoryItem): string {

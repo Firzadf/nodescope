@@ -185,7 +185,7 @@ export function FullDiagnosticRunner({
             type="button"
             onClick={() => void run()}
             disabled={running}
-            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-[#0181FB] px-4 py-2.5 text-sm font-semibold text-white transition-opacity disabled:opacity-50"
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-signal px-4 py-2.5 text-sm font-semibold text-graphite transition-opacity disabled:opacity-50"
           >
             {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
             {running ? 'Running…' : 'Run full diagnostic'}
@@ -239,7 +239,7 @@ export function FullDiagnosticRunner({
             <button
               type="button"
               onClick={onGoHistory}
-              className="rounded-lg bg-[#0181FB] px-4 py-2 text-sm font-semibold text-white"
+              className="rounded-lg bg-signal px-4 py-2 text-sm font-semibold text-graphite"
             >
               Export report
             </button>

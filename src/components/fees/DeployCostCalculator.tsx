@@ -293,7 +293,7 @@ export function DeployCostCalculator({ lang }: { lang: Lang }) {
         <div className="grid gap-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-line bg-black/25 p-4">
-              <span className="text-sm font-semibold text-[#7DB4FF]">{p.evmSurface}</span>
+              <span className="text-sm font-semibold text-signal-ink">{p.evmSurface}</span>
               {result.evm.status === 'ok' ? (
                 <>
                   <div className="mt-2 text-2xl font-semibold tabular-nums text-white">
@@ -379,7 +379,7 @@ export function DeployCostCalculator({ lang }: { lang: Lang }) {
                   role="img"
                   aria-label={`${p.breakEvm}: ${tpot(result.evm.totalPlanck)} tPOT`}
                 >
-                  <div className="h-full bg-[#0181FB]" style={{ width: '100%' }} />
+                  <div className="h-full bg-signal" style={{ width: '100%' }} />
                 </div>
               </div>
               <div className="grid gap-1.5">

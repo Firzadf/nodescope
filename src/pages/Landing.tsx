@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Activity, ArrowRight, ArrowUpRight, Pause, Play, X } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Pause, Play, X } from 'lucide-react';
 import { sendJsonRpcRequest } from '../services/rpcClient';
 import { BackToTop } from '../components/BackToTop';
 import { IntroSplash } from '../components/common/IntroSplash';
@@ -14,13 +14,31 @@ import {
   ANCHORED_REPORT_EXPORTED_AT,
   ANCHORED_REPORT_HASH,
   ANCHORED_REPORT_RECORDS,
+  ANCHORED_REPORTS,
   PORTALDOT_CHAIN_ID,
   REGISTRY_CONTRACT,
+  SITE_TEST_FILES,
+  SITE_TESTS,
 } from '../utils/siteConstants';
+import { HEALTH_SCORE_FORMULA } from '../utils/healthScore';
 
 const APP_URL = '/app';
+const JUDGES_URL = '/judges';
 const DEMO_URL = 'https://youtu.be/TyTudF3MUaI';
 const DOCUMENTED_CHAIN_ID = 420420777;
+const SIGNAL = '#ff5b14';
+const INK_MUTED = '#8a8478';
+
+/*
+ * Landing — "calibration sheet" edition.
+ *
+ * The page reads like a printed lab report: warm paper, ink type, hairline
+ * rules, numbered sections (01 — …), one signal orange reserved for what
+ * is live. The live readout and the marquee sit on graphite bands: the
+ * instrument showing through the report. Every number on the page is
+ * real (measured, documented, or fetched once on load) — nothing counts
+ * up, nothing polls.
+ */
 
 /* ---------------------------------- hooks --------------------------------- */
 
@@ -47,28 +65,59 @@ function useInView<T extends HTMLElement>(threshold = 0.2) {
 }
 
 function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
-  const { ref, inView } = useInView<HTMLDivElement>(0.12);
+  const { ref, inView } = useInView<HTMLDivElement>(0.08);
   return (
     <div
       ref={ref}
       style={{ transitionDelay: `${delay}ms`, transitionTimingFunction: 'var(--ease-out)' }}
-      className={`reveal ${className} transition-transform transition-opacity duration-500 ${inView ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}
+      className={`reveal ${className} transition-transform transition-opacity duration-500 ${inView ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
     >
       {children}
     </div>
   );
 }
 
+type ReadoutState =
+  | { kind: 'probing' }
+  | { kind: 'live'; block: number; chainOk: boolean; latencyMs: number | null; at: Date }
+  | { kind: 'unreachable'; at: Date };
+
+/** One fetch on load, shared by the readout and the marquee. Never polls. */
+function useLiveChain(): ReadoutState {
+  const [state, setState] = useState<ReadoutState>({ kind: 'probing' });
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [blockRes, chainRes] = await Promise.all([
+        sendJsonRpcRequest(DEFAULT_PORTALDOT_V3_EVM_RPC, 'eth_blockNumber', [], 6000),
+        sendJsonRpcRequest(DEFAULT_PORTALDOT_V3_EVM_RPC, 'eth_chainId', [], 6000),
+      ]);
+      if (cancelled) return;
+      const raw = blockRes.response?.result;
+      if (blockRes.success && typeof raw === 'string') {
+        const chainRaw = chainRes.response?.result;
+        setState({
+          kind: 'live',
+          block: parseInt(raw, 16),
+          chainOk: chainRes.success && typeof chainRaw === 'string' && parseInt(chainRaw, 16) === DOCUMENTED_CHAIN_ID,
+          latencyMs: blockRes.latency,
+          at: new Date(),
+        });
+      } else {
+        setState({ kind: 'unreachable', at: new Date() });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return state;
+}
+
 /**
- * Motion video, deferred until scrolled into view. The 3.2 MB file and
- * its 74 KB poster used to download on first paint even though the
- * figure sits far below the fold, competing with the hero on slow
- * connections (Lighthouse flagged the video as the page's largest
- * payload, and the poster as an eager below-fold image). Now only a
- * same-aspect placeholder renders until viewport entry; the video
- * (with poster and src, autoplay) and the reduced-motion poster image
- * are mounted then. Where IntersectionObserver is missing (tests, old
- * browsers) everything renders on first paint, exactly like before.
+ * Motion video, deferred until scrolled into view (see git history for the
+ * Lighthouse reasoning). Only a same-aspect placeholder renders until
+ * viewport entry; where IntersectionObserver is missing everything renders.
  */
 function MotionVideo({ caption }: { caption: string }) {
   const { ref, inView } = useInView<HTMLDivElement>(0.12);
@@ -77,7 +126,7 @@ function MotionVideo({ caption }: { caption: string }) {
       {inView ? (
         <>
           <video
-            className="motion-video aspect-[16/10] w-full"
+            className="motion-video plate aspect-[16/10] w-full"
             src="/motion/nodescope-flow.mp4"
             poster="/screenshots/01-endpoint-config.jpg"
             autoPlay
@@ -89,15 +138,11 @@ function MotionVideo({ caption }: { caption: string }) {
           <img
             src="/screenshots/01-endpoint-config.jpg"
             alt={caption}
-            className="motion-poster aspect-[16/10] w-full object-cover object-top"
+            className="motion-poster plate aspect-[16/10] w-full object-cover object-top"
           />
         </>
       ) : (
-        <div
-          className="aspect-[16/10] w-full bg-panel"
-          aria-hidden="true"
-          data-testid="motion-placeholder"
-        />
+        <div className="aspect-[16/10] w-full bg-panel" aria-hidden="true" data-testid="motion-placeholder" />
       )}
     </div>
   );
@@ -129,50 +174,19 @@ function Odometer({ value }: { value: string }) {
 
 /* ------------------------------ live readout ------------------------------ */
 
-type ReadoutState =
-  | { kind: 'probing' }
-  | { kind: 'live'; block: number; chainOk: boolean; latencyMs: number | null; at: Date }
-  | { kind: 'unreachable'; at: Date };
-
-function LiveReadout({ lang }: { lang: Lang }) {
+function LiveReadout({ lang, state }: { lang: Lang; state: ReadoutState }) {
   const lr = landingCopy[lang];
-  const [state, setState] = useState<ReadoutState>({ kind: 'probing' });
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const [blockRes, chainRes] = await Promise.all([
-        sendJsonRpcRequest(DEFAULT_PORTALDOT_V3_EVM_RPC, 'eth_blockNumber', [], 6000),
-        sendJsonRpcRequest(DEFAULT_PORTALDOT_V3_EVM_RPC, 'eth_chainId', [], 6000),
-      ]);
-      if (cancelled) return;
-      const raw = blockRes.response?.result;
-      if (blockRes.success && typeof raw === 'string') {
-        const chainRaw = chainRes.response?.result;
-        setState({
-          kind: 'live',
-          block: parseInt(raw, 16),
-          chainOk: chainRes.success && typeof chainRaw === 'string' && parseInt(chainRaw, 16) === DOCUMENTED_CHAIN_ID,
-          latencyMs: blockRes.latency,
-          at: new Date(),
-        });
-      } else {
-        setState({ kind: 'unreachable', at: new Date() });
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   return (
-    <div className="overflow-hidden rounded-[24px] border border-line bg-panel/90 shadow-[0_24px_70px_rgba(0,0,0,0.5)]">
-      <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2.5">
-        <span className="font-data text-[11px] text-slate-400">{lr.liveReadoutHeader}</span>
+    <div className="graphite relative border border-graphite">
+      <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
+        <span className="font-data text-[11px] text-slate-300">{lr.liveReadoutHeader}</span>
+        <span aria-hidden="true" className="font-data text-[10px] uppercase tracking-[0.2em] text-slate-500">
+          RPC · {state.kind === 'live' ? <span className="text-signal-ink">● live</span> : state.kind === 'probing' ? '○ …' : '× off'}
+        </span>
       </div>
       <div className="px-5 py-5">
-        <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">{lr.liveReadoutLatest}</p>
-        <div className="mt-2 font-data text-[44px] font-semibold leading-none text-white md:text-[54px]">
+        <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-400">{lr.liveReadoutLatest}</p>
+        <div className="mt-3 font-data text-[52px] font-medium leading-none tracking-[-0.04em] text-white sm:text-[64px]">
           {state.kind === 'live' ? (
             <Odometer value={state.block.toLocaleString('en-US')} />
           ) : state.kind === 'probing' ? (
@@ -183,7 +197,7 @@ function LiveReadout({ lang }: { lang: Lang }) {
             <span className="text-slate-500">— — —</span>
           )}
         </div>
-        <div className="mt-4 space-y-1.5 border-t border-line pt-3.5 font-data text-[11.5px] leading-relaxed">
+        <div className="mt-5 space-y-1.5 border-t border-line pt-3.5 font-data text-[11.5px] leading-relaxed">
           {state.kind === 'probing' && (
             <p key="probing" className="state-swap text-slate-400">
               STATUS <span className="text-slate-200">{lr.liveReadoutProbing}</span>
@@ -201,10 +215,9 @@ function LiveReadout({ lang }: { lang: Lang }) {
               </p>
               <p className="text-slate-400">
                 {lr.liveReadoutAnsweredIn} <span className="text-slate-100">{state.latencyMs !== null ? `${state.latencyMs} MS` : '—'}</span>
-                {' · '}{lr.liveReadoutAt}{' '}
-                <span className="text-slate-100">
-                  {state.at.toLocaleTimeString('en-GB', { hour12: false })} WIB
-                </span>
+                {' · '}
+                {lr.liveReadoutAt}{' '}
+                <span className="text-slate-100">{state.at.toLocaleTimeString('en-GB', { hour12: false })} WIB</span>
               </p>
               <p className="text-slate-500">{lr.liveReadoutFetchedOnce}</p>
             </div>
@@ -220,12 +233,15 @@ function LiveReadout({ lang }: { lang: Lang }) {
           )}
         </div>
       </div>
-      <svg viewBox="0 0 600 40" className="h-9 w-full border-t border-line bg-black/20" aria-hidden="true">
+      <svg viewBox="0 0 600 44" className="block h-11 w-full border-t border-line" aria-hidden="true">
+        {[11, 22, 33].map((y) => (
+          <line key={y} x1="0" x2="600" y1={y} y2={y} stroke="rgba(236,229,212,0.08)" />
+        ))}
         <path
           className="ecg-path"
-          d="M0 20 H180 L192 20 L200 6 L210 34 L220 20 H330 L342 12 L352 28 L360 20 H600"
+          d="M0 22 H180 L192 22 L200 6 L210 38 L220 22 H330 L342 13 L352 31 L360 22 H600"
           fill="none"
-          stroke="#0181FB"
+          stroke={SIGNAL}
           strokeWidth="1.6"
           strokeLinejoin="round"
           strokeLinecap="round"
@@ -235,15 +251,93 @@ function LiveReadout({ lang }: { lang: Lang }) {
   );
 }
 
-/* ----------------------------- section heading ---------------------------- */
+/* ------------------------------- marquee ---------------------------------- */
 
-function SectionHeading({ title, right, accent = 'blue' }: { title: string; right?: string; accent?: 'blue' | 'sky' | 'emerald' }) {
-  const border = accent === 'emerald' ? 'border-emerald-500/30' : accent === 'sky' ? 'border-sky-500/30' : 'border-[#0181FB]/30';
-  const label = accent === 'emerald' ? 'text-emerald-400/80' : accent === 'sky' ? 'text-sky-300/80' : 'text-slate-600';
+function ChainMarquee({ lang, state }: { lang: Lang; state: ReadoutState }) {
+  const t = landingCopy[lang];
+  const live =
+    state.kind === 'live'
+      ? `${t.marqueeLive} ${state.block.toLocaleString('en-US')}`
+      : state.kind === 'probing'
+        ? `${t.marqueeLive} …`
+        : `${t.marqueeLive} — RPC unreachable`;
+  const items = [live, ...t.marqueeItems, `${SITE_TESTS} tests · ${SITE_TEST_FILES} test files`];
+  const row = (hidden: boolean) => (
+    <ul aria-hidden={hidden || undefined} className="flex shrink-0 items-center">
+      {items.map((it, i) => (
+        <li key={i} className="flex items-center whitespace-nowrap px-5 font-data text-[11px] uppercase tracking-[0.2em] text-slate-300">
+          {i === 0 && <span aria-hidden="true" className="live-dot mr-2.5 inline-block h-1.5 w-1.5 bg-signal" />}
+          <span className={i === 0 ? 'text-white' : ''}>{it}</span>
+          <span aria-hidden="true" className="ml-10 text-slate-600">/</span>
+        </li>
+      ))}
+    </ul>
+  );
   return (
-    <div className={`mb-10 flex flex-wrap items-end justify-between gap-3 border-b ${border} pb-5`}>
-      <p className="font-display text-2xl font-semibold tracking-tight text-white">{title}</p>
-      {right && <p className={`font-data text-[11px] uppercase tracking-[0.18em] ${label}`}>{right}</p>}
+    <div className="graphite overflow-hidden border-y border-graphite">
+      <div className="marquee-track flex w-max py-2.5">
+        {row(false)}
+        {row(true)}
+      </div>
+    </div>
+  );
+}
+
+/* ----------------------------- section frame ------------------------------ */
+
+/**
+ * Numbered editorial section: a sticky index column ("03 — How it works")
+ * on the left, the content on the right. The title is the section's real
+ * heading text, rendered once.
+ */
+function Section({
+  id,
+  index,
+  label,
+  title,
+  right,
+  children,
+  tone = 'paper',
+}: {
+  id?: string;
+  index: string;
+  label: string;
+  title: string;
+  right?: string;
+  children: ReactNode;
+  tone?: 'paper' | 'deep';
+}) {
+  return (
+    <section id={id} className={`scroll-mt-24 border-t border-line px-4 py-16 md:px-8 md:py-24 ${tone === 'deep' ? 'bg-deep' : ''}`}>
+      <div className="mx-auto grid max-w-[1240px] gap-8 lg:grid-cols-12 lg:gap-10">
+        <div className="lg:col-span-3">
+          <div className="lg:sticky lg:top-24">
+            <p className="flex items-baseline gap-3 font-data text-[12px] uppercase tracking-[0.2em] text-slate-500">
+              <span className="text-[13px] text-signal-ink">{index}</span>
+              <span aria-hidden="true">—</span>
+              <span>{label}</span>
+            </p>
+            {right && <p className="mt-3 max-w-[28ch] font-data text-[11px] uppercase leading-relaxed tracking-[0.16em] text-slate-500">{right}</p>}
+          </div>
+        </div>
+        <div className="min-w-0 lg:col-span-9">
+          <h2 className="font-display text-[44px] leading-[0.95] tracking-[-0.02em] text-white md:text-[72px]">{title}</h2>
+          <div className="mt-10">{children}</div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** Hairline-framed figure with a mono caption bar, used for every artifact. */
+function Plate({ label, right, children, dark = false, className = '' }: { label: string; right?: string; children: ReactNode; dark?: boolean; className?: string }) {
+  return (
+    <div className={`${dark ? 'graphite' : 'bg-panel'} overflow-hidden border border-line ${className}`}>
+      <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
+        <span className="min-w-0 truncate font-data text-[11px] text-slate-400">{label}</span>
+        {right && <span className="shrink-0 font-data text-[10px] uppercase tracking-[0.18em] text-slate-500">{right}</span>}
+      </div>
+      {children}
     </div>
   );
 }
@@ -270,14 +364,14 @@ function CheckTranscript({ lang }: { lang: Lang }) {
   const step = steps[active];
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-panel">
-      <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2.5">
+    <div className="graphite overflow-hidden border border-graphite">
+      <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
         <span className="font-data text-[11px] text-slate-400">{ct.transcriptHeader}</span>
         <button
           type="button"
           onClick={() => setPlaying((p) => !p)}
           aria-label={playing ? ct.transcriptPause : ct.transcriptPlay}
-          className="btn-ghost flex h-7 w-7 items-center justify-center rounded-full"
+          className="btn-ghost flex h-7 w-7 items-center justify-center"
         >
           {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
         </button>
@@ -293,23 +387,17 @@ function CheckTranscript({ lang }: { lang: Lang }) {
                   setPlaying(false);
                 }}
                 className={`relative flex w-full items-center gap-3.5 px-5 py-4 text-left transition-colors duration-200 ${
-                  i === active ? 'bg-white/[0.045]' : 'hover:bg-white/[0.02]'
+                  i === active ? 'bg-white/[0.05]' : 'hover:bg-white/[0.025]'
                 }`}
               >
-                {i === active && (
-                  <span className="absolute left-0 top-0 h-full w-[3px] bg-[#0181FB]" />
-                )}
-                <span className="font-data text-xs text-slate-600">{String(i + 1).padStart(2, '0')}</span>
+                {i === active && <span className="absolute left-0 top-0 h-full w-[3px] bg-signal" />}
+                <span className="font-data text-xs text-slate-500">{String(i + 1).padStart(2, '0')}</span>
                 <span className={`font-data text-sm ${i === active ? 'text-white' : 'text-slate-400'}`}>{s.method}</span>
-                <span className={`ml-auto font-data text-xs ${i < active || !playing ? 'text-emerald-400' : 'text-slate-600'}`}>
+                <span className={`ml-auto font-data text-xs ${i < active || !playing ? 'text-emerald-400' : 'text-slate-500'}`}>
                   {i === active && playing ? ct.transcriptRunning : ct.transcriptPass}
                 </span>
                 {i === active && playing && (
-                  <span
-                    key={active}
-                    aria-hidden="true"
-                    className="step-progress absolute bottom-0 left-0 h-[2px] w-full bg-[#0181FB]"
-                  />
+                  <span key={active} aria-hidden="true" className="step-progress absolute bottom-0 left-0 h-[2px] w-full bg-signal" />
                 )}
               </button>
             </li>
@@ -323,9 +411,9 @@ function CheckTranscript({ lang }: { lang: Lang }) {
               {ct.transcriptLatency} <span className="text-slate-100">{step.latency} MS</span> · {ct.transcriptOutcome}{' '}
               <span className="text-emerald-400">{ct.transcriptSuccess}</span>
             </p>
-            <p className="mt-5 border-t border-line pt-3.5 text-[13px] leading-relaxed text-slate-500">
+            <p className="mt-5 border-t border-line pt-3.5 text-[13px] leading-relaxed text-slate-400">
               {ct.transcriptNote}
-              <span className="font-data text-slate-300">nodescope.health-snapshot.v1</span>.
+              <span className="font-data text-slate-200">nodescope.health-snapshot.v1</span>.
             </p>
           </div>
         </div>
@@ -336,54 +424,48 @@ function CheckTranscript({ lang }: { lang: Lang }) {
 
 /* ------------------------------- flow visual ------------------------------ */
 
-/**
- * One question, two answers. The console lane asks eth_blockNumber once and
- * keeps nothing; the NodeScope lane turns the same method into two kept
- * snapshots and a diff. All values are the real demo pair (22 Oct 2026).
- * Pure SVG/CSS — paths draw in when the visual scrolls into view.
- */
 function FlowVisual({ lang }: { lang: Lang }) {
   const fv = landingCopy[lang];
   const { ref, inView } = useInView<HTMLDivElement>(0.3);
   return (
-    <div ref={ref} className={`mt-12 overflow-hidden rounded-xl border border-line bg-panel ${inView ? 'flow-in' : ''}`}>
-      <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2.5">
-        <span className="font-data text-[11px] text-slate-400">{fv.flowHeader}</span>
-        <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">{fv.flowRight}</span>
+    <div ref={ref} className={`mt-10 overflow-hidden border border-line bg-panel ${inView ? 'flow-in' : ''}`}>
+      <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
+        <span className="min-w-0 truncate font-data text-[11px] text-slate-400">{fv.flowHeader}</span>
+        <span className="shrink-0 font-data text-[10px] uppercase tracking-[0.18em] text-slate-500">{fv.flowRight}</span>
       </div>
       <div className="grid divide-y divide-line md:grid-cols-2 md:divide-x md:divide-y-0">
-        {/* Console lane: one call, one answer, nothing kept. */}
         <div className="px-5 py-5">
           <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">{fv.flowConsoleLane}</p>
           <svg viewBox="0 0 320 44" className="mt-4 w-full" aria-hidden="true">
-            <path pathLength={100} className="flow-draw" d="M8 22 H104" fill="none" stroke="#64748b" strokeWidth="1.6" />
-            <line x1="128" y1="22" x2="312" y2="22" stroke="#475569" strokeWidth="1.2" strokeDasharray="3 6" opacity="0.5" />
-            <circle className="flow-node" style={{ transitionDelay: '500ms' }} cx="116" cy="22" r="5" fill="#0a1226" stroke="#94a3b8" strokeWidth="1.6" />
+            <path pathLength={100} className="flow-draw" d="M8 22 H104" fill="none" stroke={INK_MUTED} strokeWidth="1.6" />
+            <line x1="128" y1="22" x2="312" y2="22" stroke={INK_MUTED} strokeWidth="1.2" strokeDasharray="3 6" opacity="0.5" />
+            <circle className="flow-node" style={{ transitionDelay: '500ms' }} cx="116" cy="22" r="5" fill="#f8f5ee" stroke={INK_MUTED} strokeWidth="1.6" />
           </svg>
           <p className="mt-3 font-data text-[12.5px] leading-relaxed text-slate-400">
-            eth_blockNumber → <span className="text-slate-200">143,764</span>
-            <span className="text-slate-600">{fv.flowConsoleBody}</span>
+            eth_blockNumber → <span className="text-slate-100">143,764</span>
+            <span className="text-slate-500">{fv.flowConsoleBody}</span>
           </p>
         </div>
-        {/* NodeScope lane: same call, kept twice, diffed, exported. */}
         <div className="px-5 py-5">
           <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-300">{fv.flowNodescopeLane}</p>
           <svg viewBox="0 0 320 44" className="mt-4 w-full" aria-hidden="true">
-            <path pathLength={100} className="flow-draw" d="M8 22 H312" fill="none" stroke="#0181FB" strokeWidth="1.6" />
-            <circle className="flow-node" style={{ transitionDelay: '150ms' }} cx="8" cy="22" r="5" fill="#0a1226" stroke="#0181FB" strokeWidth="1.8" />
-            <circle className="flow-node" style={{ transitionDelay: '600ms' }} cx="140" cy="22" r="5" fill="#0a1226" stroke="#0181FB" strokeWidth="1.8" />
-            <circle className="flow-node" style={{ transitionDelay: '1000ms' }} cx="238" cy="22" r="5" fill="#0a1226" stroke="#34d399" strokeWidth="1.8" />
-            <circle className="flow-node" style={{ transitionDelay: '1350ms' }} cx="312" cy="22" r="5" fill="#0a1226" stroke="#e2e8f0" strokeWidth="1.8" />
+            <path pathLength={100} className="flow-draw" d="M8 22 H312" fill="none" stroke={SIGNAL} strokeWidth="1.6" />
+            <circle className="flow-node" style={{ transitionDelay: '150ms' }} cx="8" cy="22" r="5" fill="#f8f5ee" stroke={SIGNAL} strokeWidth="1.8" />
+            <circle className="flow-node" style={{ transitionDelay: '600ms' }} cx="140" cy="22" r="5" fill="#f8f5ee" stroke={SIGNAL} strokeWidth="1.8" />
+            <circle className="flow-node" style={{ transitionDelay: '1000ms' }} cx="238" cy="22" r="5" fill="#f8f5ee" stroke="#15803d" strokeWidth="1.8" />
+            <circle className="flow-node" style={{ transitionDelay: '1350ms' }} cx="312" cy="22" r="5" fill="#16140f" stroke="#16140f" strokeWidth="1.8" />
           </svg>
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 font-data text-[11px] text-slate-500">
-            <span>A · <span className="text-slate-200">143,764</span></span>
-            <span>B · <span className="text-slate-200">143,776</span></span>
+            <span>
+              A · <span className="text-slate-100">143,764</span>
+            </span>
+            <span>
+              B · <span className="text-slate-100">143,776</span>
+            </span>
             <span className="text-emerald-400">{fv.flowDelta}</span>
             <span className="text-slate-300">{fv.flowReportExported}</span>
           </div>
-          <p className="mt-2 text-[12.5px] leading-relaxed text-slate-500">
-            {fv.flowNodescopeBody}
-          </p>
+          <p className="mt-2 text-[12.5px] leading-relaxed text-slate-500">{fv.flowNodescopeBody}</p>
         </div>
       </div>
     </div>
@@ -395,51 +477,20 @@ function FlowVisual({ lang }: { lang: Lang }) {
 function EvidenceGrid({ lang }: { lang: Lang }) {
   const { ref, inView } = useInView<HTMLDivElement>(0.35);
   return (
-    <div
-      ref={ref}
-      className={`grid grid-cols-12 gap-1.5 ${inView ? 'cells-in' : ''}`}
-      role="img"
-      aria-label={landingCopy[lang].evidenceGridAria}
-    >
+    <div ref={ref} className={`grid grid-cols-12 gap-1 ${inView ? 'cells-in' : ''}`} role="img" aria-label={landingCopy[lang].evidenceGridAria}>
       {Array.from({ length: 48 }).map((_, i) => (
         <span
           key={i}
-          className="evidence-cell h-6 rounded-[3px]"
+          className="evidence-cell h-7"
           style={{
             transitionDelay: `${i * 18}ms`,
-            backgroundColor:
-              i === 47 ? 'rgba(52, 211, 153, 0.85)' : `rgba(1, 129, 251, ${0.1 + (i / 47) * 0.5})`,
+            backgroundColor: i === 47 ? '#15803d' : `rgba(255, 91, 20, ${0.12 + (i / 47) * 0.7})`,
           }}
         />
       ))}
     </div>
   );
 }
-
-/* ------------------------------ HUD hero arc ------------------------------ */
-
-/**
- * Receipt HUD hero arc: one flat blue arc with a single dot travelling along
- * it. It is ambient decoration only, it carries no data, and it never implies
- * a live block height. The live number stays in the Live Readout card, which
- * is fetched once when the page loads.
- */
-function HudArc() {
-  return (
-    <svg
-      viewBox="0 0 1200 240"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-      className="hud-arc pointer-events-none absolute inset-x-0 top-0 h-56 w-full opacity-60"
-    >
-      <path d="M -40 240 Q 600 -40 1240 240" fill="none" stroke="#0181FB" strokeOpacity="0.35" strokeWidth="1" />
-      <circle r="3.5" fill="#0181FB">
-        <animateMotion dur="14s" repeatCount="indefinite" path="M -40 240 Q 600 -40 1240 240" />
-      </circle>
-    </svg>
-  );
-}
-
 
 /* --------------------------- scroll progress ------------------------------ */
 
@@ -455,23 +506,16 @@ function ScrollProgress() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
   return (
-    <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-[100] h-[2px] bg-black/40">
-      <div className="h-full bg-[#0181FB]" style={{ width: `${progress}%` }} />
+    <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-[100] h-[2px] bg-transparent">
+      <div className="h-full bg-signal" style={{ width: `${progress}%` }} />
     </div>
   );
 }
 
 /* ------------------------------ word fill --------------------------------- */
 
-/**
- * Scroll-scrubbed word fill for the problem statement. Pure presentation:
- * the full sentence is also rendered sr-only, so the text itself never
- * changes, only how brightly each word is lit as the reader scrolls.
- */
 function WordFill({ sentence }: { sentence: string }) {
   const ref = useRef<HTMLParagraphElement>(null);
-  // Reduced-motion readers see the full sentence at once, decided at
-  // first render instead of an effect that sets state after mount.
   const [progress, setProgress] = useState(() =>
     typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : 0,
   );
@@ -483,9 +527,6 @@ function WordFill({ sentence }: { sentence: string }) {
       const el = ref.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      // Words finish lighting once the heading's center reaches mid-viewport:
-      // a fixed 35%-of-viewport scroll window, so a tall heading no longer
-      // needs to be scrolled far past before its last word clears.
       const center = rect.top + rect.height / 2;
       const p = (window.innerHeight * 0.85 - center) / (window.innerHeight * 0.35);
       setProgress(Math.min(1, Math.max(0, p)));
@@ -496,15 +537,11 @@ function WordFill({ sentence }: { sentence: string }) {
   }, []);
   const words = sentence.split(' ');
   return (
-    <p ref={ref} aria-hidden="true" className="font-display text-3xl font-semibold leading-tight tracking-tight md:text-[40px]">
+    <p ref={ref} aria-hidden="true" className="font-display text-[40px] italic leading-[1.02] tracking-[-0.01em] md:text-[56px]">
       {words.map((w, i) => {
         const lit = progress * words.length > i;
         return (
-          <span
-            key={i}
-            style={{ transition: 'color 0.3s ease, filter 0.3s ease', filter: lit ? 'blur(0px)' : 'blur(1.5px)' }}
-            className={lit ? 'text-white' : 'text-slate-600'}
-          >
+          <span key={i} style={{ transition: 'color 0.3s ease' }} className={lit ? 'text-white' : 'text-slate-700'}>
             {w}{' '}
           </span>
         );
@@ -512,7 +549,6 @@ function WordFill({ sentence }: { sentence: string }) {
     </p>
   );
 }
-
 
 /* ------------------------------ typewriter -------------------------------- */
 /**
@@ -526,36 +562,36 @@ const JSON_TOKENS: { t: string; c: string }[] = [
   { t: "\n  ", c: "" },
   { t: '"schema"', c: "text-slate-100" },
   { t: ": ", c: "text-slate-500" },
-  { t: '"nodescope.diagnostic-report.v1"', c: "text-sky-300/90" },
+  { t: '"nodescope.diagnostic-report.v1"', c: "text-signal-soft" },
   { t: ",", c: "text-slate-500" },
   { t: "\n  ", c: "" },
   { t: '"endpoint"', c: "text-slate-100" },
   { t: ": ", c: "text-slate-500" },
-  { t: '"https://test-evm-rpc-v3.portaldot.dev"', c: "text-sky-300/90" },
+  { t: '"https://test-evm-rpc-v3.portaldot.dev"', c: "text-signal-soft" },
   { t: ",", c: "text-slate-500" },
   { t: "\n  ", c: "" },
   { t: '"chainId"', c: "text-slate-100" },
   { t: ": ", c: "text-slate-500" },
-  { t: '"0x190f1ca9 (420420777)"', c: "text-sky-300/90" },
+  { t: '"0x190f1ca9 (420420777)"', c: "text-signal-soft" },
   { t: ",", c: "text-slate-500" },
   { t: "\n  ", c: "" },
   { t: '"summary"', c: "text-slate-100" },
   { t: ": ", c: "text-slate-500" },
   { t: '{ "total":', c: "text-slate-500" },
-  { t: " 13", c: "text-amber-200/90" },
+  { t: " 13", c: "text-emerald-300" },
   { t: ', "success":', c: "text-slate-500" },
-  { t: " 13", c: "text-amber-200/90" },
+  { t: " 13", c: "text-emerald-300" },
   { t: ', "errors":', c: "text-slate-500" },
-  { t: " 0 ", c: "text-amber-200/90" },
+  { t: " 0 ", c: "text-emerald-300" },
   { t: "}", c: "text-slate-500" },
   { t: ",", c: "text-slate-500" },
   { t: "\n  ", c: "" },
   { t: '"findings"', c: "text-slate-100" },
   { t: ": ", c: "text-slate-500" },
   { t: '[{ "ruleId":', c: "text-slate-500" },
-  { t: ' "chain-id-verified"', c: "text-sky-300/90" },
+  { t: ' "chain-id-verified"', c: "text-signal-soft" },
   { t: ', "severity":', c: "text-slate-500" },
-  { t: ' "info" ', c: "text-sky-300/90" },
+  { t: ' "info" ', c: "text-signal-soft" },
   { t: "}]", c: "text-slate-500" },
   { t: "\n", c: "" },
   { t: "}", c: "text-slate-500" },
@@ -603,7 +639,7 @@ function TypewriterJson({ replayLabel }: { replayLabel: string }) {
       <pre aria-hidden="true" className="overflow-x-auto p-5 font-mono text-[12.5px] leading-relaxed text-slate-400">
         <code>
           {parts}
-          {inView && !done ? <span className="animate-pulse text-sky-300">▍</span> : null}
+          {inView && !done ? <span className="animate-pulse text-signal">▍</span> : null}
         </code>
       </pre>
       <pre className="sr-only">{JSON_PLAIN}</pre>
@@ -615,7 +651,7 @@ function TypewriterJson({ replayLabel }: { replayLabel: string }) {
               setCount(0);
               setRun((r) => r + 1);
             }}
-            className="font-data text-[11px] uppercase tracking-[0.16em] text-sky-300 hover:text-sky-200"
+            className="font-data text-[11px] uppercase tracking-[0.16em] text-signal-ink hover:text-white"
           >
             ↻ {replayLabel}
           </button>
@@ -625,98 +661,6 @@ function TypewriterJson({ replayLabel }: { replayLabel: string }) {
   );
 }
 
-/* ------------------------------ packet flow -------------------------------- */
-
-/**
- * Packet flow: three dots travelling from YOU to NODE to RECEIPT along one
- * line, labelled with real method names. Pure decoration: it carries no live
- * data, no block height, and no result, and the caption says so.
- */
-function PacketFlow({ lang }: { lang: Lang }) {
-  const pk = landingCopy[lang];
-  return (
-    <div aria-hidden="true" className="mb-6 overflow-hidden rounded-[20px] border border-line bg-panel/70 px-6 py-5">
-      <svg viewBox="0 0 600 60" preserveAspectRatio="none" className="h-[60px] w-full">
-        <path d="M 20 30 H 580" fill="none" stroke="#1e293b" strokeWidth="1" />
-        <circle r="3" fill="#0181FB">
-          <animateMotion dur="6s" repeatCount="indefinite" path="M 20 30 H 580" />
-        </circle>
-        <circle r="3" fill="#38bdf8">
-          <animateMotion dur="8s" begin="1s" repeatCount="indefinite" path="M 20 30 H 580" />
-        </circle>
-        <circle r="3" fill="#34d399">
-          <animateMotion dur="10s" begin="2s" repeatCount="indefinite" path="M 20 30 H 580" />
-        </circle>
-      </svg>
-      <div className="flex justify-between font-data text-[10px] uppercase tracking-[0.2em] text-slate-500">
-        <span>{pk.packetYou}</span>
-        <span className="text-slate-400">eth_chainId · eth_blockNumber · net_version</span>
-        <span>{pk.packetReceipt}</span>
-      </div>
-      <p className="mt-2 text-center font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">
-        {pk.packetNote}
-      </p>
-    </div>
-  );
-}
-
-
-/* --------------------------- full background ------------------------------- */
-
-/**
- * Full-page background animation, built from cheap parts:
- * radial-gradient glow orbs (no filter blur, so moving them is just
- * compositing), two SVG ribbon paths drifting on transform, and one light
- * streak sweeping across. A rAF-throttled scroll listener only shifts the
- * ribbon layer for parallax, it never polls and never fetches anything.
- * It is decoration only, carries no data, and sits behind all content.
- */
-function FullBackground() {
-  const [scroll, setScroll] = useState(0);
-  useEffect(() => {
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        setScroll(window.scrollY);
-        ticking = false;
-      });
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-  return (
-    <div aria-hidden="true" className="ribbon-bg pointer-events-none fixed inset-0 z-0 overflow-hidden">
-      <div
-        className="ribbon-orb absolute -left-40 top-[10%] h-[560px] w-[560px] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(1, 129, 251, 0.16), transparent 70%)' }}
-      />
-      <div
-        className="ribbon-orb ribbon-orb-2 absolute -right-48 top-[45%] h-[640px] w-[640px] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(56, 189, 248, 0.12), transparent 70%)' }}
-      />
-      <div
-        className="ribbon-orb ribbon-orb-3 absolute left-[30%] top-[80%] h-[520px] w-[520px] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(30, 50, 90, 0.35), transparent 70%)' }}
-      />
-      <div className="absolute inset-x-0 top-[18%]" style={{ transform: `translateY(${scroll * 0.08}px)` }}>
-        <svg viewBox="0 0 1440 320" preserveAspectRatio="none" className="ribbon-path h-[320px] w-[110%] -translate-x-[5%]">
-          <defs>
-            <linearGradient id="ribbonGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#0181FB" stopOpacity="0" />
-              <stop offset="50%" stopColor="#0181FB" stopOpacity="0.35" />
-              <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <path d="M -100 160 Q 240 40 480 160 T 960 160 T 1540 160" fill="none" stroke="url(#ribbonGrad)" strokeWidth="1.5" />
-          <path d="M -100 210 Q 240 90 480 210 T 960 210 T 1540 210" fill="none" stroke="url(#ribbonGrad)" strokeWidth="1" strokeOpacity="0.5" />
-        </svg>
-      </div>
-      <div className="ribbon-streak absolute left-0 top-[62%] h-[2px] w-1/3 bg-gradient-to-r from-transparent via-[#0181FB]/70 to-transparent" />
-    </div>
-  );
-}
 
 /* ---------------------------------- page ---------------------------------- */
 
@@ -728,6 +672,8 @@ export function Landing() {
     storeLang(l);
   };
   const t = landingCopy[lang];
+  const live = useLiveChain();
+  const sl = t.sectionLabels;
 
   useEffect(() => {
     if (lightbox === null) return;
@@ -738,17 +684,21 @@ export function Landing() {
     return () => window.removeEventListener('keydown', onKey);
   }, [lightbox]);
 
+  const toneClass = (tone: string) =>
+    tone === 'emerald'
+      ? 'border-emerald-500/50 text-emerald-300'
+      : tone === 'amber'
+        ? 'border-amber-500/50 text-amber-300'
+        : tone === 'sky'
+          ? 'border-signal/50 text-signal-ink'
+          : 'border-line text-slate-300';
+
   return (
-    <div className="landing-root min-h-screen bg-ink font-sans text-slate-200 antialiased selection:bg-[#8C1DEF]/40 selection:text-white">
+    <div className="paper landing-root min-h-screen bg-ink font-sans text-slate-200 antialiased">
       <IntroSplash scope="landing" />
-      {/* Scroll progress lives here, as a direct child of the root: every
-          section below is position:relative + z-index:1, which traps any
-          fixed element rendered inside it — that is how the bar used to
-          disappear behind later sections while scrolling. At z-[100] it
-          stays above the nav (z-40), modals (z-50), and every section. */}
+      {/* Scroll progress: direct child of the root so no section's stacking
+          context can trap it (regression-tested). */}
       <ScrollProgress />
-      <FullBackground />
-      {/* -------------------------------- nav ------------------------------- */}
       <SiteHeader
         nav={t.nav}
         lang={lang}
@@ -762,615 +712,641 @@ export function Landing() {
         menuToggleAria={t.menuToggleAria}
       />
 
-      <main>
-      {/* -------------------------------- hero ------------------------------ */}
-      <section className="relative overflow-hidden px-4 pb-24 pt-32 md:pt-40">
-        <HudArc />
-        <div aria-hidden="true" className="pointer-events-none absolute -top-32 right-[-10%] h-[480px] w-[480px] rounded-full bg-[#0181FB]/[0.14] blur-[120px]" />
-        <div aria-hidden="true" className="pointer-events-none absolute bottom-0 left-[-10%] h-[360px] w-[360px] rounded-full bg-[#0181FB]/[0.08] blur-[100px]" />
-        <div className="relative mx-auto grid max-w-6xl items-start gap-12 lg:grid-cols-12">
-          <div className="stagger lg:col-span-7">
-            <p className="inline-flex items-center gap-2 rounded-full border border-line bg-black/30 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.22em] text-slate-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#0181FB]" />
-              {t.heroPill}
-            </p>
-            <h1 className="mt-7 font-display text-[52px] font-semibold leading-[0.98] tracking-tight text-white md:text-[88px]">
-              {t.heroLine1}
-              <br />
-              NodeScope{' '}
-              <span className="font-data font-medium tracking-tight text-[#0181FB]" style={{ textShadow: '0 0 32px rgba(1, 129, 251, 0.45)' }}>
-                {t.heroAccent}<span className="cursor-blink">▊</span>
-              </span>
-            </h1>
-            <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-400 md:text-lg">
-              {t.heroParagraph}
-              <span className="text-slate-100">{t.heroParagraphEmphasis}</span>{t.heroParagraphTail}
-            </p>
-            <div className="mt-9 flex flex-wrap items-center gap-3.5">
-              <a href={APP_URL} className="btn-primary inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-[15px] font-semibold">
-                {t.launchApp}
-                <ArrowRight className="h-4.5 w-4.5" />
-              </a>
-              <a href={DEMO_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-2 py-3.5 text-[15px] font-medium text-slate-300 underline decoration-slate-600 underline-offset-4 transition-colors hover:text-white">
-                {t.watchDemo}
-                <ArrowUpRight className="h-4.5 w-4.5" />
-              </a>
-            </div>
-            <p className="mt-6 font-data text-[11px] uppercase tracking-[0.16em] text-slate-600">
-              {t.heroFactLine}
-            </p>
-            <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-400">
-              {t.heroPillarLine}
-            </p>
-            <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-t border-line pt-4 font-data text-[10px] uppercase tracking-[0.22em] text-slate-500">
-              {t.heroMeta.map((m) => (
-                <span key={m}>{m}</span>
-              ))}
-            </div>
-          </div>
+      <main className="pt-[57px]">
+        <ChainMarquee lang={lang} state={live} />
 
-          <div className="stagger relative lg:col-span-5">
-            <span aria-hidden="true" className="absolute -left-2 -top-2 font-data text-sm text-[#0181FB]">+</span>
-            <span aria-hidden="true" className="absolute -right-2 -top-2 font-data text-sm text-[#0181FB]">+</span>
-            <LiveReadout lang={lang} />
-            <div className="relative z-10 mx-3 -mt-3">
-              <figure className="hero-media relative overflow-hidden rounded-[24px] border border-line bg-panel shadow-[0_32px_90px_rgba(0,0,0,0.55),0_0_60px_rgba(1,129,251,0.12)] transition-transform duration-500 [transform:perspective(1200px)_rotateY(-6deg)_rotateX(1.5deg)] hover:[transform:perspective(1200px)_rotateY(0deg)_rotateX(0deg)]" style={{ transitionTimingFunction: 'var(--ease-out)' }}>
-                <img src="/screenshots/03-snapshot-comparison.jpg" alt={t.heroFigureCaption} fetchPriority="high" className="aspect-[16/9] w-full object-cover object-top" />
-                <div aria-hidden="true" className="scan-line pointer-events-none absolute inset-x-0 top-0 z-20 h-20" />
-                <figcaption className="border-t border-line bg-black/30 px-4 py-2.5 font-data text-[10px] uppercase tracking-[0.16em] text-slate-400">
-                  {t.heroFigureCaption}
-                </figcaption>
-              </figure>
-              <span aria-hidden="true" className="absolute -left-4 top-6 rounded-full border border-line bg-black/80 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-slate-200 shadow-lg">{t.heroChipEvm}</span>
-              <span aria-hidden="true" className="absolute -right-3 bottom-12 rounded-full border border-line bg-black/80 px-3 py-1.5 font-data text-[10px] uppercase tracking-[0.18em] text-slate-200 shadow-lg">{t.heroChipSchema}</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ------------------------------ pillars ------------------------------- */}
-      <section className="cv-auto border-b border-line px-4 py-16">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="font-display text-3xl font-semibold tracking-tight text-white md:text-4xl">{t.pillarSectionTitle}</h2>
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400 md:text-base">{t.pillarSectionIntro}</p>
-          <div className="mt-8">
-            <PillarCards health={t.pillarHealth} fees={t.pillarFees} />
-          </div>
-          <div className="mt-8 rounded-3xl border border-amber-400/30 bg-amber-400/[0.05] p-6 md:p-7">
-            <h3 className="font-display text-xl font-semibold tracking-tight text-white">{t.feeBlockTitle}</h3>
-            <p className="mt-2.5 max-w-3xl text-sm leading-relaxed text-slate-300">{t.feeBlockBody}</p>
-            <div className="mt-5 flex flex-wrap gap-x-8 gap-y-2 font-data text-sm tabular-nums">
-              <span className="text-[#7DB4FF]">{t.feeBlockEvm}</span>
-              <span className="text-amber-300">{t.feeBlockNative}</span>
-            </div>
-            <p className="mt-4 text-xs text-slate-400">{t.feeBlockFootnote}</p>
-            <a href="/app/fee-lab" className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-slate-200 underline decoration-slate-600 underline-offset-4 transition-colors hover:text-white">
-              {t.feeBlockCta} →
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* --------------------------- announcement banner ----------------------- */}
-      <div className="border-y border-line bg-black/30 px-4 py-3">
-        <p className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center font-data text-[11px] uppercase tracking-[0.18em] text-slate-400">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-          </span>
-          {t.banner}
-        </p>
-      </div>
-
-      {/* ------------------------------- stats ------------------------------ */}
-      <section className="cv-auto border-y border-line bg-deep/60 px-4 py-14">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-4">
-          {t.stats.map((s, i) => (
-            <Reveal key={s.label} delay={i * 80}>
-              <p className="font-data text-3xl font-semibold text-white md:text-4xl">{s.value}</p>
-              <p className="mt-2 font-data text-[11px] uppercase tracking-[0.2em] text-slate-300">{s.label}</p>
-              <p className="mt-1.5 max-w-[26ch] text-xs leading-relaxed text-slate-500">{s.sub}</p>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* ------------------------------ problem ----------------------------- */}
-      <section id="problem" className="cv-auto scroll-mt-28 px-4 py-16">
-        <div className="mx-auto max-w-6xl">
-          <Reveal>
-            <SectionHeading title={t.problemTitle} right={t.problemRight} />
-            <div className="grid gap-10 md:grid-cols-2">
-              <h2 className="sr-only">{t.problemStatement}</h2>
-              <WordFill sentence={t.problemStatement} />
-              <div className="space-y-4 text-base leading-[1.85] text-slate-400">
-                <p>
-                  {t.problemPara1a}<span className="text-slate-200">{t.problemPara1Emphasis}</span>{t.problemPara1b}
-                </p>
-                <p>
-                  {t.problemPara2}
-                </p>
-                <div className="space-y-2.5 pt-2 font-data text-[13px]">
-                  <p className="flex gap-3"><span className="shrink-0 text-slate-600">{t.consoleLabel}</span> <span>{t.consoleQuote}</span></p>
-                  <p className="flex gap-3"><span className="shrink-0 font-semibold text-slate-100">{t.nodescopeLabel}</span> <span className="text-slate-200">{t.nodescopeQuote}</span></p>
-                </div>
+        {/* -------------------------------- hero ------------------------------ */}
+        <section className="hero-grid relative px-4 pb-16 pt-12 md:px-8 md:pb-24 md:pt-20">
+          <div className="relative mx-auto grid max-w-[1240px] items-start gap-12 lg:grid-cols-12">
+            <div className="stagger min-w-0 lg:col-span-7">
+              <p className="flex items-center gap-3 font-data text-[11px] uppercase tracking-[0.2em] text-slate-500">
+                <span className="text-signal-ink">00</span>
+                <span aria-hidden="true">—</span>
+                <span>{t.heroPill}</span>
+              </p>
+              <h1 className="mt-8 font-display text-[64px] leading-[0.9] tracking-[-0.03em] text-white sm:text-[88px] lg:text-[124px]">
+                {t.heroLine1}
+                <br />
+                NodeScope{' '}
+                <span className="italic text-signal-ink">
+                  {t.heroAccent}
+                  <span aria-hidden="true" className="cursor-blink not-italic">_</span>
+                </span>
+              </h1>
+              <p className="mt-8 max-w-[56ch] text-[17px] leading-[1.6] text-slate-400 md:text-lg">
+                {t.heroParagraph}
+                <span className="font-medium text-white underline decoration-signal decoration-2 underline-offset-4">{t.heroParagraphEmphasis}</span>
+                {t.heroParagraphTail}
+              </p>
+              <div className="mt-10 flex flex-wrap items-center gap-3">
+                <a href={APP_URL} className="btn-primary inline-flex items-center gap-2.5 px-6 py-3.5 text-[15px] font-semibold">
+                  {t.launchApp}
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+                <a href={JUDGES_URL} className="btn-ghost inline-flex items-center gap-2 px-5 py-3.5 text-[15px] font-medium">
+                  {lang === 'id' ? 'Halaman juri' : 'For judges'}
+                  <ArrowUpRight className="h-4 w-4" />
+                </a>
+                <a href={DEMO_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-2 py-3.5 text-[15px] font-medium text-slate-300 underline decoration-slate-700 underline-offset-4 transition-colors hover:text-white">
+                  {t.watchDemo}
+                  <ArrowUpRight className="h-4 w-4" />
+                </a>
               </div>
-            </div>
-            <div className="mt-10 rounded-xl border border-line bg-panel p-6">
-              <h3 className="font-display text-lg font-semibold text-white">{t.whyTitle}</h3>
-              <ul className="mt-3 space-y-2.5">
-                {t.whyItems.map((item) => (
-                  <li key={item} className="flex gap-3 text-[15px] leading-[1.85] text-slate-400">
-                    <span aria-hidden="true" className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#0181FB]" />
-                    <span>{item}</span>
+              <p className="mt-10 max-w-[60ch] border-t border-line pt-4 text-sm leading-relaxed text-slate-400">{t.heroPillarLine}</p>
+              <p className="mt-3 font-data text-[11px] uppercase leading-relaxed tracking-[0.16em] text-slate-500">{t.heroFactLine}</p>
+              <ul className="mt-4 flex flex-wrap gap-2 font-data text-[10px] uppercase tracking-[0.18em] text-slate-400">
+                {t.heroMeta.map((m) => (
+                  <li key={m} className="border border-line px-2 py-1">
+                    {m}
                   </li>
                 ))}
               </ul>
             </div>
-            <FlowVisual lang={lang} />
-          </Reveal>
-        </div>
-      </section>
 
-      {/* -------------------------------- how ------------------------------- */}
-      <section id="how" className="cv-auto scroll-mt-28 px-4 py-16">
-        <div className="mx-auto max-w-6xl">
-          <Reveal>
-            <SectionHeading title={t.howTitle} right={t.howRight} />
-            <PacketFlow lang={lang} />
-            <div className="overflow-hidden rounded-xl border border-line">
-              {t.howSteps.map((s) => (
-                <div key={s.title} className="grid gap-2 border-b border-line bg-panel px-6 py-6 last:border-b-0 md:grid-cols-12">
-                  <h3 className="font-display text-lg font-semibold text-white md:col-span-4">{s.title}</h3>
-                  <p className="text-sm leading-relaxed text-slate-400 md:col-span-8">{s.body}</p>
+            <div className="stagger min-w-0 lg:col-span-5 lg:pt-14">
+              <LiveReadout lang={lang} state={live} />
+              <figure className="mt-6 border border-line bg-panel">
+                <div className="hero-media relative overflow-hidden">
+                  <img src="/screenshots/03-snapshot-comparison.jpg" alt={t.heroFigureCaption} fetchPriority="high" className="plate aspect-[16/9] w-full object-cover object-top" />
                 </div>
-              ))}
+                <figcaption className="flex items-center justify-between gap-3 border-t border-line px-4 py-2.5 font-data text-[10px] uppercase tracking-[0.16em] text-slate-500">
+                  <span>
+                    <span className="text-signal-ink">Fig. 01</span> — {t.heroFigureCaption}
+                  </span>
+                  <span className="hidden shrink-0 sm:inline" aria-hidden="true">
+                    {t.heroChipEvm} · {t.heroChipSchema}
+                  </span>
+                </figcaption>
+              </figure>
             </div>
-            <div className="mt-6 rounded-xl border border-line bg-panel p-6">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 className="font-display text-lg font-semibold text-white">{t.archTitle}</h3>
-                <span className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">{t.archRight}</span>
+          </div>
+        </section>
+
+        {/* ------------------------------- stats ------------------------------ */}
+        <section className="border-y border-line bg-panel px-4 md:px-8">
+          <div className="mx-auto grid max-w-[1240px] grid-cols-2 lg:grid-cols-4">
+            {t.stats.map((s, i) => (
+              <Reveal key={s.label} delay={i * 70} className={`border-line py-8 pr-4 ${i % 2 === 1 ? 'border-l pl-4 lg:pl-6' : ''} ${i >= 2 ? 'border-t lg:border-t-0' : ''} ${i === 2 ? 'lg:border-l lg:pl-6' : ''}`}>
+                <p className="font-data text-[34px] font-medium leading-none tracking-[-0.04em] text-white md:text-[52px]">{s.value}</p>
+                <p className="mt-3 font-data text-[11px] uppercase tracking-[0.2em] text-signal-ink">{s.label}</p>
+                <p className="mt-1.5 max-w-[30ch] text-xs leading-relaxed text-slate-500">{s.sub}</p>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+
+        <div className="border-b border-line px-4 py-3 md:px-8">
+          <p className="mx-auto flex max-w-[1240px] flex-wrap items-center gap-x-3 gap-y-1 font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">
+            <span aria-hidden="true" className="inline-block h-1.5 w-1.5 bg-emerald-500" />
+            {t.banner}
+          </p>
+        </div>
+
+        {/* ------------------------------ pillars ----------------------------- */}
+        <Section index="01" label={sl.pillars} title={t.pillarSectionTitle}>
+          <p className="max-w-[62ch] text-[17px] leading-relaxed text-slate-400">{t.pillarSectionIntro}</p>
+          <div className="mt-10">
+            <PillarCards health={t.pillarHealth} fees={t.pillarFees} />
+          </div>
+          <div className="graphite mt-10 border border-graphite p-6 md:p-10">
+            <div className="flex flex-wrap items-baseline justify-between gap-3">
+              <h3 className="font-display text-[30px] leading-tight text-white md:text-[40px]" style={{ fontFamily: 'var(--font-serif)' }}>
+                {t.feeBlockTitle}
+              </h3>
+              <span className="font-data text-[10px] uppercase tracking-[0.2em] text-slate-500">Fee Lab · 26 Oct 2026</span>
+            </div>
+            <div className="mt-8 grid gap-px bg-line sm:grid-cols-2">
+              <div className="bg-ink p-5">
+                <p className="font-data text-[11px] uppercase tracking-[0.2em] text-slate-400">Fee-only</p>
+                <p className="mt-2 font-data text-[56px] font-medium leading-none tracking-[-0.05em] text-slate-500 line-through decoration-signal decoration-[3px] md:text-[88px]">~804×</p>
+                <p className="mt-2 text-xs text-slate-500">EVM ÷ native partialFee — the headline denominator</p>
               </div>
-              <ol className="mt-4">
-                {t.archNodes.map((node, i) => (
-                  <li key={node} className="flex gap-3">
-                    <span className="flex flex-col items-center">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#0181FB]/50 bg-[#0181FB]/10 font-data text-[11px] text-[#7DB4FF]">{i + 1}</span>
-                      {i < t.archNodes.length - 1 && <span aria-hidden="true" className="w-px flex-1 bg-line" />}
-                    </span>
-                    <span className="pb-4 text-sm leading-relaxed text-slate-300">{node}</span>
+              <div className="bg-ink p-5">
+                <p className="font-data text-[11px] uppercase tracking-[0.2em] text-signal-ink">All-in</p>
+                <p className="mt-2 font-data text-[56px] font-medium leading-none tracking-[-0.05em] text-white md:text-[88px]">1.016×</p>
+                <p className="mt-2 text-xs text-slate-400">EVM ÷ (native fee + refundable storage deposit)</p>
+              </div>
+            </div>
+            <p className="mt-6 max-w-[70ch] text-sm leading-relaxed text-slate-300">{t.feeBlockBody}</p>
+            <div className="mt-5 flex flex-wrap gap-x-8 gap-y-2 font-data text-[13px] tabular-nums">
+              <span className="text-white">{t.feeBlockEvm}</span>
+              <span className="text-signal-soft">{t.feeBlockNative}</span>
+            </div>
+            <p className="mt-4 text-xs text-slate-500">{t.feeBlockFootnote}</p>
+            <a href="/app/fee-lab" className="mt-6 inline-flex items-center gap-2 font-data text-[12px] uppercase tracking-[0.16em] text-signal-ink underline decoration-signal/50 underline-offset-4 hover:text-white">
+              {t.feeBlockCta} →
+            </a>
+          </div>
+        </Section>
+
+        {/* --------------------------- health score --------------------------- */}
+        <Section id="score" index="02" label={sl.score} title={t.scoreTitle} right={t.scoreRight}>
+          <p className="max-w-[62ch] text-[17px] leading-relaxed text-slate-400">{t.scoreIntro}</p>
+          <div className="mt-10 grid gap-8 xl:grid-cols-12">
+            <div className="xl:col-span-4">
+              <div className="graphite border border-graphite p-6">
+                <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-400">{HEALTH_SCORE_FORMULA}</p>
+                <p className="mt-4 font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">{lang === 'id' ? 'Total bobot' : 'Total weight'}</p>
+                <p className="mt-1 font-data text-[96px] font-medium leading-none tracking-[-0.06em] text-white">
+                  Σ100
+                </p>
+                <p className="mt-3 font-data text-[11px] uppercase tracking-[0.16em] text-slate-400">30 + 15 + 20 + 20 + 15</p>
+                <div className="mt-5 flex h-3 w-full" aria-hidden="true">
+                  {t.scoreRows.map((r, i) => (
+                    <span key={r.label} style={{ width: `${r.weight}%`, opacity: 1 - i * 0.16 }} className="h-full border-r border-ink bg-signal last:border-r-0" />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="min-w-0 xl:col-span-8">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-white font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                    <th className="py-2.5 pr-4 font-medium">{t.scoreHeaders[0]}</th>
+                    <th className="py-2.5 pr-4 text-right font-medium">{t.scoreHeaders[1]}</th>
+                    <th className="hidden py-2.5 font-medium sm:table-cell">{t.scoreHeaders[2]}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {t.scoreRows.map((r, i) => (
+                    <tr key={r.label} className="align-top">
+                      <td className="py-3.5 pr-4">
+                        <span className="mr-2 font-data text-[11px] text-slate-500">{String(i + 1).padStart(2, '0')}</span>
+                        <span className="text-white">{r.label}</span>
+                        <p className="mt-1 text-[13px] leading-relaxed text-slate-500 sm:hidden">{r.rule}</p>
+                      </td>
+                      <td className="py-3.5 pr-4 text-right font-data text-lg tabular-nums text-white">{r.weight}</td>
+                      <td className="hidden py-3.5 text-[13px] leading-relaxed text-slate-400 sm:table-cell">{r.rule}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="mt-5 border border-line bg-panel px-4 py-3 font-data text-[12px] leading-relaxed text-slate-300">{t.scoreFormula}</p>
+              <p className="mt-3 text-[13px] leading-relaxed text-slate-500">{t.scoreFootnote}</p>
+              <a href="/docs#health-score" className="mt-5 inline-flex items-center gap-2 font-data text-[12px] uppercase tracking-[0.16em] text-signal-ink underline decoration-signal/50 underline-offset-4 hover:text-white">
+                {t.scoreCta} →
+              </a>
+            </div>
+          </div>
+        </Section>
+
+        {/* ------------------------------ problem ----------------------------- */}
+        <Section id="problem" index="03" label={sl.problem} title={t.problemTitle} right={t.problemRight}>
+          <Reveal>
+            <div className="grid gap-10 md:grid-cols-2">
+              <h3 className="sr-only">{t.problemStatement}</h3>
+              <WordFill sentence={t.problemStatement} />
+              <div className="space-y-4 text-base leading-[1.75] text-slate-400">
+                <p>
+                  {t.problemPara1a}
+                  <span className="text-white">{t.problemPara1Emphasis}</span>
+                  {t.problemPara1b}
+                </p>
+                <p>{t.problemPara2}</p>
+                <div className="space-y-2.5 border-l-2 border-signal pl-4 pt-1 font-data text-[13px]">
+                  <p className="flex gap-3">
+                    <span className="shrink-0 text-slate-500">{t.consoleLabel}</span> <span>{t.consoleQuote}</span>
+                  </p>
+                  <p className="flex gap-3">
+                    <span className="shrink-0 font-semibold text-white">{t.nodescopeLabel}</span> <span className="text-slate-200">{t.nodescopeQuote}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="mt-12 border-t border-white pt-6">
+              <h3 className="font-data text-[12px] uppercase tracking-[0.2em] text-slate-500">{t.whyTitle}</h3>
+              <ol className="mt-4 grid gap-x-10 gap-y-6 md:grid-cols-2">
+                {t.whyItems.map((item, i) => (
+                  <li key={item} className="flex gap-4 text-[15px] leading-[1.7] text-slate-300">
+                    <span className="font-data text-[13px] text-signal-ink">{String(i + 1).padStart(2, '0')}</span>
+                    <span>{item}</span>
                   </li>
                 ))}
               </ol>
             </div>
+            <FlowVisual lang={lang} />
           </Reveal>
-          <Reveal delay={120}>
-            <div className="mt-6 overflow-hidden rounded-xl border border-line bg-panel">
-              <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2.5">
-                <span className="font-data text-[11px] text-slate-400">{t.reportSampleLabel}</span>
-                <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">{t.reportSampleRight}</span>
+        </Section>
+
+        {/* -------------------------------- how ------------------------------- */}
+        <Section id="how" index="04" label={sl.how} title={t.howTitle} right={t.howRight} tone="deep">
+          <Reveal>
+            <div aria-hidden="true" className="mb-8 border border-line bg-panel px-5 py-4">
+              <svg viewBox="0 0 600 40" preserveAspectRatio="none" className="h-10 w-full">
+                <path d="M 10 20 H 590" fill="none" stroke={INK_MUTED} strokeWidth="1" strokeDasharray="2 5" />
+                <circle r="3.5" fill={SIGNAL}>
+                  <animateMotion dur="6s" repeatCount="indefinite" path="M 10 20 H 590" />
+                </circle>
+                <circle r="3" fill="#16140f">
+                  <animateMotion dur="9s" begin="1.5s" repeatCount="indefinite" path="M 10 20 H 590" />
+                </circle>
+              </svg>
+              <div className="flex justify-between gap-3 font-data text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                <span>{t.packetYou}</span>
+                <span className="hidden text-slate-400 sm:inline">eth_chainId · eth_blockNumber · net_version</span>
+                <span>{t.packetReceipt}</span>
               </div>
-              <TypewriterJson replayLabel={t.typeReplay} />
+              <p className="mt-2 text-center font-data text-[10px] uppercase tracking-[0.18em] text-slate-500">{t.packetNote}</p>
+            </div>
+            <ol className="border-t border-white">
+              {t.howSteps.map((s, i) => (
+                <li key={s.title} className="grid gap-3 border-b border-line py-7 md:grid-cols-12">
+                  <p className="font-data text-[44px] font-medium leading-none tracking-[-0.04em] text-slate-700 md:col-span-2">{String(i + 1).padStart(2, '0')}</p>
+                  <h3 className="font-display text-[30px] leading-tight text-white md:col-span-4">{s.title}</h3>
+                  <p className="text-[15px] leading-relaxed text-slate-400 md:col-span-6">{s.body}</p>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-10 grid gap-6 lg:grid-cols-2">
+              <div className="border border-line bg-panel p-6">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="font-display text-[26px] text-white">{t.archTitle}</h3>
+                  <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-500">{t.archRight}</span>
+                </div>
+                <ol className="mt-5">
+                  {t.archNodes.map((node, i) => (
+                    <li key={node} className="flex gap-3">
+                      <span className="flex flex-col items-center">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center border border-white font-data text-[11px] text-white">{i + 1}</span>
+                        {i < t.archNodes.length - 1 && <span aria-hidden="true" className="w-px flex-1 bg-line" />}
+                      </span>
+                      <span className="pb-4 text-sm leading-relaxed text-slate-300">{node}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              <Plate label={t.reportSampleLabel} right={t.reportSampleRight} dark>
+                <TypewriterJson replayLabel={t.typeReplay} />
+              </Plate>
             </div>
           </Reveal>
-        </div>
-      </section>
+        </Section>
 
-      {/* ------------------------------ tutorial ------------------------------ */}
-      <section id="tutorial" className="cv-auto scroll-mt-28 px-4 py-16">
-        <div className="mx-auto max-w-6xl">
+        {/* ------------------------------ tutorial ---------------------------- */}
+        <Section id="tutorial" index="05" label={sl.tutorial} title={t.tutorialTitle} right={t.tutorialRight}>
           <Reveal>
-            <SectionHeading title={t.tutorialTitle} right={t.tutorialRight} />
-            <p className="max-w-3xl text-[15px] leading-[1.85] text-slate-400">
-              {t.tutorialIntro}
-            </p>
-            <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <p className="max-w-[62ch] text-[17px] leading-relaxed text-slate-400">{t.tutorialIntro}</p>
+            <div className="mt-10 grid gap-px border border-line bg-line md:grid-cols-2 lg:grid-cols-3">
               {t.tutorialSteps.map((s) => (
-                <div key={s.n} className="rounded-[20px] border border-line bg-panel/70 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.35)] transition-all duration-300 hover:-translate-y-1 hover:border-slate-500/40">
-                  <p className="font-data text-[11px] uppercase tracking-[0.2em] text-[#0181FB]">{s.n}</p>
-                  <h3 className="mt-3 font-display text-lg font-semibold text-white">{s.title}</h3>
-                  <p className="mt-2 text-[15px] leading-[1.85] text-slate-400">{s.body}</p>
+                <div key={s.n} className="bg-ink p-6">
+                  <p className="font-data text-[12px] uppercase tracking-[0.2em] text-signal-ink">{s.n}</p>
+                  <h3 className="mt-4 font-display text-[26px] leading-tight text-white">{s.title}</h3>
+                  <p className="mt-3 text-[15px] leading-[1.7] text-slate-400">{s.body}</p>
                 </div>
               ))}
-              <div className="flex flex-col justify-center rounded-[20px] border border-[#0181FB]/40 bg-[#0181FB]/10 p-6">
-                <p className="font-display text-lg font-semibold text-white">{t.tutorialCtaTitle}</p>
-                <p className="mt-2 text-[15px] leading-[1.85] text-slate-300">
-                  {t.tutorialCtaBody}
+              <div className="graphite flex flex-col justify-center p-6">
+                <p className="font-display text-[30px] leading-tight text-white" style={{ fontFamily: 'var(--font-serif)' }}>
+                  {t.tutorialCtaTitle}
                 </p>
-                <div className="mt-5 flex flex-wrap gap-3">
+                <p className="mt-2 text-[15px] leading-[1.7] text-slate-300">{t.tutorialCtaBody}</p>
+                <div className="mt-6 flex flex-wrap gap-3">
                   <a href={APP_URL} className="btn-primary inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold">
                     {t.tutorialCtaPrimary}
                     <ArrowRight className="h-4 w-4" />
                   </a>
-                  <a href="/verify" className="btn-ghost inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-medium">
+                  <a href="/verify" className="btn-ghost inline-flex items-center gap-2 px-5 py-3 text-sm font-medium">
                     {t.tutorialCtaSecondary}
                   </a>
                 </div>
               </div>
             </div>
           </Reveal>
-        </div>
-      </section>
+        </Section>
 
-      {/* ----------------------------- instrument ---------------------------- */}
-      <section id="instrument" className="cv-auto scroll-mt-28 px-4 py-16">
-        <div className="mx-auto max-w-6xl">
+        {/* ----------------------------- instrument --------------------------- */}
+        <Section id="instrument" index="06" label={sl.instrument} title={t.instrumentTitle} right={t.instrumentRight} tone="deep">
           <Reveal>
-            <SectionHeading title={t.instrumentTitle} right={t.instrumentRight} />
-            <div className="grid items-start gap-6 lg:grid-cols-2">
+            <div className="grid items-start gap-6 xl:grid-cols-2">
               <CheckTranscript lang={lang} />
-              {/* snapshot diff artifact */}
-              <div className="overflow-hidden rounded-xl border border-line bg-panel">
-                <div className="flex items-center justify-between border-b border-line bg-black/25 px-4 py-2.5">
-                  <span className="font-data text-[11px] text-slate-400">{t.diffHeader}</span>
-                  <span className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600">{t.diffRight}</span>
+              <Plate label={t.diffHeader} right={t.diffRight}>
+                <div className="overflow-x-auto px-5 py-5 font-data text-[12.5px] leading-[1.9]">
+                  <p className="whitespace-nowrap"><span className="mr-4 text-slate-500">01</span><span className="text-slate-500"># nodescope.health-snapshot.v1 — diff A → B</span></p>
+                  <p className="whitespace-nowrap"><span className="mr-4 text-slate-500">02</span><span className="text-slate-400">A · block 143,764 · 15:48:05 WIB</span></p>
+                  <p className="whitespace-nowrap"><span className="mr-4 text-slate-500">03</span><span className="text-slate-400">B · block 143,776 · 15:49:21 WIB</span></p>
+                  <p className="whitespace-nowrap"><span className="mr-4 text-slate-500">04</span><span className="text-slate-500">eth_chainId&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0x190f1ca9 → 0x190f1ca9&nbsp;&nbsp;{t.diffUnchanged}</span></p>
+                  <p className="-mx-5 whitespace-nowrap bg-red-400/[0.08] px-5"><span className="mr-4 text-slate-500">05</span><span className="text-red-400">− eth_blockNumber&nbsp;&nbsp;&nbsp;143,764</span></p>
+                  <p className="-mx-5 whitespace-nowrap bg-emerald-400/[0.09] px-5"><span className="mr-4 text-slate-500">06</span><span className="text-emerald-400">+ eth_blockNumber&nbsp;&nbsp;&nbsp;143,776&nbsp;&nbsp;Δ +12</span></p>
+                  <p className="whitespace-nowrap"><span className="mr-4 text-slate-500">07</span><span className="text-slate-500">net_version&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;420420777 → 420420777&nbsp;&nbsp;{t.diffUnchanged}</span></p>
+                  <p className="whitespace-nowrap"><span className="mr-4 text-slate-500">08</span><span className="text-slate-500">findings&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{t.diffFindings}</span></p>
                 </div>
-                <div className="px-5 py-5 font-data text-[12.5px] leading-[1.9]">
-                  <p><span className="mr-4 text-slate-600">01</span><span className="text-slate-500"># nodescope.health-snapshot.v1 — diff A → B</span></p>
-                  <p><span className="mr-4 text-slate-600">02</span><span className="text-slate-400">A · block 143,764 · 15:48:05 WIB</span></p>
-                  <p><span className="mr-4 text-slate-600">03</span><span className="text-slate-400">B · block 143,776 · 15:49:21 WIB</span></p>
-                  <p><span className="mr-4 text-slate-600">04</span><span className="text-slate-500">eth_chainId&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0x190f1ca9 → 0x190f1ca9&nbsp;&nbsp;<span className="text-slate-500">{t.diffUnchanged}</span></span></p>
-                  <p className="-mx-5 bg-red-400/[0.06] px-5"><span className="mr-4 text-slate-600">05</span><span className="text-red-300">− eth_blockNumber&nbsp;&nbsp;&nbsp;143,764</span></p>
-                  <p className="-mx-5 bg-emerald-400/[0.07] px-5"><span className="mr-4 text-slate-600">06</span><span className="text-emerald-300">+ eth_blockNumber&nbsp;&nbsp;&nbsp;143,776&nbsp;&nbsp;Δ +12</span></p>
-                  <p><span className="mr-4 text-slate-600">07</span><span className="text-slate-500">net_version&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;420420777 → 420420777&nbsp;&nbsp;{t.diffUnchanged}</span></p>
-                  <p><span className="mr-4 text-slate-600">08</span><span className="text-slate-500">findings&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{t.diffFindings}</span></p>
-                </div>
-                <p className="border-t border-line px-5 py-3 font-data text-[10.5px] uppercase tracking-[0.14em] text-slate-600">
-                  {t.diffFooter}
-                </p>
-              </div>
+                <p className="border-t border-line px-5 py-3 font-data text-[10.5px] uppercase tracking-[0.14em] text-slate-500">{t.diffFooter}</p>
+              </Plate>
             </div>
           </Reveal>
-          <Reveal delay={100}>
-            <div className="mt-6 hidden overflow-hidden rounded-[20px] border border-sky-500/25 shadow-[0_24px_60px_rgba(0,0,0,0.4)] md:block">
+          <Reveal delay={80}>
+            <div className="mt-10 hidden md:block">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-sky-500/25 bg-sky-500/[0.06] font-data text-[11px] uppercase tracking-[0.18em] text-sky-300">
-                    <th className="px-5 py-3.5 font-medium">{t.capabilityHeaders[0]}</th>
-                    <th className="hidden px-5 py-3.5 font-medium md:table-cell">{t.capabilityHeaders[1]}</th>
-                    <th className="px-5 py-3.5 font-medium">{t.capabilityHeaders[2]}</th>
+                  <tr className="border-b border-white font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                    <th className="py-3 pr-5 font-medium">{t.capabilityHeaders[0]}</th>
+                    <th className="py-3 pr-5 font-medium">{t.capabilityHeaders[1]}</th>
+                    <th className="py-3 font-medium">{t.capabilityHeaders[2]}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-line bg-panel/60 text-sm">
+                <tbody className="divide-y divide-line text-sm">
                   {t.capabilities.map((r, i) => (
-                    <tr key={r.cap} className="group transition-colors hover:bg-white/[0.03]">
-                      <td className="relative px-5 py-4 font-data text-[13px] font-medium text-white">
-                        <span aria-hidden="true" className="absolute left-0 top-0 h-full w-[3px] bg-[#0181FB] opacity-0 transition-opacity group-hover:opacity-100" />
-                        <span className="mr-3 text-slate-600">0{i + 1}</span>
+                    <tr key={r.cap} className="group align-top transition-colors hover:bg-panel">
+                      <td className="py-4 pr-5 font-data text-[13px] font-medium text-white">
+                        <span className="mr-3 text-slate-500">0{i + 1}</span>
                         {r.cap}
                       </td>
-                      <td className="hidden max-w-md px-5 py-4 leading-relaxed text-slate-400 md:table-cell">{r.what}</td>
-                      <td className="px-5 py-4">
-                        <span
-                          className={`inline-block rounded-full border px-2.5 py-1 font-data text-[11px] ${
-                            r.tone === 'emerald'
-                              ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-                              : r.tone === 'amber'
-                                ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
-                                : r.tone === 'sky'
-                                  ? 'border-sky-500/40 bg-sky-500/10 text-sky-300'
-                                  : 'border-line bg-white/[0.03] text-slate-300'
-                          }`}
-                        >
-                          {r.proof}
-                        </span>
+                      <td className="max-w-md py-4 pr-5 leading-relaxed text-slate-400">{r.what}</td>
+                      <td className="py-4">
+                        <span className={`inline-block border px-2 py-1 font-data text-[11px] ${toneClass(r.tone)}`}>{r.proof}</span>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <div className="mt-6 space-y-3 md:hidden">
+            <div className="mt-10 divide-y divide-line border-y border-line md:hidden">
               {t.capabilities.map((r, i) => (
-                <div key={r.cap} className="rounded-xl border border-line bg-panel p-4">
+                <div key={r.cap} className="py-4">
                   <p className="font-data text-[13px] font-medium text-white">
-                    <span className="mr-3 text-slate-600">0{i + 1}</span>
+                    <span className="mr-3 text-slate-500">0{i + 1}</span>
                     {r.cap}
                   </p>
                   <p className="mt-1.5 text-sm leading-relaxed text-slate-400">{r.what}</p>
-                  <span
-                    className={`mt-2 inline-block rounded-full border px-2.5 py-1 font-data text-[11px] ${
-                      r.tone === 'emerald'
-                        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-                        : r.tone === 'amber'
-                          ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
-                          : r.tone === 'sky'
-                            ? 'border-sky-500/40 bg-sky-500/10 text-sky-300'
-                            : 'border-line bg-white/[0.03] text-slate-300'
-                    }`}
-                  >
-                    {r.proof}
-                  </span>
+                  <span className={`mt-2 inline-block border px-2 py-1 font-data text-[11px] ${toneClass(r.tone)}`}>{r.proof}</span>
                 </div>
               ))}
             </div>
           </Reveal>
-        </div>
-      </section>
+        </Section>
 
-      {/* ----------------------------- evidence ----------------------------- */}
-      <section id="evidence" className="cv-auto scroll-mt-28 px-4 py-16">
-        <div className="mx-auto max-w-6xl">
+        {/* ------------------------------ evidence ---------------------------- */}
+        <Section id="evidence" index="07" label={sl.evidence} title={t.evidenceTitle} right={t.evidenceRight}>
           <Reveal>
-            <SectionHeading title={t.evidenceTitle} right={t.evidenceRight} accent="emerald" />
-            <div className="rounded-xl border border-line bg-panel px-5 py-5">
+            <div className="border border-line bg-panel px-5 py-5">
               <EvidenceGrid lang={lang} />
-              <p className="mt-3.5 font-data text-[11px] leading-relaxed text-slate-500">
-                {t.evidenceGridCaption}
-              </p>
+              <p className="mt-3.5 font-data text-[10.5px] leading-relaxed tracking-[0.04em] text-slate-500">{t.evidenceGridCaption}</p>
             </div>
-            <div className="mt-6 hidden overflow-hidden rounded-[20px] border border-emerald-500/25 shadow-[0_24px_60px_rgba(0,0,0,0.4)] md:block">
+            <div className="mt-8 hidden md:block">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-emerald-500/25 bg-emerald-500/[0.06] font-data text-[11px] uppercase tracking-[0.18em] text-emerald-300">
-                    <th className="px-5 py-3.5 font-medium">{t.evidenceHeaders[0]}</th>
-                    <th className="px-5 py-3.5 font-medium">{t.evidenceHeaders[1]}</th>
-                    <th className="hidden px-5 py-3.5 font-medium md:table-cell">{t.evidenceHeaders[2]}</th>
+                  <tr className="border-b border-white font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                    <th className="py-3 pr-5 font-medium">{t.evidenceHeaders[0]}</th>
+                    <th className="py-3 pr-5 font-medium">{t.evidenceHeaders[1]}</th>
+                    <th className="py-3 font-medium">{t.evidenceHeaders[2]}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-line bg-panel/60 font-data text-[13px]">
+                <tbody className="divide-y divide-line font-data text-[13px]">
                   {t.evidenceRows.map((r) => (
-                    <tr key={r.block} className="group transition-colors hover:bg-white/[0.03]">
-                      <td className="relative px-5 py-3.5 font-semibold text-white">
-                        <span aria-hidden="true" className="absolute left-0 top-0 h-full w-[3px] bg-emerald-400 opacity-0 transition-opacity group-hover:opacity-100" />
-                        {r.block}
-                      </td>
-                      <td className="px-5 py-3.5 text-slate-300">
+                    <tr key={r.block} className="transition-colors hover:bg-panel">
+                      <td className="py-3.5 pr-5 text-[20px] font-medium tracking-[-0.02em] text-white">{r.block}</td>
+                      <td className="py-3.5 pr-5 text-slate-300">
                         {r.label}
-                        {'delta' in r && r.delta ? (
-                          <span className="ml-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-300">
-                            Δ {r.delta}
-                          </span>
-                        ) : null}
+                        {'delta' in r && r.delta ? <span className="ml-2 border border-emerald-500/50 px-1.5 py-0.5 text-[11px] text-emerald-300">Δ {r.delta}</span> : null}
                       </td>
-                      <td className="hidden px-5 py-3.5 text-slate-500 md:table-cell">{r.when}</td>
+                      <td className="py-3.5 text-slate-500">{r.when}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <div className="mt-6 space-y-3 md:hidden">
+            <div className="mt-8 divide-y divide-line border-y border-line md:hidden">
               {t.evidenceRows.map((r) => (
-                <div key={r.block} className="rounded-xl border border-line bg-panel p-4 font-data text-[13px]">
-                  <p className="font-semibold text-white">{r.block}</p>
+                <div key={r.block} className="py-4 font-data text-[13px]">
+                  <p className="text-[20px] font-medium text-white">{r.block}</p>
                   <p className="mt-1 text-slate-300">
                     {r.label}
-                    {'delta' in r && r.delta ? (
-                      <span className="ml-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-300">
-                        Δ {r.delta}
-                      </span>
-                    ) : null}
+                    {'delta' in r && r.delta ? <span className="ml-2 border border-emerald-500/50 px-1.5 py-0.5 text-[11px] text-emerald-300">Δ {r.delta}</span> : null}
                   </p>
                   <p className="mt-1 text-slate-500">{r.when}</p>
                 </div>
               ))}
             </div>
-            <p className="mt-3 font-data text-[11px] leading-relaxed text-slate-600">
-              {t.evidenceFootnote}
-            </p>
-            <figure className="mt-8 overflow-hidden rounded-[20px] border border-line bg-panel shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
+            <p className="mt-3 font-data text-[11px] leading-relaxed text-slate-500">{t.evidenceFootnote}</p>
+            <figure className="mt-10 border border-line bg-panel">
               <MotionVideo caption={t.motionCaption} />
-              <figcaption className="px-5 py-3.5">
-                <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-300">{t.motionCaption}</p>
+              <figcaption className="border-t border-line px-5 py-3.5">
+                <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-300">
+                  <span className="text-signal-ink">Fig. 02</span> — {t.motionCaption}
+                </p>
                 <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">{t.motionNote}</p>
               </figcaption>
             </figure>
           </Reveal>
-          <Reveal delay={100}>
-            <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-3">
+          <Reveal delay={80}>
+            <div className="mt-8 grid grid-cols-2 gap-px border border-line bg-line lg:grid-cols-3">
               {t.screenshots.map((s, i) => (
                 <button
                   key={s.src}
                   type="button"
                   onClick={() => setLightbox(i)}
-                  className={`group relative overflow-hidden rounded-[21px] bg-gradient-to-br from-[#0181FB]/60 via-slate-500/20 to-transparent p-px text-left shadow-[0_20px_50px_rgba(0,0,0,0.35)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(0,0,0,0.5)] ${i === 0 ? 'col-span-2 lg:col-span-1' : ''}`}
+                  className={`group relative bg-panel text-left ${i === 0 ? 'col-span-2 lg:col-span-1' : ''}`}
                 >
-                  <span className="block rounded-[20px] bg-panel">
-                    <span className="flex items-center gap-1.5 border-b border-line bg-black/30 px-4 py-2.5">
-                      <span className="h-2.5 w-2.5 rounded-full bg-slate-600" />
-                      <span className="h-2.5 w-2.5 rounded-full bg-slate-500" />
-                      <span className="h-2.5 w-2.5 rounded-full bg-[#0181FB]" />
-                      <span className="ml-2 font-data text-[10px] uppercase tracking-[0.16em] text-slate-600">{t.galleryLabel}</span>
-                    </span>
-                    <span className="relative block overflow-hidden">
-                      <img src={s.src} alt={s.caption} className="aspect-[16/10] w-full object-cover object-top opacity-90 transition-all duration-500 group-hover:scale-[1.04] group-hover:opacity-100" loading="lazy" />
-                      <span aria-hidden="true" className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-                    </span>
-                    <span className="flex items-center justify-between px-4 py-3 font-data text-[11px] uppercase tracking-[0.14em] text-slate-400">
-                      {s.caption}
-                      <span aria-hidden="true" className="opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100">↗</span>
-                    </span>
+                  <span className="block overflow-hidden">
+                    <img src={s.src} alt={s.caption} className="plate aspect-[16/10] w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]" loading="lazy" />
+                  </span>
+                  <span className="flex items-center justify-between gap-2 border-t border-line px-4 py-3 font-data text-[11px] uppercase tracking-[0.14em] text-slate-400">
+                    {s.caption}
+                    <span aria-hidden="true" className="text-signal-ink opacity-0 transition-opacity group-hover:opacity-100">↗</span>
                   </span>
                 </button>
               ))}
+              <div className="hidden items-end bg-panel p-4 font-data text-[10px] uppercase leading-relaxed tracking-[0.16em] text-slate-500 lg:flex">{t.galleryLabel}</div>
             </div>
           </Reveal>
-        </div>
-      </section>
+        </Section>
 
-      {/* --------------------------- on-chain evidence --------------------------- */}
-      <section id="onchain" className="cv-auto scroll-mt-28 px-4 py-16">
-        <div className="mx-auto max-w-6xl">
+        {/* --------------------------- on-chain proof ------------------------- */}
+        <Section id="onchain" index="08" label={sl.onchain} title={t.onchainTitle} right={t.onchainRight} tone="deep">
           <Reveal>
-            <SectionHeading title={t.onchainTitle} right={t.onchainRight} accent="emerald" />
-            <p className="max-w-3xl text-[15px] leading-[1.85] text-slate-400">{t.onchainIntro}</p>
-            <div className="mt-6 grid gap-3 md:grid-cols-3">
-              <div className="rounded-xl border border-line bg-panel p-4">
-                <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-500">Registry contract</p>
-                <p className="mt-2 break-all font-data text-[13px] text-slate-200">{REGISTRY_CONTRACT}</p>
-                <p className="mt-1 text-xs text-slate-500">Portaldot V3 testnet · chain {PORTALDOT_CHAIN_ID}</p>
+            <p className="max-w-[62ch] text-[17px] leading-relaxed text-slate-400">{t.onchainIntro}</p>
+            <dl className="mt-10 border-t border-white">
+              <div className="grid gap-2 border-b border-line py-5 md:grid-cols-12">
+                <dt className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500 md:col-span-3">Registry contract</dt>
+                <dd className="md:col-span-9">
+                  <p className="break-all font-data text-[15px] text-white md:text-[17px]">{REGISTRY_CONTRACT}</p>
+                  <p className="mt-1 text-xs text-slate-500">Portaldot V3 testnet · chain {PORTALDOT_CHAIN_ID} · ownerless</p>
+                </dd>
               </div>
-              <div className="rounded-xl border border-line bg-panel p-4">
-                <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-500">Anchor transaction</p>
-                <p className="mt-2 break-all font-data text-[13px] text-slate-200">{ANCHOR_TX}</p>
-                <p className="mt-1 text-xs text-slate-500">Anchor block {ANCHOR_BLOCK} · receipt status success</p>
+              <div className="grid gap-2 border-b border-line py-5 md:grid-cols-12">
+                <dt className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500 md:col-span-3">Anchor transaction</dt>
+                <dd className="md:col-span-9">
+                  <p className="break-all font-data text-[15px] text-white md:text-[17px]">{ANCHOR_TX}</p>
+                  <p className="mt-1 text-xs text-slate-500">Anchor block {ANCHOR_BLOCK} · receipt status success</p>
+                </dd>
               </div>
-              <div className="rounded-xl border border-line bg-panel p-4">
-                <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-500">Anchored report hash</p>
-                <p className="mt-2 break-all font-data text-[13px] text-slate-200">{ANCHORED_REPORT_HASH}</p>
-                <p className="mt-1 text-xs text-slate-500">Exported {ANCHORED_REPORT_EXPORTED_AT} · {ANCHORED_REPORT_RECORDS} records</p>
+              <div className="grid gap-2 border-b border-line py-5 md:grid-cols-12">
+                <dt className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500 md:col-span-3">Anchored report hash</dt>
+                <dd className="md:col-span-9">
+                  <p className="break-all font-data text-[15px] text-white md:text-[17px]">{ANCHORED_REPORT_HASH}</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Exported {ANCHORED_REPORT_EXPORTED_AT} · {ANCHORED_REPORT_RECORDS} records
+                  </p>
+                </dd>
               </div>
-            </div>
-            <div className="mt-6 rounded-xl border border-line bg-panel p-6">
-              <h3 className="font-display text-lg font-semibold text-white">{t.onchainCheckTitle}</h3>
-              <ol className="mt-3 space-y-2.5">
-                {t.onchainCheckSteps.map((s, i) => (
-                  <li key={s} className="flex gap-3 text-[15px] leading-[1.85] text-slate-400">
-                    <span className="font-data text-slate-500">0{i + 1}</span>
-                    <span>{s}</span>
-                  </li>
-                ))}
-              </ol>
-              <a
-                href={`/verify?hash=${ANCHORED_REPORT_HASH}&contract=${REGISTRY_CONTRACT}&tx=${ANCHOR_TX}`}
-                className="mt-4 inline-block rounded-lg bg-[#0181FB] px-4 py-2.5 text-sm font-semibold text-white"
-              >
-                Verify this anchor on /verify
-              </a>
-              <p className="mt-3 text-xs leading-relaxed text-slate-500">{t.onchainVerifyNote}</p>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ------------------------------ who uses ------------------------------ */}
-      <section id="who" className="cv-auto scroll-mt-28 px-4 py-16">
-        <div className="mx-auto max-w-6xl">
-          <Reveal>
-            <SectionHeading title={t.whoTitle} right={t.whoRight} />
-            <div className="grid gap-4 md:grid-cols-2">
-              {t.whoItems.map((item) => (
-                <div key={item.title} className="rounded-xl border border-line bg-panel p-6">
-                  <h3 className="font-display text-lg font-semibold text-white">{item.title}</h3>
-                  <p className="mt-2 text-[15px] leading-[1.85] text-slate-400">{item.body}</p>
-                </div>
+            </dl>
+            <div className="mt-8 grid gap-px border border-line bg-line sm:grid-cols-3">
+              {ANCHORED_REPORTS.map((a) => (
+                <a key={a.tx} href={`/verify?hash=${a.hash}&contract=${REGISTRY_CONTRACT}&tx=${a.tx}`} className="group block bg-panel p-5 transition-colors hover:bg-ink">
+                  <p className="font-data text-[10px] uppercase tracking-[0.2em] text-slate-500">{a.label}</p>
+                  <p className="mt-2 font-data text-[30px] font-medium leading-none tracking-[-0.03em] text-white">#{a.block}</p>
+                  <p className="mt-2 font-data text-[11px] text-slate-500">
+                    {a.hash.slice(0, 10)}…{a.hash.slice(-6)} · {a.records} records
+                  </p>
+                  <p className="mt-3 font-data text-[11px] uppercase tracking-[0.16em] text-signal-ink group-hover:underline">verify ↗</p>
+                </a>
               ))}
             </div>
+            <div className="mt-10 grid gap-8 lg:grid-cols-12">
+              <div className="lg:col-span-7">
+                <h3 className="font-display text-[28px] text-white">{t.onchainCheckTitle}</h3>
+                <ol className="mt-4 space-y-3">
+                  {t.onchainCheckSteps.map((s, i) => (
+                    <li key={s} className="flex gap-4 text-[15px] leading-[1.7] text-slate-400">
+                      <span className="font-data text-signal-ink">0{i + 1}</span>
+                      <span>{s}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              <div className="lg:col-span-5">
+                <a href={`/verify?hash=${ANCHORED_REPORT_HASH}&contract=${REGISTRY_CONTRACT}&tx=${ANCHOR_TX}`} className="btn-primary inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold">
+                  Verify this anchor on /verify
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+                <p className="mt-4 text-xs leading-relaxed text-slate-500">{t.onchainVerifyNote}</p>
+                <p className="mt-4 font-data text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                  {SITE_TESTS} tests · {SITE_TEST_FILES} files · CI on Ubuntu + Windows
+                </p>
+              </div>
+            </div>
           </Reveal>
-        </div>
-      </section>
+        </Section>
 
-      {/* ----------------------------- V3 references ------------------------------ */}
-      <section id="v3" className="cv-auto scroll-mt-28 px-4 py-16">
-        <div className="mx-auto max-w-6xl">
+        {/* ------------------------------ who uses ---------------------------- */}
+        <Section id="who" index="09" label={sl.who} title={t.whoTitle} right={t.whoRight}>
           <Reveal>
-            <SectionHeading title={t.v3Title} right={t.v3Right} />
-            <p className="mt-3 max-w-3xl text-[15px] leading-[1.85] text-slate-400">
-              {t.v3Intro}
-            </p>
-            <div className="mt-6 grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-2 lg:grid-cols-3">
+            <ul className="border-t border-white">
+              {t.whoItems.map((item, i) => (
+                <li key={item.title} className="grid gap-2 border-b border-line py-6 md:grid-cols-12">
+                  <span className="font-data text-[12px] text-slate-500 md:col-span-1">{String(i + 1).padStart(2, '0')}</span>
+                  <h3 className="font-display text-[26px] leading-tight text-white md:col-span-5">{item.title}</h3>
+                  <p className="text-[15px] leading-[1.7] text-slate-400 md:col-span-6">{item.body}</p>
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+        </Section>
+
+        {/* ----------------------------- V3 references ------------------------ */}
+        <Section id="v3" index="10" label={sl.v3} title={t.v3Title} right={t.v3Right} tone="deep">
+          <Reveal>
+            <p className="max-w-[62ch] text-[15px] leading-[1.75] text-slate-400">{t.v3Intro}</p>
+            <div className="mt-8 grid gap-px border border-line bg-line md:grid-cols-2 lg:grid-cols-3">
               {t.v3Cards.map((link) => (
-                <a key={link.label} href={link.href} target="_blank" rel="noreferrer" className="group relative block bg-panel/70 p-6 transition-colors hover:bg-panel">
-                  <span aria-hidden="true" className="absolute left-0 top-0 h-[2px] w-full bg-[#0181FB] opacity-0 transition-opacity group-hover:opacity-100" />
-                  <p className="flex items-center justify-between font-data text-[11px] uppercase tracking-[0.16em] text-sky-300">
+                <a key={link.label} href={link.href} target="_blank" rel="noreferrer" className="group relative block bg-panel p-5 transition-colors hover:bg-ink">
+                  <p className="flex items-center justify-between font-data text-[11px] uppercase tracking-[0.16em] text-signal-ink">
                     {link.label}
-                    <span aria-hidden="true" className="opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100">↗</span>
+                    <span aria-hidden="true" className="opacity-0 transition-opacity group-hover:opacity-100">↗</span>
                   </p>
                   <p className="mt-2 break-all font-data text-xs text-slate-300">{link.href}</p>
                   <p className="mt-1.5 text-xs text-slate-500">{link.note}</p>
                 </a>
               ))}
             </div>
-            <p className="mt-4 text-sm text-slate-500">
-              {t.v3Footnote}
-            </p>
+            <p className="mt-4 text-sm text-slate-500">{t.v3Footnote}</p>
           </Reveal>
-        </div>
-      </section>
+        </Section>
 
-      {/* ----------------------------- roadmap ------------------------------ */}
-      <section id="roadmap" className="cv-auto scroll-mt-28 px-4 py-16">
-        <div className="mx-auto max-w-6xl">
+        {/* ------------------------------ roadmap ----------------------------- */}
+        <Section id="roadmap" index="11" label={sl.roadmap} title={t.roadmapTitle} right={t.roadmapRight}>
           <Reveal>
-            <SectionHeading title={t.roadmapTitle} right={t.roadmapRight} accent="sky" />
-            <div className="relative overflow-hidden rounded-[20px] border border-line">
-              <div aria-hidden="true" className="absolute bottom-6 left-[27px] top-6 w-px bg-line" />
-              <div aria-hidden="true" className="probe-bot absolute left-[14px] top-0 z-10">
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                  <path d="M14 2 L25 8.5 V19.5 L14 26 L3 19.5 V8.5 Z" fill="#0b1220" stroke="#0181FB" strokeWidth="1.5" />
-                  <circle cx="14" cy="14" r="3" fill="#0181FB">
-                    <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" />
-                  </circle>
-                  <path d="M14 2 V0" stroke="#0181FB" strokeWidth="1.5" />
-                </svg>
-              </div>
+            <div className="grid gap-px border border-line bg-line lg:grid-cols-3">
               {t.roadmapItems.map((r) => (
-                <div key={r.title} className="relative bg-panel/70 p-6 pl-16">
-                  <span aria-hidden="true" className="absolute left-[20px] top-7 h-[14px] w-[14px] rounded-full border-2 border-[#0181FB] bg-deep" />
-                  <span className="inline-flex items-center gap-2 font-data text-[11px] uppercase tracking-[0.16em] text-emerald-300">
-                    <span className="h-2 w-2 bg-emerald-400" />
+                <div key={r.title} className="bg-ink p-6">
+                  <span className="inline-flex items-center gap-2 font-data text-[11px] uppercase tracking-[0.16em] text-emerald-400">
+                    <span aria-hidden="true" className="h-2 w-2 bg-emerald-500" />
                     {t.roadmapShipped}
                   </span>
-                  <h3 className="mt-4 font-display text-lg font-semibold text-white">{r.title}</h3>
-                  <p className="mt-2 text-[15px] leading-[1.85] text-slate-400">{r.body}</p>
+                  <h3 className="mt-4 font-display text-[26px] leading-tight text-white">{r.title}</h3>
+                  <p className="mt-3 text-[14px] leading-[1.7] text-slate-400">{r.body}</p>
                 </div>
               ))}
             </div>
-            <div className="mt-6 rounded-[20px] border border-dashed border-line bg-panel/50 p-6">
-              <p className="font-data text-[11px] uppercase tracking-[0.16em] text-amber-300">{t.roadmapNextLabel}</p>
-              <div className="mt-4 space-y-4">
-                {t.roadmapNextItems.map((r) => (
-                  <div key={r.title}>
-                    <h3 className="font-display text-base font-semibold text-white">{r.title}</h3>
-                    <p className="mt-1 text-[15px] leading-[1.85] text-slate-400">{r.body}</p>
+            <div className="graphite mt-6 border border-graphite p-6 md:p-8">
+              <p className="inline-flex items-center gap-2 font-data text-[11px] uppercase tracking-[0.16em] text-signal-ink">
+                <span aria-hidden="true" className="h-2 w-2 bg-signal" />
+                {t.roadmapNewLabel}
+              </p>
+              <div className="mt-5 grid gap-8 lg:grid-cols-3">
+                {t.roadmapNewItems.map((r) => (
+                  <div key={r.title} className="border-t border-line pt-4">
+                    <h3 className="font-display text-[26px] leading-tight text-white" style={{ fontFamily: 'var(--font-serif)' }}>
+                      {r.title}
+                    </h3>
+                    <p className="mt-3 text-[14px] leading-[1.7] text-slate-400">{r.body}</p>
                   </div>
                 ))}
               </div>
             </div>
-            <p className="mt-5 text-sm text-slate-500">
-              {t.roadmapFootnote}
-            </p>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* --------------------------- judge quickstart ------------------------ */}
-      <section id="judge" className="cv-auto scroll-mt-28 px-4 py-16">
-        <div className="mx-auto max-w-6xl">
-          <Reveal>
-            <SectionHeading title={t.judgeTitle} right={t.judgeRight} />
-            <p className="max-w-3xl text-[15px] leading-[1.85] text-slate-400">
-              {t.judgeIntro}
-            </p>
-            <div className="mt-6 overflow-hidden rounded-xl border border-line">
-              {t.judgeSteps.map((s) => (
-                <div key={s.title} className="grid gap-2 border-b border-line bg-panel px-6 py-6 last:border-b-0 md:grid-cols-12">
-                  <h3 className="font-display text-lg font-semibold text-white md:col-span-4">{s.title}</h3>
-                  <p className="text-sm leading-relaxed text-slate-400 md:col-span-8">{s.body}</p>
-                </div>
-              ))}
+            <div className="mt-6 border border-dashed border-slate-700 p-6 md:p-8">
+              <p className="font-data text-[11px] uppercase tracking-[0.16em] text-amber-400">{t.roadmapNextLabel}</p>
+              <div className="mt-5 grid gap-6 md:grid-cols-2">
+                {t.roadmapNextItems.map((r) => (
+                  <div key={r.title}>
+                    <h3 className="font-display text-[22px] leading-tight text-white">{r.title}</h3>
+                    <p className="mt-2 text-[14px] leading-[1.7] text-slate-400">{r.body}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-            <p className="mt-4 text-sm text-slate-500">
-              {t.judgeFootnote}
-            </p>
+            <p className="mt-5 text-sm text-slate-500">{t.roadmapFootnote}</p>
           </Reveal>
-        </div>
-      </section>
+        </Section>
 
-      {/* ------------------------------- CTA -------------------------------- */}
-      <section className="cv-auto relative overflow-hidden px-4 py-24">
-        <Reveal className="relative mx-auto max-w-3xl rounded-[32px] border border-line bg-panel/70 px-8 py-16 text-center shadow-[0_32px_90px_rgba(0,0,0,0.5)]">
-          <Activity className="mx-auto h-8 w-8 text-slate-500" />
-          <h2 className="mt-6 font-display text-4xl font-semibold leading-tight tracking-tight text-white md:text-5xl">
-            {t.ctaTitleA}<span className="font-data font-medium">{t.ctaTitleB}</span>
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-slate-400">
-            {t.ctaBody}
-          </p>
-          <a href={APP_URL} className="btn-primary mt-9 inline-flex items-center gap-2 rounded-xl px-7 py-4 text-base font-semibold">
-            {t.launchApp}
-            <ArrowRight className="h-5 w-5" />
-          </a>
-        </Reveal>
-      </section>
+        {/* --------------------------- judge quickstart ----------------------- */}
+        <Section id="judge" index="12" label={sl.judge} title={t.judgeTitle} right={t.judgeRight} tone="deep">
+          <Reveal>
+            <p className="max-w-[62ch] text-[17px] leading-relaxed text-slate-400">{t.judgeIntro}</p>
+            <ol className="mt-8 border-t border-white">
+              {t.judgeSteps.map((s, i) => (
+                <li key={s.title} className="grid gap-2 border-b border-line py-6 md:grid-cols-12">
+                  <span className="font-data text-[12px] text-signal-ink md:col-span-1">{String(i + 1).padStart(2, '0')}</span>
+                  <h3 className="font-display text-[26px] leading-tight text-white md:col-span-4">{s.title}</h3>
+                  <p className="text-[15px] leading-[1.7] text-slate-400 md:col-span-7">{s.body}</p>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <a href={JUDGES_URL} className="btn-ink inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold">
+                {lang === 'id' ? 'Tabel bukti untuk juri' : 'Evidence table for judges'}
+                <ArrowRight className="h-4 w-4" />
+              </a>
+              <p className="text-sm text-slate-500">{t.judgeFootnote}</p>
+            </div>
+          </Reveal>
+        </Section>
 
+        {/* -------------------------------- CTA ------------------------------- */}
+        <section className="graphite relative overflow-hidden px-4 py-24 md:px-8 md:py-32">
+          <div aria-hidden="true" className="cta-glow pointer-events-none absolute left-1/2 top-full h-[520px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full" />
+          <Reveal className="relative mx-auto max-w-[1240px]">
+            <p className="font-data text-[12px] uppercase tracking-[0.2em] text-slate-500">
+              <span className="text-signal-ink">13</span> — {lang === 'id' ? 'Mulai' : 'Start'}
+            </p>
+            <h2 className="mt-6 max-w-[16ch] font-display text-[56px] leading-[0.92] tracking-[-0.02em] text-white md:text-[112px]" style={{ fontFamily: 'var(--font-serif)' }}>
+              {t.ctaTitleA}
+              <span className="italic text-signal">{t.ctaTitleB}</span>
+            </h2>
+            <div className="mt-10 flex flex-wrap items-end justify-between gap-6 border-t border-line pt-6">
+              <p className="max-w-[48ch] text-[15px] leading-relaxed text-slate-400">{t.ctaBody}</p>
+              <a href={APP_URL} className="btn-primary inline-flex items-center gap-2.5 px-7 py-4 text-base font-semibold">
+                {t.launchApp}
+                <ArrowRight className="h-5 w-5" />
+              </a>
+            </div>
+          </Reveal>
+        </section>
       </main>
       <SiteFooter t={t} />
 
-      {/* ----------------------------- lightbox ----------------------------- */}
       {lightbox !== null && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#16140f]/90 p-4"
           onClick={() => setLightbox(null)}
           role="dialog"
           aria-modal="true"
@@ -1379,16 +1355,14 @@ export function Landing() {
           <button
             type="button"
             aria-label={t.lightboxClose}
-            className="btn-ghost absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full"
+            className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center border border-[#f1ede4]/40 text-[#f1ede4]"
             onClick={() => setLightbox(null)}
           >
             <X className="h-5 w-5" />
           </button>
           <figure className="w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
-            <img src={t.screenshots[lightbox].src} alt={t.screenshots[lightbox].caption} className="mx-auto block max-h-[82vh] w-auto max-w-full rounded-xl border border-line" />
-            <figcaption className="mt-3 text-center font-data text-xs uppercase tracking-[0.16em] text-slate-400">
-              {t.screenshots[lightbox].caption}
-            </figcaption>
+            <img src={t.screenshots[lightbox].src} alt={t.screenshots[lightbox].caption} className="mx-auto block max-h-[82vh] w-auto max-w-full border border-[#f1ede4]/20" />
+            <figcaption className="mt-3 text-center font-data text-xs uppercase tracking-[0.16em] text-[#cdc8bc]">{t.screenshots[lightbox].caption}</figcaption>
           </figure>
         </div>
       )}

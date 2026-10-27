@@ -56,15 +56,15 @@ export function IntroSplash({ scope }: { scope: 'landing' | 'app' }) {
       <img
         src="/logo.png"
         alt=""
-        className="intro-rise h-16 w-16 rounded-2xl shadow-[0_0_40px_rgba(1,129,251,0.45)] ring-1 ring-[#0181FB]/40"
+        className="intro-rise h-16 w-16 rounded-2xl shadow-[0_0_40px_rgba(1,129,251,0.45)] ring-1 ring-signal/40"
       />
       <p
         className="intro-rise font-display text-3xl font-semibold tracking-tight text-white"
         style={{ animationDelay: '120ms' }}
       >
-        Node<span className="text-[#0181FB]">Scope</span>
+        Node<span className="text-signal-ink">Scope</span>
       </p>
-      <div className="intro-sweep h-[2px] w-40 bg-gradient-to-r from-transparent via-[#0181FB] to-transparent" />
+      <div className="intro-sweep h-[2px] w-40 bg-gradient-to-r from-transparent via-signal to-transparent" />
       <p
         className="intro-rise font-data text-[11px] uppercase tracking-[0.22em] text-slate-500"
         style={{ animationDelay: '240ms' }}
