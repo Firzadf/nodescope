@@ -89,17 +89,22 @@ class Deck(FPDF):
         self.set_xy(MARGIN, 44)
         self.cell(0, 14, text.upper())
 
-    def headline(self, text: str, size: float = 34) -> None:
+    def headline(self, text: str, size: float = 34) -> float:
+        # Left-aligned, never justified: fpdf2's multi_cell defaults to
+        # justified, which stretches inter-word spacing on wrapped lines.
+        # Returns the y below the last headline line, so content below can
+        # start after the headline's real height instead of a fixed y.
         self.set_font("sans", "B", size)
         self.set_text_color(*TEXT)
         self.set_xy(MARGIN, 70)
-        self.multi_cell(W - 2 * MARGIN, size + 8, text)
+        self.multi_cell(W - 2 * MARGIN, size + 8, text, align="L")
+        return self.get_y()
 
     def body(self, text: str, y: float, size: float = 15, color=MUTED) -> None:
         self.set_font("sans", "", size)
         self.set_text_color(*color)
         self.set_xy(MARGIN, y)
-        self.multi_cell(W - 2 * MARGIN, size + 7, text)
+        self.multi_cell(W - 2 * MARGIN, size + 7, text, align="L")
 
     def slide_footer(self, criterion: str) -> None:
         self.set_font("sans", "", 10)
@@ -179,56 +184,61 @@ def slide_title(d: Deck) -> None:
 def slide_problem(d: Deck) -> None:
     d.new_slide()
     d.kicker("Problem")
-    d.headline("A node can answer once. That proves almost nothing.")
-    d.panel(MARGIN, 150, 408, 190)
-    d.set_font("sans", "B", 17)
+    top = d.headline("A node can answer once. That proves almost nothing.")
+    py = max(150, top + 16)
+    d.panel(MARGIN, py, 408, 210)
+    d.set_font("sans", "B", 18)
     d.set_text_color(*TEXT)
-    d.set_xy(MARGIN + 24, 172)
+    d.set_xy(MARGIN + 24, py + 22)
     d.cell(0, 22, "Health over time")
-    d.set_font("sans", "", 14)
+    d.set_font("sans", "", 15)
     d.set_text_color(*MUTED)
-    d.set_xy(MARGIN + 24, 202)
-    d.multi_cell(360, 20, "An operator can see a node respond, but cannot "
-           "prove it stayed healthy, or what changed since the last check.")
-    d.panel(MARGIN + 440, 150, 408, 190)
-    d.set_font("sans", "B", 17)
+    d.set_xy(MARGIN + 24, py + 52)
+    d.multi_cell(360, 22, "An operator can see a node respond, but cannot "
+           "prove it stayed healthy, or what changed since the last check.",
+           align="L")
+    d.panel(MARGIN + 440, py, 408, 210)
+    d.set_font("sans", "B", 18)
     d.set_text_color(*TEXT)
-    d.set_xy(MARGIN + 464, 172)
+    d.set_xy(MARGIN + 464, py + 22)
     d.cell(0, 22, "One operation, two prices")
-    d.set_xy(MARGIN + 464, 202)
-    d.multi_cell(360, 20, "The same operation is priced on the EVM surface "
+    d.set_font("sans", "", 15)
+    d.set_text_color(*MUTED)
+    d.set_xy(MARGIN + 464, py + 52)
+    d.multi_cell(360, 22, "The same operation is priced on the EVM surface "
            "and on the native surface, and headline fee numbers hide the "
-           "difference.")
+           "difference.", align="L")
     d.slide_footer("Innovation")
 
 
 def slide_solution(d: Deck) -> None:
     d.new_slide()
     d.kicker("Solution")
-    d.headline("One build, two pillars, one evidence discipline.")
-    d.panel(MARGIN, 150, 408, 150)
-    d.set_font("sans", "B", 17)
+    top = d.headline("One build, two pillars, one evidence discipline.")
+    py = max(150, top + 16)
+    d.panel(MARGIN, py, 408, 170)
+    d.set_font("sans", "B", 18)
     d.set_text_color(*TEXT)
-    d.set_xy(MARGIN + 24, 170)
+    d.set_xy(MARGIN + 24, py + 20)
     d.cell(0, 22, "Health")
-    d.set_font("sans", "", 14)
+    d.set_font("sans", "", 15)
     d.set_text_color(*MUTED)
-    d.set_xy(MARGIN + 24, 200)
-    d.multi_cell(360, 20, "Timestamped snapshots. Deterministic before/after "
-           "comparison. Reports verified by SHA-256.")
-    d.panel(MARGIN + 440, 150, 408, 150)
-    d.set_font("sans", "B", 17)
+    d.set_xy(MARGIN + 24, py + 50)
+    d.multi_cell(360, 22, "Timestamped snapshots. Deterministic before/after "
+           "comparison. Reports verified by SHA-256.", align="L")
+    d.panel(MARGIN + 440, py, 408, 170)
+    d.set_font("sans", "B", 18)
     d.set_text_color(*TEXT)
-    d.set_xy(MARGIN + 464, 170)
+    d.set_xy(MARGIN + 464, py + 20)
     d.cell(0, 22, "Fees")
-    d.set_font("sans", "", 14)
+    d.set_font("sans", "", 15)
     d.set_text_color(*MUTED)
-    d.set_xy(MARGIN + 464, 200)
-    d.multi_cell(360, 20, "One operation priced on EVM and native, side by "
-           "side. Fee-only and all-in shown as they are.")
+    d.set_xy(MARGIN + 464, py + 50)
+    d.multi_cell(360, 22, "One operation priced on EVM and native, side by "
+           "side. Fee-only and all-in shown as they are.", align="L")
     d.set_font("sans", "B", 16)
     d.set_text_color(*ACCENT)
-    d.set_xy(MARGIN, 340)
+    d.set_xy(MARGIN, py + 190)
     d.cell(0, 22, "No background polling. No black-box score. "
            "No simulated data shown as live.")
     d.slide_footer("Innovation  ·  Technical Feasibility")
@@ -237,7 +247,7 @@ def slide_solution(d: Deck) -> None:
 def slide_demo(d: Deck) -> None:
     d.new_slide()
     d.kicker("Demo flow · 60 seconds")
-    d.headline("From endpoint to verified report in five steps.")
+    top = d.headline("From endpoint to verified report in five steps.")
     steps = [
         ("01", "Open /app. The testnet endpoint is already filled in."),
         ("02", "Run full diagnostic: connect, health check, capability discovery, "
@@ -248,7 +258,7 @@ def slide_demo(d: Deck) -> None:
                "latency trend."),
         ("05", "Export the report and verify it at /verify. No account. No wallet."),
     ]
-    y = 150
+    y = max(150, top + 16)
     for num, text in steps:
         d.set_font("sans", "B", 15)
         d.set_text_color(*ACCENT)
@@ -257,7 +267,7 @@ def slide_demo(d: Deck) -> None:
         d.set_font("sans", "", 15)
         d.set_text_color(*TEXT)
         d.set_xy(MARGIN + 44, y)
-        d.multi_cell(W - 2 * MARGIN - 44, 21, text)
+        d.multi_cell(W - 2 * MARGIN - 44, 21, text, align="L")
         y += 62
     d.slide_footer("Technical Feasibility")
 
@@ -265,15 +275,16 @@ def slide_demo(d: Deck) -> None:
 def slide_evidence(d: Deck) -> None:
     d.new_slide()
     d.kicker("On-chain evidence · Portaldot V3 testnet · Chain 420420777")
-    d.headline("Three reports anchored. Anyone can recheck them.", size=30)
-    d.panel(MARGIN, 138, W - 2 * MARGIN, 72)
-    d.mono_line(MARGIN + 20, 152, "Registry", REGISTRY)
-    d.mono_line(MARGIN + 20, 176, "Deploy tx", DEPLOY_TX)
+    top = d.headline("Three reports anchored. Anyone can recheck them.", size=30)
+    py = max(138, top + 16)
+    d.panel(MARGIN, py, W - 2 * MARGIN, 68)
+    d.mono_line(MARGIN + 20, py + 14, "Registry", REGISTRY)
+    d.mono_line(MARGIN + 20, py + 38, "Deploy tx", DEPLOY_TX)
     d.set_font("sans", "", 12)
     d.set_text_color(*MUTED)
-    d.set_xy(MARGIN + 20, 196)
+    d.set_xy(MARGIN + 20, py + 54)
     d.cell(0, 14, "Ownerless contract  ·  Deploy block 216268")
-    y = 224
+    y = py + 82
     for label, h, tx, block in ANCHORS:
         d.panel(MARGIN, y, W - 2 * MARGIN, 64)
         d.set_font("sans", "B", 14)
@@ -286,7 +297,7 @@ def slide_evidence(d: Deck) -> None:
         d.cell(0, 14, f"Anchor block {block}")
         d.mono_line(MARGIN + 20, y + 32, "Report", h)
         d.mono_line(MARGIN + 20, y + 48, "Tx", tx)
-        y += 78
+        y += 76
     d.set_font("sans", "", 13)
     d.set_text_color(*MUTED)
     d.set_xy(MARGIN, y + 2)
@@ -297,33 +308,34 @@ def slide_evidence(d: Deck) -> None:
 def slide_fees(d: Deck) -> None:
     d.new_slide()
     d.kicker("Fees finding · Measured 27 Oct 2026 · Contract deploy")
-    d.headline("The headline says 804x. The bill says 1.016x.")
-    d.set_font("sans", "B", 64)
+    top = d.headline("The headline says 804x. The bill says 1.016x.")
+    ny = max(160, top + 16)
+    d.set_font("sans", "B", 70)
     d.set_text_color(*MUTED)
-    d.set_xy(MARGIN, 160)
+    d.set_xy(MARGIN, ny)
     d.cell(300, 70, "804x")
     d.set_font("sans", "", 15)
     d.set_text_color(*MUTED)
-    d.set_xy(MARGIN, 232)
+    d.set_xy(MARGIN, ny + 70)
     d.cell(300, 20, "fee-only")
-    d.set_font("sans", "B", 64)
+    d.set_font("sans", "B", 70)
     d.set_text_color(*ACCENT)
-    d.set_xy(MARGIN + 330, 160)
+    d.set_xy(MARGIN + 330, ny)
     d.cell(300, 70, "1.016x")
     d.set_font("sans", "", 15)
     d.set_text_color(*MUTED)
-    d.set_xy(MARGIN + 330, 232)
+    d.set_xy(MARGIN + 330, ny + 70)
     d.cell(300, 20, "all-in")
     d.set_font("sans", "", 15)
     d.set_text_color(*TEXT)
-    d.set_xy(MARGIN, 280)
+    d.set_xy(MARGIN, ny + 118)
     d.cell(0, 21, "EVM deploy: 124.098 tPOT  ·  Native all-in: 122.191 tPOT  ·  Within 2%")
     d.body("Most of the gap is a 122.037 tPOT storage deposit on the native side. "
            "A deposit is a hold, not a burned fee: it is refundable when storage "
-           "is freed. The EVM figure already folds it in.", 320, size=15)
+           "is freed. The EVM figure already folds it in.", ny + 160, size=15)
     d.set_font("sans", "", 12)
     d.set_text_color(*FAINT)
-    d.set_xy(MARGIN, 410)
+    d.set_xy(MARGIN, ny + 270)
     d.cell(0, 16, "tPOT is a testnet token with no market price.")
     d.slide_footer("Innovation")
 
@@ -331,7 +343,7 @@ def slide_fees(d: Deck) -> None:
 def slide_tech(d: Deck) -> None:
     d.new_slide()
     d.kicker("Engineering")
-    d.headline("Built to be rechecked, not to be believed.")
+    top = d.headline("Built to be rechecked, not to be believed.")
     items = [
         ("467 tests across 67 files", "Vitest, run on every push."),
         ("5/5 Foundry contract tests", "The attestation contract, tested in isolation."),
@@ -341,7 +353,7 @@ def slide_tech(d: Deck) -> None:
         ("Deterministic comparison", "Same inputs, same diff. Reports verified by SHA-256."),
         ("Read-only by design", "No wallet, no signing, no background polling."),
     ]
-    y = 150
+    y = max(150, top + 16)
     for title, text in items:
         d.set_font("sans", "B", 15)
         d.set_text_color(*TEXT)
@@ -350,15 +362,15 @@ def slide_tech(d: Deck) -> None:
         d.set_font("sans", "", 14)
         d.set_text_color(*MUTED)
         d.set_xy(MARGIN + 330, y)
-        d.multi_cell(W - 2 * MARGIN - 330, 20, text)
-        y += 44
+        d.multi_cell(W - 2 * MARGIN - 330, 20, text, align="L")
+        y += 52
     d.slide_footer("Technical Feasibility")
 
 
 def slide_ecosystem(d: Deck) -> None:
     d.new_slide()
     d.kicker("Ecosystem contribution")
-    d.headline("Findings the ecosystem can use, not just a demo.")
+    top = d.headline("Findings the ecosystem can use, not just a demo.")
     items = [
         "Six measured findings for Portaldot, documented with reproduction steps: "
         "fee model, deposit semantics, dry-run limits, WSS connect, unavailable equivalents.",
@@ -366,13 +378,13 @@ def slide_ecosystem(d: Deck) -> None:
         "An evidence standard: anchored reports anyone can recompute from the repo.",
         "Adoption outreach prepared. No team results claimed yet.",
     ]
-    y = 150
+    y = max(150, top + 16)
     for text in items:
         d.set_font("sans", "", 15)
         d.set_text_color(*TEXT)
         d.set_xy(MARGIN, y)
-        d.multi_cell(W - 2 * MARGIN, 21, "·  " + text)
-        y += 62
+        d.multi_cell(W - 2 * MARGIN, 21, "·  " + text, align="L")
+        y += 76
     d.slide_footer("Ecosystem Contribution")
 
 
@@ -380,38 +392,39 @@ def slide_business(d: Deck) -> None:
     d.new_slide()
     d.kicker("Business model")
     d.headline("Free to use. Paid when it runs for you.")
-    d.panel(MARGIN, 150, 408, 150)
+    d.panel(MARGIN, 150, 408, 170)
     d.set_font("sans", "B", 17)
     d.set_text_color(*TEXT)
     d.set_xy(MARGIN + 24, 170)
     d.cell(0, 22, "Free, open source (MIT)")
-    d.set_font("sans", "", 14)
+    d.set_font("sans", "", 15)
     d.set_text_color(*MUTED)
     d.set_xy(MARGIN + 24, 200)
-    d.multi_cell(360, 20, "The app, Fee Lab, CLI, GitHub Action, and the "
-           "attestation registry.")
-    d.panel(MARGIN + 440, 150, 408, 150)
+    d.multi_cell(360, 22, "The app, Fee Lab, CLI, GitHub Action, and the "
+           "attestation registry.", align="L")
+    d.panel(MARGIN + 440, 150, 408, 170)
     d.set_font("sans", "B", 17)
     d.set_text_color(*TEXT)
     d.set_xy(MARGIN + 464, 170)
     d.cell(0, 22, "Paid, when there is demand")
-    d.set_font("sans", "", 14)
+    d.set_font("sans", "", 15)
     d.set_text_color(*MUTED)
     d.set_xy(MARGIN + 464, 200)
-    d.multi_cell(360, 20, "Hosted monitoring with alerts for node operators. "
-           "A managed pre-deploy cost gate with history for teams and CI.")
+    d.multi_cell(360, 22, "Hosted monitoring with alerts for node operators. "
+           "A managed pre-deploy cost gate with history for teams and CI.",
+           align="L")
     d.set_font("sans", "", 15)
     d.set_text_color(*TEXT)
-    d.set_xy(MARGIN, 330)
+    d.set_xy(MARGIN, 340)
     d.multi_cell(W - 2 * MARGIN, 21,
                  "Targets: Portaldot builders, node operators, wallets and dApps "
-                 "that need EVM vs native routing.")
+                 "that need EVM vs native routing.", align="L")
     d.set_font("sans", "", 14)
     d.set_text_color(*MUTED)
-    d.set_xy(MARGIN, 380)
+    d.set_xy(MARGIN, 400)
     d.multi_cell(W - 2 * MARGIN, 20,
                  "Sizing, honestly: no total market claimed. Only verified "
-                 "counts are used.")
+                 "counts are used.", align="L")
     d.slide_footer("Business Potential")
 
 
@@ -420,22 +433,26 @@ def slide_roadmap_team(d: Deck) -> None:
     d.kicker("Roadmap · Team")
     d.headline("What happens next.")
     steps = [
-        ("Office hours", "28-29 Oct 2026, with the findings and the evidence bundle."),
-        ("Demo recording", "4-5 Nov 2026, real screen recording of the final app."),
-        ("Code freeze", "6 Nov 2026, 11:00 WIB."),
-        ("After", "Mainnet profile becomes a live check when a public mainnet EVM "
-                  "RPC is verified. Hosted monitoring when demand exists."),
+        ("Hosted monitoring and alerts",
+         "For node operators, when demand exists."),
+        ("Pre-deploy cost gate in CI",
+         "The GitHub Action as a check teams run before deploying."),
+        ("Mainnet check",
+         "The mainnet profile becomes a live check when a public mainnet EVM "
+         "RPC is verified."),
+        ("GitHub Action on Marketplace",
+         "Publish the action so any team can add it in one step."),
     ]
     y = 150
     for title, text in steps:
         d.set_font("sans", "B", 15)
         d.set_text_color(*TEXT)
         d.set_xy(MARGIN, y)
-        d.cell(180, 20, title)
+        d.cell(280, 20, title)
         d.set_font("sans", "", 15)
         d.set_text_color(*MUTED)
-        d.set_xy(MARGIN + 190, y)
-        d.multi_cell(W - 2 * MARGIN - 190, 21, text)
+        d.set_xy(MARGIN + 290, y)
+        d.multi_cell(W - 2 * MARGIN - 290, 21, text, align="L")
         y += 52
     d.set_font("sans", "B", 15)
     d.set_text_color(*TEXT)
