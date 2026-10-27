@@ -1,0 +1,122 @@
+{
+  "schemaVersion": "nodescope.diagnostic-report.v1",
+  "exportedAt": "2026-10-27T10:18:05.411Z",
+  "recordCount": 6,
+  "records": [
+    {
+      "id": "1793096274922-297lz",
+      "requestMethod": "net_version",
+      "timestamp": "2026-10-27T10:17:54.533Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 388,
+      "metricStatus": "success",
+      "metricResult": 388,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    },
+    {
+      "id": "1793096274533-dm6dt",
+      "requestMethod": "web3_clientVersion",
+      "timestamp": "2026-10-27T10:17:54.131Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 402,
+      "metricStatus": "success",
+      "metricResult": 402,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    },
+    {
+      "id": "1793096274131-c3yb1",
+      "requestMethod": "eth_blockNumber",
+      "timestamp": "2026-10-27T10:17:53.713Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 417,
+      "metricStatus": "success",
+      "metricResult": 216294,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    },
+    {
+      "id": "1793096273714-xkt8r",
+      "requestMethod": "eth_chainId",
+      "timestamp": "2026-10-27T10:17:53.331Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 381,
+      "metricStatus": "success",
+      "metricResult": 381,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    },
+    {
+      "id": "1793096273331-2t5iy",
+      "requestMethod": "eth_blockNumber",
+      "timestamp": "2026-10-27T10:17:52.926Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 404,
+      "metricStatus": "success",
+      "metricResult": 216293,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    },
+    {
+      "id": "1793096273331-uocg6",
+      "requestMethod": "eth_chainId",
+      "timestamp": "2026-10-27T10:17:52.073Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": 852,
+      "metricStatus": "success",
+      "metricResult": 852,
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    }
+  ],
+  "findings": [
+    {
+      "ruleId": "block-height-retrieved",
+      "severity": "info",
+      "title": "Block Height Retrieved",
+      "evidence": "Method 'eth_blockNumber' returned block height: 0x34ce6",
+      "explanation": "The eth_blockNumber method returned a block height from the endpoint. This confirms retrieval only; one measurement does not prove synchronization or continued block production.",
+      "recommendation": "Repeat the check over time to determine whether block height advances."
+    },
+    {
+      "ruleId": "chain-id-verified",
+      "severity": "info",
+      "title": "Chain ID Observed",
+      "evidence": "Observed chain ID: 420420777 (0x190f1ca9); expected: 420420777 (0x190f1ca9)",
+      "explanation": "The endpoint reports the expected Portaldot V3 testnet chain ID.",
+      "recommendation": "Chain ID check passed. Continue with independent endpoint and block-height checks."
+    }
+  ],
+  "substrateWsProbe": {
+    "url": "wss://test-node-v3.portaldot.dev",
+    "handshakeMs": 384,
+    "totalMs": 707,
+    "chain": "PortaldotV3 Test",
+    "version": "3.0.0-dev-fddd43141f2",
+    "peers": 1,
+    "isSyncing": false,
+    "shouldHavePeers": true,
+    "headerNumberHex": "0x34ce6",
+    "headerNumberDecimal": "216294",
+    "status": "ok",
+    "error": null
+  },
+  "integrity": {
+    "algorithm": "SHA-256",
+    "hash": "08ac72ad0f7a818bc18a8624232811fc4f994cf065bbd2cad1eea4b0bb002df4",
+    "scope": "SHA-256 over the canonical JSON of this report, excluding the integrity block itself. Covers schemaVersion, exportedAt, recordCount, records, findings and sessionTrends when present."
+  }
+}

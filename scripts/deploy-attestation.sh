@@ -145,6 +145,11 @@ mkdir -p "$ROOT/deployments"
 python3 - "$ROOT/deployments/portaldot-v3.json" "$CONTRACT_ADDR" "$TX_HASH" "$BLOCK_NUM" "$DEPLOYER" "$RPC_URL" "$TIMESTAMP" <<'PYEOF'
 import json, sys
 path, addr, tx, block, deployer, rpc, ts = sys.argv[1:8]
+def to_int(v):
+    try:
+        return int(v, 0)
+    except (TypeError, ValueError):
+        return v
 doc = {
     "contractName": "NodeScopeAttestation",
     "contract": addr,
@@ -152,9 +157,9 @@ doc = {
     "rpcUrl": rpc,
     "deployer": deployer,
     "deployTx": tx,
-    "deployBlock": int(block) if str(block).isdigit() else block,
+    "deployBlock": to_int(block),
     "deployedAt": ts,
-    "anchor": None,
+    "anchors": [],
 }
 with open(path, "w") as f:
     json.dump(doc, f, indent=2)

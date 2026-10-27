@@ -69,9 +69,11 @@ true; full commands in `docs/EVIDENCE.md`):
   tx `0xc74a08f3835b0c5b7d813ab15597488affa1987bce79a88d843dfdc31a9ec913`,
   block 216346
 
-The deployments file records only the latest anchor by design; the
-other two live in `docs/EVIDENCE.md` and verify with the same cast
-commands. Never run the anchor script without `--report`: the default
+The deployments file records every anchor in its anchors array. Each
+anchored report is committed under `evidence/reports/` with a
+byte-identical copy under `public/evidence/reports/` for `/verify` to
+load, and `npm run verify:evidence` rechecks all of them. Never run the
+anchor script without `--report`: the default
 anchors the bundled sample report, which is not evidence of anything
 real.
 
@@ -79,7 +81,8 @@ real.
 
 ```bash
 npm run verify:evidence
-# expected: 5 PASS, OVERALL: PASS
+# expected: 18 PASS (registry-code, deploy-receipt, five per anchor,
+#   recompile), OVERALL: PASS
 ```
 
 Also run by hand from `docs/EVIDENCE.md` if you do not trust the script.
@@ -105,11 +108,14 @@ scripts.
 
 ## 6. Rotating to a new registry
 
-Re-run sections 1-3. The scripts overwrite
-`deployments/portaldot-v3.json`; the app, the consistency script, and
+Re-run sections 1-3. The deploy script writes a fresh
+`deployments/portaldot-v3.json` (empty anchors array); the anchor
+script appends each new anchor to that array instead of overwriting
+the previous ones. The app, the consistency script, and
 `npm run verify:evidence` follow the file, so no second copy of the
 address needs updating by hand. Update `src/utils/siteConstants.ts`
-(`ANCHOR_*` to the new latest anchor, previous anchor to `SUPPLEMENT_*`),
-`README.md`, the DoraHacks draft, and `docs/EVIDENCE.md` in the same
-commit, and keep the old anchor visible with its date label instead of
-deleting it.
+(`ANCHOR_*` to the new latest anchor, the new entry appended to
+`ANCHORED_REPORTS`), `README.md`, the DoraHacks draft, and
+`docs/EVIDENCE.md` in the same commit. When the registry itself is
+replaced, keep the old registry's anchor visible with its date label
+(`SUPPLEMENT_*`) instead of deleting it.

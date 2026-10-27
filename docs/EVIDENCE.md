@@ -36,6 +36,7 @@ block 216341.
 
 - Report hash: `0x08ac72ad0f7a818bc18a8624232811fc4f994cf065bbd2cad1eea4b0bb002df4`
 - Anchor tx: `0xba35df8e2f182d75885b75b75f0dd97340f4ce64333840d1cf06a252441e9476`
+- Report file (committed, byte-identical): `evidence/reports/diagnostic-2026-10-27-1.json`, also served at `/evidence/reports/diagnostic-2026-10-27-1.json`
 
 ```bash
 cast call 0xd48da7eff3264bdd51a86b873da9ff6997aae99c "isAnchored(bytes32)(bool)" 0x08ac72ad0f7a818bc18a8624232811fc4f994cf065bbd2cad1eea4b0bb002df4 --rpc-url https://test-evm-rpc-v3.portaldot.dev
@@ -59,6 +60,7 @@ on chain, not just a schema-level claim.
 
 - Report hash: `0x246d6d43b308b8801109910bb52d8ad8d264376e7c8557255b3704176ada0464`
 - Anchor tx: `0x0c08335507cfb2a0df4b0236543607aed04527ec26361e6e0022c9100c88f2c9`
+- Report file (committed, byte-identical): `evidence/reports/fee-2026-10-27.json`, also served at `/evidence/reports/fee-2026-10-27.json`
 
 ```bash
 cast call 0xd48da7eff3264bdd51a86b873da9ff6997aae99c "isAnchored(bytes32)(bool)" 0x246d6d43b308b8801109910bb52d8ad8d264376e7c8557255b3704176ada0464 --rpc-url https://test-evm-rpc-v3.portaldot.dev
@@ -77,11 +79,12 @@ Verify link: https://nodescope.vercel.app/verify?hash=0x246d6d43b308b8801109910b
 Claim: the diagnostic report exported 2026-10-27T10:20:20Z (12 records
 across 2 snapshots, blocks 216294 to 216317, verdict healthy, Substrate
 WSS probe status ok at header 216317) has its SHA-256 anchored at block
-216346. This is the latest anchor and the one recorded in
-`deployments/portaldot-v3.json`.
+216346. This is the latest anchor; all three anchors are recorded in
+the anchors array of `deployments/portaldot-v3.json`.
 
 - Report hash: `0x528f38d58920b2c7fef730c27e95200e429a126874746e8cead5c1146c768a5b`
 - Anchor tx: `0xc74a08f3835b0c5b7d813ab15597488affa1987bce79a88d843dfdc31a9ec913`
+- Report file (committed, byte-identical): `evidence/reports/diagnostic-2026-10-27-2.json`, also served at `/evidence/reports/diagnostic-2026-10-27-2.json`
 
 ```bash
 cast call 0xd48da7eff3264bdd51a86b873da9ff6997aae99c "isAnchored(bytes32)(bool)" 0x528f38d58920b2c7fef730c27e95200e429a126874746e8cead5c1146c768a5b --rpc-url https://test-evm-rpc-v3.portaldot.dev
@@ -124,16 +127,20 @@ Verify link: https://nodescope.vercel.app/verify?hash=0x0bc787de4c634a55699e92d9
 
 ```bash
 npm run verify:evidence
-# expected: [PASS] registry-code, [PASS] deploy-receipt, [PASS] anchor-receipt,
-#   [PASS] anchor-log-topic, [PASS] recompile, OVERALL: PASS
+# expected: [PASS] registry-code, [PASS] deploy-receipt, then five PASS
+#   lines per anchor (anchor-1-receipt, anchor-1-log-topic,
+#   anchor-1-report-hash, anchor-1-is-anchored, anchor-1-public-copy,
+#   same for anchors 2 and 3), [PASS] recompile, OVERALL: PASS
 ```
 
 The script reads `deployments/portaldot-v3.json` and checks the registry
-code, the deploy receipt, and the latest anchor (anchor 3 above) on
-chain, then recompiles the contract and compares creation plus deployed
-bytecode against the committed artifact. Anchors 1 and 2 are covered by
-the cast commands in sections 2 and 3, not by this script: the
-deployments file records only the latest anchor by design.
+code, the deploy receipt, and every anchor in the anchors array on
+chain: receipt status, log topic, the SHA-256 recomputed from the
+committed report file in `evidence/reports/`, the registry's
+`isAnchored` view, and a byte-identical public copy under
+`public/evidence/reports/` for `/verify` to load. Then it recompiles
+the contract and compares creation plus deployed bytecode against the
+committed artifact.
 
 ## 7. What anchoring does not prove
 

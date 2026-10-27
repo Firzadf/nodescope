@@ -150,22 +150,46 @@ mkdir -p "$ROOT/deployments"
 python3 - "$DEPLOY_FILE" "$REGISTRY" "$REPORT_FILE" "$REPORT_HASH" "$ENDPOINT" "$BLOCK_PARAM" "$TX_HASH" "$ANCHOR_BLOCK" "$TIMESTAMP" <<'PYEOF'
 import json, os, sys
 path, registry, report, h, endpoint, param, tx, block, ts = sys.argv[1:10]
+def to_int(v):
+    try:
+        return int(v, 0)
+    except (TypeError, ValueError):
+        return v
 doc = {}
 if os.path.exists(path):
     doc = json.load(open(path))
 doc.setdefault("contractName", "NodeScopeAttestation")
 doc.setdefault("contract", registry)
 doc.setdefault("chainId", 420420777)
-doc["anchor"] = {
+# Record the report path relative to the repo root when it lives inside
+# the repo, so the deployments file never leaks a local absolute path.
+root = os.path.dirname(os.path.dirname(os.path.abspath(path)))
+if os.path.isabs(report):
+    try:
+        rel = os.path.relpath(report, root)
+        if not rel.startswith(".."):
+            report = rel
+    except ValueError:
+        pass
+anchors = doc.get("anchors")
+if not isinstance(anchors, list):
+    anchors = []
+    if isinstance(doc.get("anchor"), dict):
+        anchors.append(doc["anchor"])
+    doc["anchors"] = anchors
+    doc.pop("anchor", None)
+anchors.append({
     "reportFile": report,
     "reportHash": h,
     "endpoint": endpoint,
     "chainId": 420420777,
-    "blockParam": int(param) if str(param).isdigit() else param,
+    "blockParam": to_int(param),
     "txHash": tx,
-    "block": int(block) if str(block).isdigit() else block,
+    "block": to_int(block),
     "anchoredAt": ts,
-}
+})
+# Label is display metadata for /judges; add one by hand in the
+# deployments file when wiring the anchor into the app.
 with open(path, "w") as f:
     json.dump(doc, f, indent=2)
     f.write("\n")

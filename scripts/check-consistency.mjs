@@ -11,11 +11,13 @@
  *
  * Deployment facts come from deployments/portaldot-v3.json, the file the
  * deploy and anchor scripts write: it is the truth for the registry
- * contract, the deploy transaction, and the latest anchor. This script
+ * contract, the deploy transaction, and the anchors array. This script
  * cross-checks src/utils/siteConstants.ts against it (ANCHOR_TX and
- * ANCHORED_REPORT_HASH must equal the file's latest anchor) and requires
- * the README and the draft to contain the contract, the deploy tx, the
- * latest anchor tx and hash, the chain ID, and the test counts.
+ * ANCHORED_REPORT_HASH must equal the file's latest anchor, and every
+ * ANCHORED_REPORTS entry must match an anchors array entry, in order)
+ * and requires the README and the draft to contain the contract, the
+ * deploy tx, the latest anchor tx and hash, the chain ID, and the test
+ * counts.
  * Exit code 1 lists every missing fact; fix the file, never this script.
  */
 import { readFileSync } from 'node:fs';
@@ -60,17 +62,42 @@ if (draftArg !== -1 && process.argv[draftArg + 1]) {
 let failures = 0;
 const anchorTx = FACTS.find((f) => f.name === 'ANCHOR_TX').value;
 const anchorHash = FACTS.find((f) => f.name === 'ANCHORED_REPORT_HASH').value;
-if (!deployments.anchor || anchorTx !== deployments.anchor.txHash) {
+const anchors = Array.isArray(deployments.anchors) ? deployments.anchors : [];
+const latest = anchors[anchors.length - 1];
+if (!latest || anchorTx !== latest.txHash) {
   console.error(
-    `FAIL deployments: siteConstants ANCHOR_TX (${anchorTx}) != deployments anchor txHash (${deployments.anchor?.txHash})`,
+    `FAIL deployments: siteConstants ANCHOR_TX (${anchorTx}) != deployments latest anchor txHash (${latest?.txHash})`,
   );
   failures += 1;
 }
-if (!deployments.anchor || anchorHash !== deployments.anchor.reportHash) {
+if (!latest || anchorHash !== latest.reportHash) {
   console.error(
-    `FAIL deployments: siteConstants ANCHORED_REPORT_HASH (${anchorHash}) != deployments anchor reportHash (${deployments.anchor?.reportHash})`,
+    `FAIL deployments: siteConstants ANCHORED_REPORT_HASH (${anchorHash}) != deployments latest anchor reportHash (${latest?.reportHash})`,
   );
   failures += 1;
+}
+const reportsBlock = constantsSrc.match(/export const ANCHORED_REPORTS[^=]*=\s*\[([\s\S]*?)\n\];/);
+if (!reportsBlock) {
+  console.error('FAIL deployments: ANCHORED_REPORTS not found in siteConstants.ts');
+  failures += 1;
+} else {
+  const hashes = [...reportsBlock[1].matchAll(/hash: '([^']+)'/g)].map((m) => m[1]);
+  const txs = [...reportsBlock[1].matchAll(/tx: '([^']+)'/g)].map((m) => m[1]);
+  if (hashes.length !== anchors.length || txs.length !== anchors.length) {
+    console.error(
+      `FAIL deployments: ANCHORED_REPORTS has ${hashes.length} entries but deployments has ${anchors.length} anchors`,
+    );
+    failures += 1;
+  } else {
+    anchors.forEach((a, i) => {
+      if (a.reportHash !== hashes[i] || a.txHash !== txs[i]) {
+        console.error(
+          `FAIL deployments: ANCHORED_REPORTS[${i}] (${txs[i]}, ${hashes[i]}) != deployments anchors[${i}] (${a.txHash}, ${a.reportHash})`,
+        );
+        failures += 1;
+      }
+    });
+  }
 }
 for (const { label, path } of targets) {
   let text;

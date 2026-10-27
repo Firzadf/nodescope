@@ -28,17 +28,26 @@ export const DEPLOYED_REGISTRY_ADDRESS: string = deployments.contract;
 export const DEPLOYED_REGISTRY_CHAIN_ID: number = deployments.chainId;
 
 /**
- * The latest anchor recorded in deployments/portaldot-v3.json, or null
- * when the file records a deployment with no anchor yet. The attestation
- * panel offers it as a one-click fill-in; it never signs anything.
+ * The latest anchor recorded in deployments/portaldot-v3.json (the last
+ * entry of the anchors array), or null when the file records a deployment
+ * with no anchor yet. The attestation panel offers it as a one-click
+ * fill-in; it never signs anything.
+ *
+ * Blocks are stored as decimal integers in the deployments file; the
+ * panel's display helper takes a hex string, so the block is converted
+ * back here (216346 -> "0x34d1a").
  */
+const LATEST_ANCHOR =
+  Array.isArray(deployments.anchors) && deployments.anchors.length > 0
+    ? deployments.anchors[deployments.anchors.length - 1]
+    : null;
 export const REFERENCE_ANCHOR: { hash: string; tx: string; block: string } | null =
-  deployments.anchor == null
+  LATEST_ANCHOR == null
     ? null
     : {
-        hash: deployments.anchor.reportHash as string,
-        tx: deployments.anchor.txHash as string,
-        block: deployments.anchor.block as string,
+        hash: LATEST_ANCHOR.reportHash as string,
+        tx: LATEST_ANCHOR.txHash as string,
+        block: `0x${(LATEST_ANCHOR.block as number).toString(16)}`,
       };
 
 export interface ShareParams {

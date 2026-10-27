@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "nodescope.diagnostic-report.v1",
+  "exportedAt": "2026-10-27T10:18:57.232Z",
+  "recordCount": 2,
+  "records": [
+    {
+      "id": "evm",
+      "requestMethod": "eth_estimateGas (create)",
+      "timestamp": "2026-10-27T10:18:57.232Z",
+      "endpointOrigin": "https://test-evm-rpc-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": null,
+      "metricStatus": "success",
+      "metricResult": "12409821877058561",
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    },
+    {
+      "id": "native",
+      "requestMethod": "revive.instantiateWithCode",
+      "timestamp": "2026-10-27T10:18:57.232Z",
+      "endpointOrigin": "wss://test-node-v3.portaldot.dev",
+      "outcome": "success",
+      "latencyMs": null,
+      "metricStatus": "success",
+      "metricResult": "12219141166063999",
+      "evidenceLabel": "generic_endpoint_tested",
+      "dataOrigin": "real_request",
+      "error": null
+    }
+  ],
+  "feeComparison": {
+    "evm": {
+      "status": "ok",
+      "method": "eth_estimateGas (create)",
+      "gas": "4262346514531534",
+      "gasPrice": "29115",
+      "feeWei": "124098218770585612410",
+      "totalPlanck": "12409821877058561",
+      "blockNumber": 216303
+    },
+    "native": {
+      "status": "ok",
+      "method": "revive.instantiateWithCode",
+      "partialFee": "15441166063999",
+      "storageDeposit": "12203700000000000",
+      "totalPlanck": "12219141166063999",
+      "weight": {
+        "refTime": "372899347",
+        "proofSize": "20930"
+      },
+      "blockNumber": 216304
+    },
+    "ratioAllIn": 1.015605,
+    "ratioVsNativeFeeOnly": 803.684244,
+    "recommended": "either",
+    "savingsPlanck": "190680710994562",
+    "reason": "All-in costs are within 2% — pick by wallet/UX. Native storage deposit is reserved (refundable when storage is freed); the EVM gas figure already folds it in.",
+    "measuredAt": "2026-10-27T10:18:57.232Z"
+  },
+  "feeOperation": "deploy",
+  "integrity": {
+    "algorithm": "SHA-256",
+    "hash": "246d6d43b308b8801109910bb52d8ad8d264376e7c8557255b3704176ada0464",
+    "scope": "SHA-256 over the canonical JSON of this report, excluding the integrity block itself. Covers schemaVersion, exportedAt, recordCount, records, findings and sessionTrends when present."
+  }
+}

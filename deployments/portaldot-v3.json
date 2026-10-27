@@ -5,16 +5,39 @@
   "rpcUrl": "https://test-evm-rpc-v3.portaldot.dev",
   "deployer": "0xaD62d0aA606240e2C5156e04C82e61C81044959f",
   "deployTx": "0x1c2a055523a4cf8b73d771df4d3c54d21392a85f86a14a4d68213bf6db5f4904",
-  "deployBlock": "0x34ccc",
+  "deployBlock": 216268,
   "deployedAt": "2026-10-27T10:15:19Z",
-  "anchor": {
-    "reportFile": "/mnt/c/Users/LP/Downloads/nodescope-diagnostic-report-2026-10-27 (1).json",
-    "reportHash": "0x528f38d58920b2c7fef730c27e95200e429a126874746e8cead5c1146c768a5b",
-    "endpoint": "https://test-evm-rpc-v3.portaldot.dev",
-    "chainId": 420420777,
-    "blockParam": 216343,
-    "txHash": "0xc74a08f3835b0c5b7d813ab15597488affa1987bce79a88d843dfdc31a9ec913",
-    "block": "0x34d1a",
-    "anchoredAt": "2026-10-27T10:23:06Z"
-  }
+  "anchors": [
+    {
+      "label": "Health #1",
+      "reportFile": "evidence/reports/diagnostic-2026-10-27-1.json",
+      "reportHash": "0x08ac72ad0f7a818bc18a8624232811fc4f994cf065bbd2cad1eea4b0bb002df4",
+      "endpoint": "https://test-evm-rpc-v3.portaldot.dev",
+      "chainId": 420420777,
+      "blockParam": 216336,
+      "txHash": "0xba35df8e2f182d75885b75b75f0dd97340f4ce64333840d1cf06a252441e9476",
+      "block": 216341
+    },
+    {
+      "label": "Fees",
+      "reportFile": "evidence/reports/fee-2026-10-27.json",
+      "reportHash": "0x246d6d43b308b8801109910bb52d8ad8d264376e7c8557255b3704176ada0464",
+      "endpoint": "https://test-evm-rpc-v3.portaldot.dev",
+      "chainId": 420420777,
+      "blockParam": 216341,
+      "txHash": "0x0c08335507cfb2a0df4b0236543607aed04527ec26361e6e0022c9100c88f2c9",
+      "block": 216343
+    },
+    {
+      "label": "Health #2",
+      "reportFile": "evidence/reports/diagnostic-2026-10-27-2.json",
+      "reportHash": "0x528f38d58920b2c7fef730c27e95200e429a126874746e8cead5c1146c768a5b",
+      "endpoint": "https://test-evm-rpc-v3.portaldot.dev",
+      "chainId": 420420777,
+      "blockParam": 216343,
+      "txHash": "0xc74a08f3835b0c5b7d813ab15597488affa1987bce79a88d843dfdc31a9ec913",
+      "block": 216346,
+      "anchoredAt": "2026-10-27T10:23:06Z"
+    }
+  ]
 }
