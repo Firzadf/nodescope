@@ -501,3 +501,84 @@ export async function postWebhook(url, text, fetchImpl = globalThis.fetch) {
   if (!res.ok) throw new Error(`webhook answered HTTP ${res.status}`);
   return { kind, status: res.status };
 }
+
+/* ------------------------------------------------------------------------ */
+/* RPC endpoint benchmark: latency + consistency across endpoints.          */
+/* ------------------------------------------------------------------------ */
+
+function percentile(sorted, p) {
+  if (sorted.length === 0) return null;
+  const idx = Math.min(sorted.length - 1, Math.max(0, Math.ceil((p / 100) * sorted.length) - 1));
+  return sorted[idx];
+}
+
+/**
+ * Benchmark one or more EVM endpoints with the same read-only calls:
+ * `samples` rounds of eth_blockNumber (timed, sequential per endpoint,
+ * all endpoints in parallel per round) plus one eth_chainId each.
+ * Reports p50/p95/max latency, error count, the chain id, and the head
+ * height of the LAST round, then a consistency block: do the chain ids
+ * agree, and how far apart are the heads (max − min) in that last round.
+ * A head spread is reported, never judged: endpoints can legitimately be a
+ * block or two apart between two calls.
+ */
+export async function benchEndpoints(urls, opts = {}) {
+  const samples = opts.samples ?? 5;
+  const timeoutMs = opts.timeoutMs ?? 10000;
+  const now = opts.now ?? (() => performance.now());
+  const results = await Promise.all(
+    urls.map(async (url) => {
+      let chainId = null;
+      try {
+        chainId = Number(hexToBigInt(await rpcCall(url, 'eth_chainId', [], timeoutMs)));
+      } catch {
+        chainId = null;
+      }
+      return { url, chainId, latencies: [], errors: 0, lastHead: null, lastError: null };
+    }),
+  );
+  for (let round = 0; round < samples; round++) {
+    await Promise.all(
+      results.map(async (r) => {
+        const t0 = now();
+        try {
+          const head = await rpcCall(r.url, 'eth_blockNumber', [], timeoutMs);
+          r.latencies.push(Math.round(now() - t0));
+          r.lastHead = Number(hexToBigInt(head));
+        } catch (e) {
+          r.errors += 1;
+          r.lastError = e instanceof Error ? e.message : String(e);
+        }
+      }),
+    );
+  }
+  const endpoints = results.map((r) => {
+    const sorted = [...r.latencies].sort((a, b) => a - b);
+    return {
+      url: r.url,
+      chainId: r.chainId,
+      ok: r.latencies.length,
+      errors: r.errors,
+      p50Ms: percentile(sorted, 50),
+      p95Ms: percentile(sorted, 95),
+      maxMs: sorted.length ? sorted[sorted.length - 1] : null,
+      head: r.lastHead,
+      lastError: r.lastError,
+    };
+  });
+  const ids = [...new Set(endpoints.map((e) => e.chainId).filter((x) => x !== null))];
+  const heads = endpoints.map((e) => e.head).filter((h) => h !== null);
+  const answering = endpoints.filter((e) => e.ok > 0);
+  const fastest = answering.length ? answering.reduce((a, b) => (a.p50Ms <= b.p50Ms ? a : b)).url : null;
+  return {
+    samples,
+    endpoints,
+    consistency: {
+      chainIdsAgree: ids.length <= 1,
+      chainIds: ids,
+      headSpread: heads.length >= 2 ? Math.max(...heads) - Math.min(...heads) : null,
+      expectedChain: ids.length === 1 && ids[0] === PORTALDOT_CHAIN_ID,
+    },
+    fastest,
+  };
+}

@@ -29,6 +29,7 @@ import {
   detectTransition,
   checkAlertText,
   postWebhook,
+  benchEndpoints,
 } from './lib.mjs';
 
 const USAGE = `nodescope — check the node + price the deploy before you deploy.
@@ -39,6 +40,7 @@ Usage:
   nodescope fees --artifact <file.json> [--evm-rpc URL] [--wss URL]
     [--from 0x…] [--max-tpot N] [--evm-only] [--json]
     [--connect-timeout-ms N] [--estimate-timeout-ms N]
+  nodescope bench <rpc-url> [<rpc-url> …] [--samples N] [--json]
 
 Defaults: --evm-rpc ${DEFAULT_EVM_RPC}, --wss ${DEFAULT_WSS},
 --from ${SAMPLE_FROM} (dry-run origin only; nothing is signed).
@@ -47,6 +49,10 @@ Alerts: --webhook posts to Discord/Slack. One-shot: only when the
 verdict is not healthy. With --watch N (N >= 30) the check repeats every
 N seconds until Ctrl-C and posts only on degrade/recover transitions;
 the first check is the baseline. The URL is never printed.
+
+bench: latency (p50/p95/max of eth_blockNumber) and consistency (chain
+ids agree, head spread) across endpoints, read-only. Exit 0 when every
+endpoint answered and the chain ids agree, 1 otherwise.
 
 Exit codes:
   check: 0 healthy, 1 degraded/down, 2 usage error (one-shot mode).
@@ -214,6 +220,26 @@ async function runFees(argv) {
   process.exit(0);
 }
 
+async function runBench(argv) {
+  const { flags, positional } = parseFlags(argv);
+  if (positional.length === 0) failUsage('bench needs at least one RPC URL.');
+  const samples = flags.samples !== undefined ? Number(flags.samples) : 5;
+  if (!Number.isInteger(samples) || samples < 1 || samples > 50) failUsage('--samples must be an integer from 1 to 50.');
+  const out = await benchEndpoints(positional, { samples });
+  if (flags.json) {
+    console.log(JSON.stringify(out, null, 2));
+  } else {
+    for (const e of out.endpoints) {
+      console.log(`${e.url}`);
+      console.log(`  chainId ${e.chainId ?? '—'} · head ${e.head ?? '—'} · ok ${e.ok}/${out.samples} · p50 ${e.p50Ms ?? '—'} ms · p95 ${e.p95Ms ?? '—'} ms · max ${e.maxMs ?? '—'} ms${e.errors ? ` · last error: ${e.lastError}` : ''}`);
+    }
+    console.log(`consistency: chain ids ${out.consistency.chainIdsAgree ? 'agree' : 'DISAGREE'} (${out.consistency.chainIds.join(', ') || 'none'}) · head spread ${out.consistency.headSpread ?? 'n/a'} blocks`);
+    if (out.fastest) console.log(`fastest (p50): ${out.fastest}`);
+  }
+  const allAnswered = out.endpoints.every((e) => e.ok > 0);
+  process.exit(allAnswered && out.consistency.chainIdsAgree ? 0 : 1);
+}
+
 async function main() {
   const [cmd, ...rest] = process.argv.slice(2);
   if (!cmd || cmd === '--help' || cmd === '-h') {
@@ -222,6 +248,7 @@ async function main() {
   }
   if (cmd === 'check') await runCheck(rest);
   else if (cmd === 'fees') await runFees(rest);
+  else if (cmd === 'bench') await runBench(rest);
   else failUsage(`Unknown command: ${cmd}.`);
 }
 

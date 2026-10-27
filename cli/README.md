@@ -49,6 +49,21 @@ nodescope check <rpc-url> --webhook https://hooks.slack.com/services/… --watch
 - Same transition rule as the app's Watch & alerts panel. Read-only toward
   the chain: the only writes are the webhook POSTs.
 
+## bench
+
+```bash
+nodescope bench <rpc-url> [<rpc-url> …] [--samples N] [--json]
+```
+
+Read-only RPC endpoint benchmark. For each endpoint: one `eth_chainId`,
+then `--samples` rounds (default 5, max 50) of `eth_blockNumber`, all
+endpoints in parallel per round. Prints p50 / p95 / max latency, answers
+vs errors, and the head of the last round, then a consistency line: do
+the chain ids agree, and the head spread (max − min) in the last round.
+A spread of a block or two is normal between two calls and is reported,
+not judged. Exit 0 when every endpoint answered and the chain ids agree,
+1 otherwise, 2 on a usage error.
+
 ## Cost gate (`scripts/cost-gate.mjs` + `.github/actions/cost-gate`)
 
 ```bash
