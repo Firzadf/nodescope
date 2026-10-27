@@ -40,8 +40,8 @@ describe('JudgesPage anchors', () => {
     const { container } = render(<JudgesPage />);
     const scope = within(container);
     expect(
-      scope.getByText(/Three reports are anchored on the current registry/),
-    ).toBeTruthy();
+      scope.getAllByText(/Three reports are anchored on the current registry/),
+    ).toHaveLength(2);
     expect(scope.queryByText('Exactly one report is anchored so far.')).toBeNull();
     expect(
       scope.getByText(/deploy transaction is not listed because it was not recorded/),
