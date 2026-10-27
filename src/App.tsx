@@ -32,6 +32,11 @@ import { defaultLatencyMethodForProfile, defaultClientVersionMethodForProfile } 
 import { parseLatency, parseClientVersion, latencyFromCheck, versionFromCheck } from './utils/metricParsers';
 import { extractEvmSide } from './utils/combinedVerdict';
 import { FullDiagnosticRunner } from './components/dashboard/FullDiagnosticRunner';
+import { WatchAlertsPanel, type WatchCycleResult } from './components/dashboard/WatchAlertsPanel';
+import { overallVerdictFrom } from './utils/overallVerdict';
+import { computeHealthScore } from './utils/healthScore';
+import { probeSubstrateWs } from './services/substrateWsProbe';
+import { sanitizeEndpointOrigin } from './utils/reportBuilder';
 // Fee Lab is lazy: its panel code stays out of the first load (the
 // @polkadot/api chunk was already lazy via dynamic import).
 const FeeLabPanel = lazy(() => import('./components/feeLab/FeeLabPanel').then((m) => ({ default: m.FeeLabPanel })));
@@ -236,6 +241,33 @@ function App() {
   }, [healthSnapshots]);
 
   const isConnected = connectionStatus === 'connected';
+
+  // Watch & alerts: one user-started cycle = one EVM health check + one
+  // Substrate probe, summarized into the verdict and the Health Score.
+  const currentScore = useMemo(
+    () => computeHealthScore({ snapshots: healthSnapshots, wsProbe: wsProbeResult }),
+    [healthSnapshots, wsProbeResult],
+  );
+  const currentWatchState: WatchCycleResult = {
+    verdict: overallVerdictFrom(latestHealthSnapshot, wsProbeResult),
+    endpointOrigin: sanitizeEndpointOrigin(endpoint),
+    blockHeight: extractEvmSide(latestHealthSnapshot)?.blockHeightDecimal ?? null,
+    score: currentScore.score,
+    coverage: currentScore.coverage,
+  };
+  const runWatchCycle = async (): Promise<WatchCycleResult> => {
+    const snapshot = await doHealthCheck();
+    const probe = await probeSubstrateWs();
+    handleWsProbeResultChange(probe);
+    const score = computeHealthScore({ snapshots: getHealthSnapshots(), wsProbe: probe });
+    return {
+      verdict: overallVerdictFrom(snapshot, probe),
+      endpointOrigin: snapshot.endpointOrigin,
+      blockHeight: extractEvmSide(snapshot)?.blockHeightDecimal ?? null,
+      score: score.score,
+      coverage: score.coverage,
+    };
+  };
   // Session restore wrappers: a fresh run replaces restored data and is
   // saved for the next reload; a null (e.g. endpoint change clearing the
   // capability snapshot) only clears the restored label, not the store.
@@ -414,6 +446,7 @@ function App() {
                   onWsProbeResultChange={handleWsProbeResultChange}
                   probeRestoredAt={probeRestoredAt}
                   capabilityRestoredAt={capabilityRestoredAt}
+                  alertsSlot={<WatchAlertsPanel runCycle={runWatchCycle} current={currentWatchState} onToast={pushToast} />}
                 />
               </div>
             )}
