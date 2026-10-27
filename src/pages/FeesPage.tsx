@@ -104,7 +104,7 @@ export function FeesPage() {
 
       <section className="border-t border-line px-4 py-16 md:px-8 md:py-24">
         <div className="mx-auto max-w-[1240px]">
-          <h2 className="font-display text-[40px] leading-none tracking-[-0.02em] text-white md:text-[56px]"><span className="mr-4 align-middle font-data text-[13px] tracking-normal text-signal-ink">01</span>{t.howTitle}</h2>
+          <h2 className="font-display text-[40px] leading-none tracking-[-0.02em] text-white md:text-[56px]"><span aria-hidden="true" className="mr-4 align-middle font-data text-[13px] tracking-normal text-signal-ink">01</span>{t.howTitle}</h2>
           <div className="mt-10 grid gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
             {t.howSteps.map((s, i) => (
               <div key={s.title} className="bg-ink p-6">
@@ -119,7 +119,7 @@ export function FeesPage() {
 
       <section className="border-t border-line px-4 py-16 md:px-8 md:py-24">
         <div className="mx-auto max-w-[1240px]">
-          <h2 className="font-display text-[40px] leading-none tracking-[-0.02em] text-white md:text-[56px]"><span className="mr-4 align-middle font-data text-[13px] tracking-normal text-signal-ink">02</span>{t.opsTitle}</h2>
+          <h2 className="font-display text-[40px] leading-none tracking-[-0.02em] text-white md:text-[56px]"><span aria-hidden="true" className="mr-4 align-middle font-data text-[13px] tracking-normal text-signal-ink">02</span>{t.opsTitle}</h2>
           <div className="mt-10 grid gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
             {t.ops.map((o) => (
               <div key={o.title} className="bg-ink p-6">
@@ -133,7 +133,7 @@ export function FeesPage() {
 
       <section className="border-t border-line px-4 py-16 md:px-8 md:py-24">
         <div className="mx-auto max-w-[1240px]">
-          <h2 className="font-display text-[40px] leading-none tracking-[-0.02em] text-white md:text-[56px]"><span className="mr-4 align-middle font-data text-[13px] tracking-normal text-signal-ink">03</span>{t.findingsTitle}</h2>
+          <h2 className="font-display text-[40px] leading-none tracking-[-0.02em] text-white md:text-[56px]"><span aria-hidden="true" className="mr-4 align-middle font-data text-[13px] tracking-normal text-signal-ink">03</span>{t.findingsTitle}</h2>
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">{t.findingsIntro}</p>
           <div className="mt-10 overflow-x-auto border-t border-white">
             <table className="w-full min-w-[720px] text-left text-sm">
@@ -168,7 +168,7 @@ export function FeesPage() {
 
       <section className="border-t border-line px-4 py-16 md:px-8 md:py-24">
         <div className="mx-auto max-w-[1240px]">
-          <h2 className="font-display text-[40px] leading-none tracking-[-0.02em] text-white md:text-[56px]"><span className="mr-4 align-middle font-data text-[13px] tracking-normal text-signal-ink">04</span>{t.calc.title}</h2>
+          <h2 className="font-display text-[40px] leading-none tracking-[-0.02em] text-white md:text-[56px]"><span aria-hidden="true" className="mr-4 align-middle font-data text-[13px] tracking-normal text-signal-ink">04</span>{t.calc.title}</h2>
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">{t.calc.intro}</p>
           <div className="mt-10 border border-line bg-panel p-5 md:p-8">
             <DeployCostCalculator lang={lang} />
@@ -178,14 +178,14 @@ export function FeesPage() {
 
       <section className="border-t border-line px-4 py-16 md:px-8 md:py-24">
         <div className="mx-auto max-w-[1240px]">
-          <h2 className="font-display text-[40px] leading-none tracking-[-0.02em] text-white md:text-[56px]"><span className="mr-4 align-middle font-data text-[13px] tracking-normal text-signal-ink">05</span>{t.limitsTitle}</h2>
+          <h2 className="font-display text-[40px] leading-none tracking-[-0.02em] text-white md:text-[56px]"><span aria-hidden="true" className="mr-4 align-middle font-data text-[13px] tracking-normal text-signal-ink">05</span>{t.limitsTitle}</h2>
           <ul className="mt-6 grid max-w-4xl gap-2.5 text-sm leading-relaxed text-slate-400">
             {t.limits.map((l) => (
               <li key={l} className="flex gap-2.5"><span aria-hidden="true" className="font-data text-signal-ink">—</span><span>{l}</span></li>
             ))}
           </ul>
           <div className="graphite mt-14 border border-graphite p-6 md:p-12">
-            <h2 className="font-display text-[40px] leading-none tracking-[-0.02em] text-white md:text-[56px]"><span className="mr-4 align-middle font-data text-[13px] tracking-normal text-signal-ink">06</span>{t.ctaTitle}</h2>
+            <h2 className="font-display text-[40px] leading-none tracking-[-0.02em] text-white md:text-[56px]"><span aria-hidden="true" className="mr-4 align-middle font-data text-[13px] tracking-normal text-signal-ink">06</span>{t.ctaTitle}</h2>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-400">{t.ctaBody}</p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <a href="/app/fee-lab" className="btn-primary inline-flex items-center gap-2 px-6 py-3 text-[15px] font-semibold">

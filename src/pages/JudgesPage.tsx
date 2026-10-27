@@ -118,7 +118,7 @@ export function JudgesPage() {
         <section className="mt-16" aria-labelledby="evidence-title">
           <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-white pb-3">
             <h2 id="evidence-title" className="font-display text-[36px] leading-none text-white">
-              <span className="mr-3 font-data text-[13px] text-signal-ink">01</span>On-chain evidence
+              <span aria-hidden="true" className="mr-3 font-data text-[13px] text-signal-ink">01</span>On-chain evidence
             </h2>
             <p className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-500">Registry · deploy · 3 anchors</p>
           </div>
@@ -188,7 +188,7 @@ export function JudgesPage() {
         <section className="mt-16">
           <div className="border-b border-white pb-3">
             <h2 className="font-display text-[36px] leading-none text-white">
-              <span className="mr-3 font-data text-[13px] text-signal-ink">02</span>The 60-second test path
+              <span aria-hidden="true" className="mr-3 font-data text-[13px] text-signal-ink">02</span>The 60-second test path
             </h2>
           </div>
           <ol className="mt-2 divide-y divide-line text-[15px] leading-relaxed text-slate-400">
@@ -204,7 +204,7 @@ export function JudgesPage() {
         <section className="mt-16">
           <div className="border-b border-white pb-3">
             <h2 className="font-display text-[36px] leading-none text-white">
-              <span className="mr-3 font-data text-[13px] text-signal-ink">03</span>Sample report
+              <span aria-hidden="true" className="mr-3 font-data text-[13px] text-signal-ink">03</span>Sample report
             </h2>
           </div>
           <p className="mt-4 max-w-[70ch] text-sm leading-relaxed text-slate-400">
@@ -234,7 +234,7 @@ export function JudgesPage() {
         <section className="mt-16">
           <div className="border-b border-white pb-3">
             <h2 className="font-display text-[36px] leading-none text-white">
-              <span className="mr-3 font-data text-[13px] text-signal-ink">04</span>Earlier anchor (25 Oct 2026, supplement)
+              <span aria-hidden="true" className="mr-3 font-data text-[13px] text-signal-ink">04</span>Earlier anchor (25 Oct 2026, supplement)
             </h2>
           </div>
           <p className="mt-4 max-w-[70ch] text-sm leading-relaxed text-slate-400">
@@ -266,7 +266,7 @@ export function JudgesPage() {
           <div>
             <div className="border-b border-white pb-3">
               <h2 className="font-display text-[36px] leading-none text-white">
-                <span className="mr-3 font-data text-[13px] text-signal-ink">05</span>Tests and source
+                <span aria-hidden="true" className="mr-3 font-data text-[13px] text-signal-ink">05</span>Tests and source
               </h2>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-slate-400">
@@ -287,7 +287,7 @@ export function JudgesPage() {
           <div>
             <div className="border-b border-white pb-3">
               <h2 className="font-display text-[36px] leading-none text-white">
-                <span className="mr-3 font-data text-[13px] text-signal-ink">06</span>Known limitations, stated honestly
+                <span aria-hidden="true" className="mr-3 font-data text-[13px] text-signal-ink">06</span>Known limitations, stated honestly
               </h2>
             </div>
             <ul className="mt-2 divide-y divide-line text-sm leading-relaxed text-slate-400">

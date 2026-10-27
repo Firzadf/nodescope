@@ -839,7 +839,10 @@ select {
    * above, so they get the same treatment: freeze, never hide. */
   .animate-ping,
   .animate-pulse,
-  .animate-spin,
+  .animate-spin {
+    animation: none;
+  }
+  /* Calibration-sheet motion: live dots, marquee, meters freeze too. */
   .watch-dot,
   .live-dot,
   .marquee-track {
