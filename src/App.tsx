@@ -137,11 +137,18 @@ function App() {
         snapshot.checks.find((c) => c.method === defaultClientVersionMethodForProfile(endpointProfile)),
         snapshot.timestamp,
       );
-      if (latency || version) {
+      // The block height card reads the same snapshot, so a passing
+      // eth_blockNumber check never sits next to a "—" again.
+      const blockDecimal = extractEvmSide(snapshot)?.blockHeightDecimal ?? null;
+      const blockHeight = blockDecimal
+        ? { status: 'success' as const, value: blockDecimal, sourceMethod: 'eth_blockNumber', timestamp: snapshot.timestamp }
+        : null;
+      if (latency || version || blockHeight) {
         setMetricsDetailed((prev) => ({
           ...prev,
           ...(latency ? { latency } : {}),
           ...(version ? { clientVersion: version } : {}),
+          ...(blockHeight ? { blockHeight } : {}),
         }));
       }
       return snapshot;
@@ -393,41 +400,28 @@ function App() {
         liveBlock={extractEvmSide(latestHealthSnapshot)?.blockHeightDecimal ?? null}
       />
       <div className="flex">
+        {!sidebarCollapsed && (
+          <button
+            type="button"
+            aria-label="Close sidebar"
+            onClick={toggleSidebar}
+            className="fixed inset-0 z-30 bg-black/60 md:hidden"
+          />
+        )}
         <Sidebar activeSection={activeSection} onSectionChange={handleSectionChange} onOpenPalette={() => setPaletteOpen(true)} collapsed={sidebarCollapsed} onToggleCollapse={toggleSidebar} />
-        <main className="relative min-w-0 flex-1 p-6">
+        <main className="relative min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-10">
           <div className="relative max-w-7xl mx-auto space-y-6">
             {activeSection === 'overview' && (
               <div className="space-y-6 stagger">
                 <div className="relative z-10 flex flex-wrap items-end justify-between gap-3 bg-ink pt-1">
                   <div>
                     <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">NodeScope / Overview</p>
-                    <h2 className="text-3xl font-bold tracking-tight text-white mt-1.5 [text-decoration:none]">
+                    <h2 className="mt-2 text-[28px] font-semibold leading-tight tracking-[-0.025em] text-white md:text-[36px]">
                       Node health, proven over time.
                     </h2>
                   </div>
                   <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500 pb-1">Portaldot V3 EVM · Chain 420420777</p>
                 </div>
-                <FullDiagnosticRunner
-                  endpoint={endpoint}
-                  endpointProfile={endpointProfile}
-                  onConnect={handleConnect}
-                  onRunHealthCheck={doHealthCheck}
-                  onProbeResult={handleWsProbeResultChange}
-                  onCapabilitySnapshot={handleCapabilitySnapshotChange}
-                  onGoHistory={() => handleSectionChange('history')}
-                  onToast={pushToast}
-                />
-                <EndpointConfig
-                  endpoint={endpoint}
-                  onEndpointChange={handleEndpointChange}
-                  connectionStatus={connectionStatus}
-                  onConnect={handleConnect}
-                  onDisconnect={handleDisconnect}
-                  isLoading={isLoading}
-                  endpointProfile={endpointProfile}
-                  onProfileChange={setEndpointProfile}
-                  evmConnectionDetails={evmConnectionDetails}
-                />
                 <Overview
                   endpoint={endpoint}
                   connectionStatus={connectionStatus}
@@ -446,6 +440,31 @@ function App() {
                   onWsProbeResultChange={handleWsProbeResultChange}
                   probeRestoredAt={probeRestoredAt}
                   capabilityRestoredAt={capabilityRestoredAt}
+                  setupSlot={
+                    <>
+                      <FullDiagnosticRunner
+                        endpoint={endpoint}
+                        endpointProfile={endpointProfile}
+                        onConnect={handleConnect}
+                        onRunHealthCheck={doHealthCheck}
+                        onProbeResult={handleWsProbeResultChange}
+                        onCapabilitySnapshot={handleCapabilitySnapshotChange}
+                        onGoHistory={() => handleSectionChange('history')}
+                        onToast={pushToast}
+                      />
+                      <EndpointConfig
+                        endpoint={endpoint}
+                        onEndpointChange={handleEndpointChange}
+                        connectionStatus={connectionStatus}
+                        onConnect={handleConnect}
+                        onDisconnect={handleDisconnect}
+                        isLoading={isLoading}
+                        endpointProfile={endpointProfile}
+                        onProfileChange={setEndpointProfile}
+                        evmConnectionDetails={evmConnectionDetails}
+                      />
+                    </>
+                  }
                   alertsSlot={<WatchAlertsPanel runCycle={runWatchCycle} current={currentWatchState} onToast={pushToast} />}
                 />
               </div>
@@ -455,7 +474,7 @@ function App() {
                 <div className="flex flex-wrap items-end justify-between gap-3 pt-1">
                   <div>
                     <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">NodeScope / RPC Diagnostics</p>
-                    <h2 className="text-3xl font-bold tracking-tight text-white mt-1.5">
+                    <h2 className="mt-2 text-[28px] font-semibold leading-tight tracking-[-0.025em] text-white md:text-[36px]">
                       Ask the node. Keep the receipt.
                     </h2>
                   </div>
@@ -516,7 +535,7 @@ function App() {
                 <div className="flex flex-wrap items-end justify-between gap-3 pt-1">
                   <div>
                     <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">NodeScope / History</p>
-                    <h2 className="text-3xl font-bold tracking-tight text-white mt-1.5">
+                    <h2 className="mt-2 text-[28px] font-semibold leading-tight tracking-[-0.025em] text-white md:text-[36px]">
                       Every check, on record.
                     </h2>
                   </div>

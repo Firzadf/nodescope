@@ -1,4 +1,5 @@
 import type { ConnectionStatus } from '../../types/node';
+import { BrandMark } from '../common/BrandMark';
 
 interface HeaderProps {
   connectionStatus: ConnectionStatus;
@@ -6,8 +7,12 @@ interface HeaderProps {
   liveBlock: string | null;
 }
 
+/**
+ * Instrument status strip. Left: the mark and where you are. Right: the one
+ * connection readout (state + block of the latest snapshot) and the chain
+ * the instrument is calibrated against. No decoration that implies data.
+ */
 export function Header({ connectionStatus, liveBlock }: HeaderProps) {
-  const isConnected = connectionStatus === 'connected';
   const statusText =
     connectionStatus === 'connected'
       ? liveBlock
@@ -18,14 +23,14 @@ export function Header({ connectionStatus, liveBlock }: HeaderProps) {
         : connectionStatus === 'error'
           ? 'ERROR'
           : 'NOT CONNECTED';
-  const statusColor =
+  const dot =
     connectionStatus === 'connected'
-      ? '#34d399'
+      ? 'bg-emerald-400'
       : connectionStatus === 'connecting'
-        ? '#fbbf24'
+        ? 'bg-amber-400'
         : connectionStatus === 'error'
-          ? '#f87171'
-          : '#475569';
+          ? 'bg-red-400'
+          : 'bg-slate-600';
   const statusTextClass =
     connectionStatus === 'connected'
       ? 'text-emerald-300'
@@ -36,92 +41,32 @@ export function Header({ connectionStatus, liveBlock }: HeaderProps) {
           : 'text-slate-400';
 
   return (
-    <header className="relative bg-deep/85 border-b border-line backdrop-blur shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <a
-            href="/"
-            title="Back to landing page"
-            className="flex items-center gap-3 rounded-lg transition-opacity hover:opacity-80"
-          >
-            <img
-              src="/logo.png"
-              alt="NodeScope"
-              className="h-9 w-9 rounded-lg shadow-[0_0_24px_rgba(1,129,251,0.35)] ring-1 ring-signal/40"
-            />
-            <div>
-              <div className="flex items-baseline gap-2">
-                <h1 className="text-xl font-bold tracking-tight text-white">
-                  Node<span className="text-signal-ink">Scope</span>
-                </h1>
-                <span className="hidden font-data text-[11px] uppercase tracking-[0.18em] text-slate-400 sm:inline">
-                  Proves node health over time
-                </span>
-              </div>
-            </div>
-          </a>
+    <header className="relative border-b border-line bg-deep">
+      <div className="flex h-14 items-center justify-between gap-3 px-4 sm:px-6">
+        <a href="/" title="Back to landing page" className="flex min-w-0 items-center gap-3 transition-opacity hover:opacity-80">
+          <BrandMark className="h-7 w-7 shrink-0 text-white" />
+          <h1 className="text-[17px] font-semibold tracking-[-0.01em] text-white">NodeScope</h1>
+          <span className="hidden font-data text-[11px] uppercase tracking-[0.18em] text-slate-500 sm:inline">/ instrument</span>
+        </a>
 
-          {/* Centre: a quiet ECG trace that fills the old void. Decoration
-              only, it carries no live data; the real state stays in the one
-              status pill on the right. */}
-          <div aria-hidden="true" className="pointer-events-none relative mx-8 hidden flex-1 lg:block">
-            <div className="h-px bg-gradient-to-r from-transparent via-signal/40 to-transparent" />
-            <svg
-              className="absolute -top-[7px] left-0 h-[15px] w-full overflow-visible"
-              viewBox="0 0 600 15"
-              preserveAspectRatio="none"
-              fill="none"
-            >
-              <path
-                d="M 0,7 L 240,7 L 260,1 L 280,13 L 300,3 L 320,7 L 600,7"
-                stroke="#ff5b14"
-                strokeOpacity="0.5"
-                strokeWidth="1"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <circle r="2.5" fill="#ff5b14">
-                <animateMotion
-                  dur="9s"
-                  repeatCount="indefinite"
-                  path="M 0,7 L 240,7 L 260,1 L 280,13 L 300,3 L 320,7 L 600,7"
-                />
-              </circle>
-            </svg>
-            <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-deep px-2 font-data text-[9px] uppercase tracking-[0.24em] text-slate-600">
-              Session ledger · user-triggered only
+        <p aria-hidden="true" className="hidden flex-1 justify-center gap-6 font-data text-[10px] uppercase tracking-[0.22em] text-slate-500 xl:flex">
+          <span>EVM · HTTP JSON-RPC</span>
+          <span>Substrate · WSS</span>
+          <span>Read-only · user-triggered</span>
+        </p>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="flex items-center gap-2 border border-line bg-black/20 px-2.5 py-1.5">
+            <span aria-hidden="true" className={`h-1.5 w-1.5 ${dot} ${connectionStatus === 'connected' ? 'live-dot' : ''}`} />
+            <span key={statusText} className={`state-swap font-data text-[11px] tracking-[0.06em] ${statusTextClass}`}>
+              {statusText}
             </span>
           </div>
-
-          <div className="flex shrink-0 items-center gap-3">
-            {/* The one status indicator: the pulse pill carries the
-                connection state and, once a snapshot exists, its block. */}
-            <div className="flex items-center gap-2 px-3 py-1 bg-black/30 rounded-full border border-line">
-              <svg className="w-8 h-4 overflow-visible" viewBox="0 0 32 16" fill="none">
-                <path
-                  d="M 0,8 L 8,8 L 11,2 L 15,14 L 19,4 L 22,8 L 32,8"
-                  stroke={statusColor}
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className={isConnected ? "pulse-anim" : ""}
-                />
-              </svg>
-              <span key={statusText} className={`state-swap text-xs font-data ${statusTextClass}`}>
-                {statusText}
-              </span>
-            </div>
-
-            <span className="hidden rounded-full border border-signal/40 bg-signal/10 px-3 py-1.5 font-data text-[11px] uppercase tracking-[0.18em] text-sky-200 shadow-[0_0_20px_rgba(1,129,251,0.15)] md:block">
-              V3 Testnet · 420420777
-            </span>
-          </div>
+          <span className="hidden border border-signal/60 px-2.5 py-1.5 font-data text-[11px] uppercase tracking-[0.18em] text-signal-ink md:block">
+            V3 Testnet · 420420777
+          </span>
         </div>
       </div>
-      <div
-        aria-hidden="true"
-        className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-signal/60 to-transparent"
-      />
     </header>
   );
 }

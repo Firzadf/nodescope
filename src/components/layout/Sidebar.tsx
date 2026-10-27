@@ -48,7 +48,7 @@ export function Sidebar({ activeSection, onSectionChange, onOpenPalette, collaps
   const rowWrap = collapsed ? 'px-0 space-y-1.5' : 'px-3 space-y-1.5';
   const smallIcon = collapsed ? 'h-[18px] w-[18px]' : 'h-4 w-4';
   return (
-    <aside className={`${width} bg-deep border-r border-line min-h-screen flex flex-col shrink-0 transition-[width] duration-200`}>
+    <aside className={`${width} bg-deep border-r border-line min-h-screen flex flex-col shrink-0 transition-[width] duration-200 ${collapsed ? '' : 'max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-40 max-md:overflow-y-auto'}`}>
       <div className={`flex items-center pt-5 pb-2 ${collapsed ? 'justify-center px-0' : 'justify-between px-3'}`}>
         {!collapsed && <p className="px-2 font-data text-[10px] uppercase tracking-[0.24em] text-slate-600">Workspace</p>}
         {onToggleCollapse && (
@@ -100,12 +100,12 @@ export function Sidebar({ activeSection, onSectionChange, onOpenPalette, collaps
                     title={item.label}
                     className={`relative ${row} text-sm transition-colors ${
                       isActive
-                        ? 'bg-white/[0.06] text-white font-medium shadow-[0_0_20px_rgba(1,129,251,0.15)]'
+                        ? 'bg-white/[0.06] text-white font-medium'
                         : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]'
                     }`}
                   >
                     {isActive && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-signal" />
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-signal" />
                     )}
                     <Icon className={`h-[18px] w-[18px] ${isActive ? 'text-white' : 'text-slate-500'}`} />
                     {!collapsed && (
@@ -170,7 +170,7 @@ export function Sidebar({ activeSection, onSectionChange, onOpenPalette, collaps
             <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-600">Target Network</p>
             <p className="text-sm font-medium text-white mt-1.5">Portaldot V3 EVM</p>
             <div className="flex items-center gap-2 mt-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+              <span className="live-dot h-1.5 w-1.5 bg-signal" />
               <span className="font-data text-[11px] text-slate-400">CHAIN 420420777</span>
             </div>
             <p className="font-data text-[10px] uppercase tracking-[0.18em] text-slate-600 mt-2.5">Testnet · Read-only RPC</p>

@@ -913,3 +913,15 @@ select {
     transition: none;
   }
 }
+
+/* One corner language: hairline rectangles. Pills (rounded-full) stay for
+   status dots and toggles; every card and button squares off to 2px. */
+.instrument :is(.rounded, .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl, .rounded-\[20px\], .rounded-\[21px\], .rounded-\[24px\], .rounded-\[32px\]),
+.paper :is(.rounded, .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl, .rounded-\[20px\], .rounded-\[21px\], .rounded-\[24px\], .rounded-\[32px\]) {
+  border-radius: 2px;
+}
+/* No soft drop shadows on either surface: depth comes from hairlines. */
+.instrument [class*="shadow-["],
+.paper [class*="shadow-["] {
+  box-shadow: none;
+}

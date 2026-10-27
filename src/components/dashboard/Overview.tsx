@@ -37,6 +37,8 @@ interface OverviewProps {  endpoint: string;
   capabilityRestoredAt?: number | null;
   /** Watch & alerts panel, owned by App (it runs health checks). */
   alertsSlot?: ReactNode;
+  /** Run-full-diagnostic + endpoint configuration, owned by App. */
+  setupSlot?: ReactNode;
 }
 
 /**
@@ -97,6 +99,7 @@ export function Overview({
   probeRestoredAt = null,
   capabilityRestoredAt = null,
   alertsSlot,
+  setupSlot,
 }: OverviewProps) {
   const isDisconnected = connectionStatus === 'disconnected';
 
@@ -123,6 +126,7 @@ export function Overview({
         onRunHealthCheck={onRunHealthCheck ? () => void onRunHealthCheck() : undefined}
         running={isHealthChecking}
       />
+      {setupSlot}
       {alertsSlot}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-line border border-line rounded-xl overflow-hidden ">
         <MetricCard
