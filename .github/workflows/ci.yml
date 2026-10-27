@@ -1,6 +1,6 @@
-# CI — build, tests, lint, consistency, and contract checks.
+# CI — build, tests, lint, consistency, contract checks, and evidence.
 #
-# Two jobs, split by OS on purpose:
+# Three jobs:
 # - `node` runs on ubuntu-latest AND windows-latest, because reviewers
 #   rerun the suite on Windows too. Everything this job runs is
 #   cross-platform by construction: npm scripts, vitest, oxlint, and the
@@ -8,13 +8,14 @@
 #   process spawning in the app suite). If a test ever assumes a POSIX
 #   path or shell, the Windows leg fails loudly instead of shipping quietly.
 # - `forge` stays on ubuntu-latest: Foundry is a build tool, not app
-#   behavior, and the byte-identical recompile check is already covered
-#   locally by `npm run verify:evidence`.
-#
-# Deliberately NOT here: `npm run verify:evidence`. It needs a deployment
-# record (deployments/portaldot-v3.json) that does not exist in the repo
-# yet — the user deploys by hand — so running it in CI would report SKIP
-# on every run. It runs locally after the user deploys.
+#   behavior, and the byte-identical recompile check is also covered by
+#   the `verify-evidence` job below.
+# - `verify-evidence` runs on ubuntu-latest with Foundry. It used to be
+#   deliberately NOT here: it needs a deployment record, and before
+#   27 Oct 2026 no deployment existed in the repo, so it would have
+#   reported SKIP on every run. The deployment now exists
+#   (deployments/portaldot-v3.json), so the job runs with --strict: a
+#   SKIP there means a broken setup, not a pass.
 name: CI
 
 on:
@@ -64,3 +65,30 @@ jobs:
           if [ -d "$HOME/.foundry/bin" ]; then echo "$HOME/.foundry/bin" >> "$GITHUB_PATH"; fi
       - run: forge build
       - run: forge test
+
+  verify-evidence:
+    name: verify-evidence (ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Install Foundry
+        # The foundryup installer now places foundryup in
+        # ~/.config/.foundry/bin (older installs used ~/.foundry/bin);
+        # try the new location first so this step cannot 127.
+        run: |
+          curl -L https://foundry.paradigm.xyz | bash
+          if [ -x "$HOME/.config/.foundry/bin/foundryup" ]; then
+            "$HOME/.config/.foundry/bin/foundryup"
+          else
+            "$HOME/.foundry/bin/foundryup"
+          fi
+      - name: Add Foundry to PATH
+        run: |
+          if [ -d "$HOME/.config/.foundry/bin" ]; then echo "$HOME/.config/.foundry/bin" >> "$GITHUB_PATH"; fi
+          if [ -d "$HOME/.foundry/bin" ]; then echo "$HOME/.foundry/bin" >> "$GITHUB_PATH"; fi
+      - run: npm run verify:evidence -- --strict

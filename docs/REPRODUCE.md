@@ -79,6 +79,38 @@ npm run lint
 npm run build
 ```
 
-At the last full verification, 25 Oct 2026, the suite passed 296 tests across
-26 files, lint reported 0 errors, and the production build succeeded. If a
+At the last full verification, 27 Oct 2026, the suite passed 467 tests across
+67 files, lint reported 0 errors, and the production build succeeded. If a
 future change breaks that, the suite, not this document, is the authority.
+
+## 6. Foundry, for the on-chain evidence check
+
+`npm run verify:evidence` rechecks the deployment and all three anchors
+against the live testnet (registry code, deploy receipt, and per anchor:
+receipt, log topic, recomputed report hash, `isAnchored`, public copy),
+then recompiles the attestation contract to compare bytecode. The
+on-chain checks need only Node (they call the public RPC directly);
+only the recompile step needs Foundry.
+
+Install Foundry (Linux, macOS, or Windows via WSL):
+
+```bash
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
+```
+
+`foundryup` places `forge` in `~/.config/.foundry/bin` on newer installs
+(`~/.foundry/bin` on older ones); the script checks both, so either
+location works. Confirm with `forge --version`, then:
+
+```bash
+npm run verify:evidence
+```
+
+Without Foundry, the recompile check reports SKIP and the run still
+exits 0 as long as every on-chain check passes. Pass `--strict` to make
+any SKIP fail the run (CI runs with `--strict`):
+
+```bash
+npm run verify:evidence -- --strict
+```

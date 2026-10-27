@@ -32,12 +32,17 @@
  *
  * Usage:
  *   npm run verify:evidence
- *   node scripts/verify-evidence.mjs [--rpc URL] [--deployments FILE]
+ *   npm run verify:evidence -- --strict
+ *   node scripts/verify-evidence.mjs [--rpc URL] [--deployments FILE] [--strict]
  *
- * Exit codes: 0 = every check PASS; 1 = any check FAIL; 2 = no FAIL but
- * at least one SKIP (nothing on-chain recorded yet). Exit 2 is honest
- * incompleteness, not success: it never prints an overall PASS for
- * checks that did not run.
+ * Exit codes: 1 = any check FAIL; 0 = otherwise. A SKIP (for example the
+ * recompile check on a machine without Foundry) does not fail the run by
+ * default, because the on-chain checks are what determine PASS/FAIL.
+ * Pass --strict for the old behavior: exit 2 when no check failed but at
+ * least one SKIPped. OVERALL printed is still PASS / SKIP / FAIL from the
+ * checks themselves, regardless of the exit code, so a SKIP never prints
+ * as a PASS. CI runs with --strict, so a SKIP there (a broken setup, not
+ * a pass) fails the job.
  *
  * Dependencies: none beyond node itself. RPC calls use global fetch;
  * the recompile check shells out to `forge` WITHOUT a shell (execFile),
@@ -65,10 +70,11 @@ const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 const HASH_RE = /^0x[0-9a-fA-F]{64}$/;
 
 function parseArgs(argv) {
-  const args = { rpc: DEFAULT_RPC, deployments: DEFAULT_DEPLOYMENTS };
+  const args = { rpc: DEFAULT_RPC, deployments: DEFAULT_DEPLOYMENTS, strict: false };
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--rpc' && argv[i + 1]) args.rpc = argv[i + 1];
     if (argv[i] === '--deployments' && argv[i + 1]) args.deployments = argv[i + 1];
+    if (argv[i] === '--strict') args.strict = true;
   }
   return args;
 }
@@ -159,12 +165,13 @@ function canonicalizeValue(value) {
 
 /** SHA-256 of a parsed report, excluding its root integrity block. */
 function recomputedReportHash(parsed) {
-  const { integrity, ...rest } = parsed;
+  const rest = { ...parsed };
+  delete rest.integrity;
   return createHash('sha256').update(canonicalizeValue(rest), 'utf8').digest('hex');
 }
 
 async function main() {
-  const { rpc, deployments } = parseArgs(process.argv.slice(2));
+  const { rpc, deployments, strict } = parseArgs(process.argv.slice(2));
   console.log(`NodeScope evidence verification (rpc: ${rpc})`);
   const results = [];
 
@@ -367,7 +374,13 @@ async function main() {
   const anySkip = results.some((r) => r.status === 'SKIP');
   const overall = anyFail ? 'FAIL' : anySkip ? 'SKIP' : 'PASS';
   console.log(`OVERALL: ${overall}`);
-  process.exit(overall === 'PASS' ? 0 : overall === 'SKIP' ? 2 : 1);
+  // The on-chain checks determine PASS/FAIL. A SKIP (for example the
+  // recompile check on a machine without Foundry) does not fail the run
+  // by default; --strict restores exit 2 for any SKIP, which is what CI
+  // uses so a broken setup cannot pass silently.
+  if (anyFail) process.exit(1);
+  if (anySkip && strict) process.exit(2);
+  process.exit(0);
 }
 
 main().catch((e) => {
