@@ -89,23 +89,23 @@ export function JudgesPage() {
           <aside className="graphite self-end border border-graphite p-5 lg:col-span-4">
             <p className="font-data text-[10px] uppercase tracking-[0.2em] text-slate-400">At a glance</p>
             <dl className="mt-3 divide-y divide-line font-data text-[12px]">
-              <div className="flex justify-between gap-3 py-2">
-                <dt className="text-slate-400">Chain</dt>
-                <dd className="text-white">{PORTALDOT_CHAIN_ID}</dd>
+              <div className="flex gap-3 py-2">
+                <dt className="flex-1 text-slate-400">Chain</dt>
+                <dd className="shrink-0 text-white">{PORTALDOT_CHAIN_ID}</dd>
               </div>
-              <div className="flex justify-between gap-3 py-2">
-                <dt className="text-slate-400">Anchors on registry</dt>
-                <dd className="text-white">{ANCHORED_REPORTS.length}</dd>
+              <div className="flex gap-3 py-2">
+                <dt className="flex-1 text-slate-400">Anchors on registry</dt>
+                <dd className="shrink-0 text-white">{ANCHORED_REPORTS.length}</dd>
               </div>
-              <div className="flex justify-between gap-3 py-2">
-                <dt className="text-slate-400">Tests</dt>
-                <dd className="text-white">
+              <div className="flex gap-3 py-2">
+                <dt className="flex-1 text-slate-400">Tests</dt>
+                <dd className="shrink-0 text-white">
                   {SITE_TESTS} / {SITE_TEST_FILES} files
                 </dd>
               </div>
-              <div className="flex justify-between gap-3 py-2">
-                <dt className="text-slate-400">Deploy all-in vs fee-only</dt>
-                <dd className="text-white">1.016× / ~804×</dd>
+              <div className="flex gap-3 py-2">
+                <dt className="flex-1 text-slate-400">Deploy all-in vs fee-only</dt>
+                <dd className="shrink-0 text-white">1.016× / ~804×</dd>
               </div>
             </dl>
             <a href="/app" className="btn-primary mt-4 flex items-center justify-center px-4 py-2.5 text-sm font-semibold">

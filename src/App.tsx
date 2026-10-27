@@ -5,6 +5,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { TerminalFeed } from './components/layout/TerminalFeed';
 import { BackToTop } from './components/BackToTop';
 import { IntroSplash } from './components/common/IntroSplash';
+import { Loader } from './components/common/Loader';
 import { Toasts, type Toast } from './components/common/Toasts';
 import { Overview } from './components/dashboard/Overview';
 import { EndpointConfig } from './components/dashboard/EndpointConfig';
@@ -525,7 +526,7 @@ function App() {
             )}
             {activeSection === 'fee-lab' && (
               <div className="space-y-6 stagger">
-                <Suspense fallback={<div className="empty-shell p-4"><p className="text-sm text-slate-400">Loading Fee Lab…</p></div>}>
+                <Suspense fallback={<div className="empty-shell p-8"><Loader tone="graphite" /></div>}>
                   <FeeLabPanel />
                 </Suspense>
               </div>

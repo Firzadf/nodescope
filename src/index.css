@@ -401,35 +401,26 @@
     filter: blur(0);
   }
 }
-/* Intro splash: brand elements rise in, then a blue line sweeps under
-   them. Pure entrance motion — no progress is faked. The reduced-motion
-   block below turns the whole splash off (the component returns null). */
-@keyframes intro-rise {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+/* Shared loader: the reticle needle sweeps 360 degrees in ~1.6s while
+   the dashed ring turns the other way, slower. Both rotate about the
+   mark's centre (32, 32 in viewBox units). Reduced motion stops both
+   spins in the reduced-motion block; the mark itself stays. */
+.loader-needle,
+.loader-ring {
+  transform-box: view-box;
+  transform-origin: 32px 32px;
 }
-.intro-rise {
-  animation: intro-rise 0.5s var(--ease-out) both;
+.loader-needle {
+  animation: loader-spin 1.6s linear infinite;
 }
-@keyframes intro-sweep {
-  from {
-    transform: scaleX(0);
-    opacity: 0;
-  }
-  to {
-    transform: scaleX(1);
-    opacity: 1;
-  }
+.loader-ring {
+  animation: loader-spin-rev 3.2s linear infinite;
 }
-.intro-sweep {
-  animation: intro-sweep 0.9s var(--ease-out) both;
-  transform-origin: center;
+@keyframes loader-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes loader-spin-rev {
+  to { transform: rotate(-360deg); }
 }
 
 .stagger > * {
@@ -785,6 +776,10 @@ select {
     transition: none;
   }
   .step-progress {
+    animation: none;
+  }
+  .loader-needle,
+  .loader-ring {
     animation: none;
   }
   .strip-cell-in {

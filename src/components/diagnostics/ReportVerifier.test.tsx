@@ -7,8 +7,10 @@ import sampleReport from '../../../public/sample-report.json';
 import {
   attachSessionTrends,
   buildDiagnosticReport,
+  HEALTH_SCORE_METHODOLOGY_URL,
   type DiagnosticReportExport,
 } from '../../utils/reportBuilder';
+import { HEALTH_SCORE_FORMULA } from '../../utils/healthScore';
 import { stampReportIntegrity } from '../../utils/reportIntegrity';
 import type { DiagnosticHistoryItem } from '../../types/rpc';
 import {
@@ -122,6 +124,54 @@ describe('ReportVerifier', () => {
 
     expect(await screen.findByText('NO INTEGRITY STAMP')).toBeInTheDocument();
     expect(screen.getByText(/predates integrity stamping/)).toBeInTheDocument();
+  });
+
+  it('shows the score and coverage when the dropped report carries a healthScore block', async () => {
+    const base = await stampedReport();
+    const withScore: DiagnosticReportExport = {
+      ...base,
+      healthScore: {
+        formula: HEALTH_SCORE_FORMULA,
+        score: 87,
+        band: 'degraded' as const,
+        coverage: 100,
+        components: [],
+        methodology: HEALTH_SCORE_METHODOLOGY_URL,
+      },
+    };
+    render(<ReportVerifier />);
+    pasteAndVerify(JSON.stringify(await stampReportIntegrity(withScore)));
+
+    expect(await screen.findByText('VERIFIED — INTACT')).toBeInTheDocument();
+    expect(screen.getByText('87/100 (coverage 100%)')).toBeInTheDocument();
+  });
+
+  it('says so when the dropped report has no healthScore block', async () => {
+    render(<ReportVerifier />);
+    pasteAndVerify(JSON.stringify(await stampedReport()));
+
+    expect(await screen.findByText('VERIFIED — INTACT')).toBeInTheDocument();
+    expect(screen.getByText('no score in this report')).toBeInTheDocument();
+  });
+
+  it('shows not scored with coverage when the block exists but coverage is below the threshold', async () => {
+    const base = await stampedReport();
+    const unscored: DiagnosticReportExport = {
+      ...base,
+      healthScore: {
+        formula: HEALTH_SCORE_FORMULA,
+        score: null,
+        band: null,
+        coverage: 42,
+        components: [],
+        methodology: HEALTH_SCORE_METHODOLOGY_URL,
+      },
+    };
+    render(<ReportVerifier />);
+    pasteAndVerify(JSON.stringify(await stampReportIntegrity(unscored)));
+
+    expect(await screen.findByText('VERIFIED — INTACT')).toBeInTheDocument();
+    expect(screen.getByText('not scored (coverage 42%)')).toBeInTheDocument();
   });
 
   it('labels a loaded sample report with a SAMPLE badge and its capture date', async () => {

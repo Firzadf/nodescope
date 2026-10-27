@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react';
+import { Loader } from './Loader';
 
 /**
  * Brand intro splash, shown once per tab session per route (landing vs
- * app). It is a motion moment, not a loader: it never claims data is
- * loading, shows no percentage and no fake progress, and the page
- * underneath is already rendered. Click anywhere to skip it instantly.
- * Total time is about 1.2 seconds; reduced motion shows nothing at all.
+ * app). It renders the shared Loader on a full-screen backdrop: paper on
+ * public pages, graphite in /app. Click anywhere to skip it instantly.
+ * Total time is about 1.2 seconds. Reduced motion stops the Loader's
+ * spins via CSS, but the mark and the line stay; the splash still
+ * dismisses itself on the same timers.
  */
 export function IntroSplash({ scope }: { scope: 'landing' | 'app' }) {
   const key = `nodescope-intro-${scope}`;
   const [phase, setPhase] = useState<'show' | 'fade' | 'done'>(() => {
     try {
       if (sessionStorage.getItem(key)) return 'done';
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 'done';
     } catch {
       return 'done';
     }
@@ -49,28 +50,11 @@ export function IntroSplash({ scope }: { scope: 'landing' | 'app' }) {
     <div
       aria-hidden="true"
       onClick={finish}
-      className={`fixed inset-0 z-[200] flex flex-col items-center justify-center gap-5 bg-deep transition-opacity duration-300 ${
+      className={`fixed inset-0 z-[200] flex items-center justify-center transition-opacity duration-300 ${
         phase === 'fade' ? 'opacity-0' : 'opacity-100'
-      }`}
+      } ${scope === 'landing' ? 'bg-paper' : 'bg-deep'}`}
     >
-      <img
-        src="/logo.png"
-        alt=""
-        className="intro-rise h-16 w-16 rounded-2xl shadow-[0_0_40px_rgba(1,129,251,0.45)] ring-1 ring-signal/40"
-      />
-      <p
-        className="intro-rise font-display text-3xl font-semibold tracking-tight text-white"
-        style={{ animationDelay: '120ms' }}
-      >
-        Node<span className="text-signal-ink">Scope</span>
-      </p>
-      <div className="intro-sweep h-[2px] w-40 bg-gradient-to-r from-transparent via-signal to-transparent" />
-      <p
-        className="intro-rise font-data text-[11px] uppercase tracking-[0.22em] text-slate-500"
-        style={{ animationDelay: '240ms' }}
-      >
-        {scope === 'landing' ? 'Read the node. Keep the receipt.' : 'Portaldot V3 EVM · Chain 420420777'}
-      </p>
+      <Loader tone={scope === 'landing' ? 'paper' : 'graphite'} />
     </div>
   );
 }

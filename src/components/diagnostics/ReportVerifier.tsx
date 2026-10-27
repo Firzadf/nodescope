@@ -117,6 +117,19 @@ function ReportContents({ report, attested }: { report: DiagnosticReportExport; 
         </div>
       </div>
 
+      <div className="pt-3 border-t border-line">
+        <div className="text-xs text-slate-500 mb-1">Health Score</div>
+        {report.healthScore ? (
+          <p className="text-xs text-slate-300 font-data">
+            {report.healthScore.score === null
+              ? `not scored (coverage ${report.healthScore.coverage}%)`
+              : `${report.healthScore.score}/100 (coverage ${report.healthScore.coverage}%)`}
+          </p>
+        ) : (
+          <p className="text-xs text-slate-500">no score in this report</p>
+        )}
+      </div>
+
       <div>
         <div className="text-xs text-slate-500 mb-1">Endpoint{origins.length > 1 ? 's' : ''}</div>
         <div className="space-y-0.5">
