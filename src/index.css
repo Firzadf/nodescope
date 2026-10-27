@@ -925,3 +925,15 @@ select {
 .paper [class*="shadow-["] {
   box-shadow: none;
 }
+
+/* Instrument Serif ships one weight: never fake-bold it. */
+.paper :is(h1, h2, h3, h4, h5, h6),
+.paper .font-display {
+  font-weight: 400;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

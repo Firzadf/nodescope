@@ -275,7 +275,7 @@ export function DeployCostCalculator({ lang }: { lang: Lang }) {
           type="button"
           onClick={() => void run()}
           disabled={busy}
-          className="rounded-xl bg-amber-400 px-6 py-3 text-[15px] font-semibold text-black transition-colors hover:bg-amber-300 disabled:opacity-50"
+          className="btn-primary px-6 py-3 text-[15px] font-semibold"
         >
           {busy ? c.measureBusy : c.measure}
         </button>
