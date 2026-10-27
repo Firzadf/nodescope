@@ -7,6 +7,8 @@ import { SessionTrendsPanel } from './SessionTrendsPanel';
 import { SubstrateWsProbePanel } from './SubstrateWsProbePanel';
 import { CombinedVerdictPanel } from './CombinedVerdictPanel';
 import { VerdictBar } from './VerdictBar';
+import { HealthScoreHero } from './HealthScoreHero';
+import type { ReactNode } from 'react';
 import type { SubstrateWsProbeResult } from '../../services/substrateWsProbe';
 import { CapabilityDiscoveryPanel } from '../diagnostics/CapabilityDiscoveryPanel';
 import type { NodeMetricsDetailed } from '../../types/node';
@@ -33,6 +35,8 @@ interface OverviewProps {  endpoint: string;
   onWsProbeResultChange?: (result: SubstrateWsProbeResult) => void;
   probeRestoredAt?: number | null;
   capabilityRestoredAt?: number | null;
+  /** Watch & alerts panel, owned by App (it runs health checks). */
+  alertsSlot?: ReactNode;
 }
 
 /**
@@ -92,6 +96,7 @@ export function Overview({
   onWsProbeResultChange,
   probeRestoredAt = null,
   capabilityRestoredAt = null,
+  alertsSlot,
 }: OverviewProps) {
   const isDisconnected = connectionStatus === 'disconnected';
 
@@ -112,6 +117,13 @@ export function Overview({
         latencyMethod={metricsDetailed.latency.sourceMethod}
         endpointProfile={endpointProfile}
       />
+      <HealthScoreHero
+        snapshots={healthSnapshots}
+        wsProbe={wsProbeResult}
+        onRunHealthCheck={onRunHealthCheck ? () => void onRunHealthCheck() : undefined}
+        running={isHealthChecking}
+      />
+      {alertsSlot}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-line border border-line rounded-xl overflow-hidden ">
         <MetricCard
           title="Connection Status"
