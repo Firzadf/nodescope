@@ -201,6 +201,19 @@ export interface LandingCopy {
   roadmapFootnote: string;
   roadmapNextLabel: string;
   roadmapNextItems: RoadmapItem[];
+  roadmapNewLabel: string;
+  roadmapNewItems: RoadmapItem[];
+  scoreTitle: string;
+  scoreRight: string;
+  scoreIntro: string;
+  scoreHeaders: [string, string, string];
+  scoreRows: { label: string; weight: number; rule: string }[];
+  scoreFormula: string;
+  scoreFootnote: string;
+  scoreCta: string;
+  marqueeLive: string;
+  marqueeItems: string[];
+  sectionLabels: Record<string, string>;
   judgeTitle: string;
   judgeRight: string;
   judgeIntro: string;
@@ -541,15 +554,69 @@ const en: LandingCopy = {
   ],
   roadmapFootnote:
     "NodeScope's whole point is evidence — so planned work is labeled planned. Nothing on this page claims to exist before it does.",
+  roadmapNewLabel: 'New in this build — live in the app',
+  roadmapNewItems: [
+    {
+      title: 'Health Score 0–100, formula published',
+      body: 'Five weighted components — RPC availability 30, chain identity 15, head progression 20, latency 20, transport parity 15 — each shown with its points and the input it came from. Missing data is never scored; coverage is printed next to the number, and below 50% coverage there is no number at all. New exports carry the score inside the SHA-256 stamp.',
+    },
+    {
+      title: 'Watch mode + Discord / Slack alerts',
+      body: 'Opt-in and tab-scoped: press Start watch and each cycle runs the health check and the Substrate probe once (30 s floor). A message goes to your webhook only on a degrade or recover transition, or when you press Send test. The webhook URL stays in your browser. The CLI has the same rule behind --webhook and --watch.',
+    },
+    {
+      title: 'Pre-deploy cost gate (GitHub Action)',
+      body: 'A composite Action that prices a contract deploy with the Fee Lab formula and fails the job above max-tpot — or when the deploy cannot be priced at all. Its own run: block is executed by the test suite, so the Action is tested, not just documented.',
+    },
+  ],
+  scoreTitle: 'Health Score',
+  scoreRight: 'One number · formula published · nodescope.health-score.v1',
+  scoreIntro:
+    'The verdict explains; the score summarizes. Every point comes from a measurement NodeScope already makes, and every component prints the input it was computed from. A component with no data counts on neither side of the fraction.',
+  scoreHeaders: ['Component', 'Weight', 'Rule'],
+  scoreRows: [
+    { label: 'RPC availability', weight: 30, rule: '30 × checks answered ÷ checks eligible (latest snapshot). -32601 “method not found” is not a failure and is not eligible.' },
+    { label: 'Chain identity', weight: 15, rule: '15 when eth_chainId = 420420777, otherwise 0.' },
+    { label: 'Head progression', weight: 20, rule: 'Two newest snapshots, same endpoint: advanced 20 · same height under 30 s apart 10 · stalled ≥ 30 s or regressed 0.' },
+    { label: 'Latency', weight: 20, rule: 'Median of successful checks: 20 at ≤ 300 ms, 0 at ≥ 2000 ms, linear in between.' },
+    { label: 'Transport parity (WSS)', weight: 15, rule: 'Substrate probe answered 10, +5 when not syncing and peers > 0.' },
+  ],
+  scoreFormula: 'score = round(100 × Σ points ÷ Σ measured weight) · shown only when measured weight ≥ 50',
+  scoreFootnote: 'Bands: 90–100 healthy · 70–89 degraded · 0–69 critical. The score is new and lives next to the deterministic verdict, not in place of it.',
+  scoreCta: 'Read the full methodology',
+  marqueeLive: 'Live block',
+  marqueeItems: [
+    'Chain 420420777',
+    'Registry 0xd48d…c99c',
+    '3 anchors · blocks 216341 · 216343 · 216346',
+    'Deploy all-in 1.016× · fee-only ~804×',
+    'Native transfer 0.880×',
+    'SHA-256 stamped reports',
+    'Read-only · nothing signs',
+  ],
+  sectionLabels: {
+    pillars: 'Two pillars',
+    score: 'Health Score',
+    problem: 'The problem',
+    how: 'How it works',
+    tutorial: 'First run',
+    instrument: 'The instrument',
+    evidence: 'Evidence',
+    onchain: 'Proof on chain',
+    who: 'Who it is for',
+    v3: 'References',
+    roadmap: 'Roadmap',
+    judge: 'For judges',
+  },
   roadmapNextLabel: 'Planned — not shipped yet',
   roadmapNextItems: [
     {
       title: 'Scheduled watch mode',
-      body: 'Opt-in, user-configured re-checks on a schedule — still no silent background polling by default; the schedule is something you explicitly turn on.',
+      body: 'Hosted, scheduled re-checks that keep running after you close the tab. Today’s Watch mode is tab-scoped: it runs only while the app is open and only after you press Start.',
     },
     {
-      title: 'Alerts (Discord or Telegram)',
-      body: 'Notify a channel you choose when a watched endpoint degrades — the alert carries the snapshot diff, not just a red light.',
+      title: 'Telegram alerts + alert history',
+      body: 'Discord and Slack alerts ship today. Next: Telegram, and alerts that carry the full snapshot diff plus a kept history of every transition.',
     },
     {
       title: 'Monthly SLA reports for RPC providers',
@@ -980,15 +1047,69 @@ const id: LandingCopy = {
   ],
   roadmapFootnote:
     'Inti NodeScope adalah bukti, sehingga pekerjaan yang direncanakan dilabeli direncanakan. Tidak ada di halaman ini yang mengklaim ada sebelum benar-benar ada.',
+  roadmapNewLabel: 'Baru di build ini — live di app',
+  roadmapNewItems: [
+    {
+      title: 'Health Score 0–100, rumus dipublikasikan',
+      body: 'Lima komponen berbobot — ketersediaan RPC 30, identitas chain 15, progres head 20, latensi 20, paritas transport 15 — masing-masing tampil dengan poin dan input asalnya. Data yang tidak ada tidak pernah diberi skor; coverage dicetak di samping angka, dan di bawah 50% tidak ada angka sama sekali. Ekspor baru membawa skor di dalam stempel SHA-256.',
+    },
+    {
+      title: 'Mode pantau + peringatan Discord / Slack',
+      body: 'Opt-in dan hanya selama tab terbuka: tekan Start watch dan tiap siklus menjalankan health check dan probe Substrate sekali (minimal 30 dtk). Pesan ke webhook hanya saat transisi turun atau pulih, atau saat kamu menekan Send test. URL webhook tetap di browser kamu. CLI punya aturan yang sama lewat --webhook dan --watch.',
+    },
+    {
+      title: 'Gerbang biaya pra-deploy (GitHub Action)',
+      body: 'Composite Action yang menghitung biaya deploy kontrak dengan rumus Fee Lab dan menggagalkan job di atas max-tpot — atau saat deploy sama sekali tidak bisa dihitung. Blok run: miliknya dijalankan oleh test suite, jadi Action-nya diuji, bukan cuma didokumentasikan.',
+    },
+  ],
+  scoreTitle: 'Health Score',
+  scoreRight: 'Satu angka · rumus dipublikasikan · nodescope.health-score.v1',
+  scoreIntro:
+    'Verdict menjelaskan; skor merangkum. Setiap poin berasal dari pengukuran yang memang sudah dilakukan NodeScope, dan setiap komponen mencetak input asalnya. Komponen tanpa data tidak dihitung di sisi mana pun dari pecahan.',
+  scoreHeaders: ['Komponen', 'Bobot', 'Aturan'],
+  scoreRows: [
+    { label: 'Ketersediaan RPC', weight: 30, rule: '30 × cek yang dijawab ÷ cek yang layak (snapshot terbaru). -32601 “method not found” bukan kegagalan dan tidak dihitung.' },
+    { label: 'Identitas chain', weight: 15, rule: '15 jika eth_chainId = 420420777, selain itu 0.' },
+    { label: 'Progres head', weight: 20, rule: 'Dua snapshot terbaru, endpoint sama: naik 20 · tinggi sama dengan jarak < 30 dtk 10 · macet ≥ 30 dtk atau mundur 0.' },
+    { label: 'Latensi', weight: 20, rule: 'Median cek yang sukses: 20 pada ≤ 300 ms, 0 pada ≥ 2000 ms, linier di antaranya.' },
+    { label: 'Paritas transport (WSS)', weight: 15, rule: 'Probe Substrate menjawab 10, +5 jika tidak syncing dan peers > 0.' },
+  ],
+  scoreFormula: 'skor = round(100 × Σ poin ÷ Σ bobot terukur) · hanya tampil jika bobot terukur ≥ 50',
+  scoreFootnote: 'Rentang: 90–100 sehat · 70–89 menurun · 0–69 kritis. Skor ini baru dan berdiri di samping verdict deterministik, bukan menggantikannya.',
+  scoreCta: 'Baca metodologi lengkap',
+  marqueeLive: 'Blok live',
+  marqueeItems: [
+    'Chain 420420777',
+    'Registry 0xd48d…c99c',
+    '3 anchor · blok 216341 · 216343 · 216346',
+    'Deploy all-in 1.016× · fee-only ~804×',
+    'Transfer native 0.880×',
+    'Laporan berstempel SHA-256',
+    'Read-only · tidak ada yang ditandatangani',
+  ],
+  sectionLabels: {
+    pillars: 'Dua pilar',
+    score: 'Health Score',
+    problem: 'Akar masalah',
+    how: 'Cara kerja',
+    tutorial: 'Pertama kali',
+    instrument: 'Instrumen',
+    evidence: 'Bukti',
+    onchain: 'Bukti on-chain',
+    who: 'Untuk siapa',
+    v3: 'Referensi',
+    roadmap: 'Roadmap',
+    judge: 'Untuk juri',
+  },
   roadmapNextLabel: 'Rencana — belum dirilis',
   roadmapNextItems: [
     {
       title: 'Mode pantau terjadwal',
-      body: 'Pemeriksaan ulang terjadwal yang bisa diaktifkan, tetap tanpa polling latar diam-diam secara default. Jadwal adalah sesuatu yang sengaja kamu nyalakan.',
+      body: 'Pemeriksaan ulang terjadwal yang di-host, tetap berjalan setelah tab ditutup. Mode pantau hari ini terbatas pada tab: hanya berjalan selama app terbuka dan setelah kamu menekan Start.',
     },
     {
-      title: 'Peringatan (Discord atau Telegram)',
-      body: 'Beri tahu kanal pilihanmu saat endpoint yang dipantau menurun, dengan diff snapshot sebagai isi peringatan, bukan sekadar lampu merah.',
+      title: 'Peringatan Telegram + riwayat peringatan',
+      body: 'Peringatan Discord dan Slack sudah tersedia hari ini. Berikutnya: Telegram, dan peringatan yang membawa diff snapshot lengkap plus riwayat setiap transisi.',
     },
     {
       title: 'Laporan SLA bulanan untuk penyedia RPC',
