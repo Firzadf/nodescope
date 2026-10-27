@@ -8,8 +8,13 @@
  * - the report schema version lives in utils/reportBuilder
  *   (REPORT_SCHEMA_VERSION);
  * - the EVM RPC URL lives in types/endpoint (DEFAULT_PORTALDOT_V3_EVM_RPC);
- * - the registry address itself lives in utils/shareableVerification
- *   (DEPLOYED_REGISTRY_ADDRESS) and is re-exported below.
+ * - the registry address itself lives in deployments/portaldot-v3.json
+ *   (imported by utils/shareableVerification as DEPLOYED_REGISTRY_ADDRESS)
+ *   and is re-exported below.
+ *
+ * The 25 Oct 2026 anchor on the earlier registry is kept as SUPPLEMENT_*
+ * below and shown on /judges with its date label. It is history, not the
+ * current evidence: ANCHOR_* above always point at the latest anchor.
  *
  * Test counts are the one exception: they are measured, not declared, so
  * SITE_TESTS / SITE_TEST_FILES are updated by hand after a test run. The
@@ -23,12 +28,22 @@ export const PORTALDOT_CHAIN_ID_HEX = '0x190f1ca9';
 export const PORTALDOT_SUBSTRATE_WSS = 'wss://test-node-v3.portaldot.dev';
 
 export const ANCHOR_TX =
-  '0xa7cd3cbd060335d851494c1f48e15124ec8d32ccfa3fe03413c85cf895625448';
-export const ANCHOR_BLOCK = 179228;
+  '0xc74a08f3835b0c5b7d813ab15597488affa1987bce79a88d843dfdc31a9ec913';
+export const ANCHOR_BLOCK = 216346;
 export const ANCHORED_REPORT_HASH =
-  '0x0bc787de4c634a55699e92d90b7280fffebdbcd557c4312044134e4df9dfa286';
-export const ANCHORED_REPORT_EXPORTED_AT = '2026-10-24T20:12:08Z';
-export const ANCHORED_REPORT_RECORDS = 14;
+  '0x528f38d58920b2c7fef730c27e95200e429a126874746e8cead5c1146c768a5b';
+export const ANCHORED_REPORT_EXPORTED_AT = '2026-10-27T10:20:20Z';
+export const ANCHORED_REPORT_RECORDS = 12;
 
-export const SITE_TESTS = '463';
+export const SUPPLEMENT_REGISTRY =
+  '0x74c88d3090aD6915BFDc373eD6F037e2da4557Ce';
+export const SUPPLEMENT_ANCHOR_TX =
+  '0xa7cd3cbd060335d851494c1f48e15124ec8d32ccfa3fe03413c85cf895625448';
+export const SUPPLEMENT_ANCHOR_BLOCK = 179228;
+export const SUPPLEMENT_REPORT_HASH =
+  '0x0bc787de4c634a55699e92d90b7280fffebdbcd557c4312044134e4df9dfa286';
+export const SUPPLEMENT_REPORT_EXPORTED_AT = '2026-10-24T20:12:08Z';
+export const SUPPLEMENT_REPORT_RECORDS = 14;
+
+export const SITE_TESTS = '464';
 export const SITE_TEST_FILES = '66';

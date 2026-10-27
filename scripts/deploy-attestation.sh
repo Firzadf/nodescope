@@ -123,7 +123,7 @@ if [ "$YES" -ne 1 ]; then
 fi
 
 # --- Deploy -----------------------------------------------------------------
-SEND_JSON="$("$CAST_BIN" send --create "$BYTECODE" --rpc-url "$RPC_URL" "${AUTH[@]}" --json)"
+SEND_JSON="$("$CAST_BIN" send --rpc-url "$RPC_URL" "${AUTH[@]}" --json --create "$BYTECODE")"
 read -r CONTRACT_ADDR TX_HASH BLOCK_NUM <<< "$(python3 -c "
 import json, sys
 d = json.loads(sys.argv[1])

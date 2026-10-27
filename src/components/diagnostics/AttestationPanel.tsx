@@ -5,6 +5,7 @@ import { PanelLabel } from '../common/PanelLabel';
 import { sendJsonRpcRequest } from '../../services/rpcClient';
 import {
   buildAnchorCommand,
+  hexToDecimal,
   isAddress,
   isReportHash,
   parseReportHashFromJson,
@@ -14,6 +15,7 @@ import {
 import {
   buildAttestationShareLink,
   DEPLOYED_REGISTRY_ADDRESS,
+  REFERENCE_ANCHOR,
 } from '../../utils/shareableVerification';
 
 /**
@@ -68,12 +70,15 @@ export function AttestationPanel({
     }
   }
 
-  async function checkOnChain() {
+  async function checkOnChain(override?: { hash: string; contract: string; tx: string }) {
+    const hash = override?.hash ?? effectiveHash;
+    const contract = override?.contract ?? contractAddress.trim();
+    const tx = override?.tx ?? txHash.trim();
     setChecking(true);
     setError(null);
     setResult(null);
     try {
-      const res = await sendJsonRpcRequest(endpoint, 'eth_getTransactionReceipt', [txHash.trim()], 10000);
+      const res = await sendJsonRpcRequest(endpoint, 'eth_getTransactionReceipt', [tx], 10000);
       if (!res.success) {
         setError(res.error || 'The endpoint did not answer the receipt request.');
         return;
@@ -81,12 +86,25 @@ export function AttestationPanel({
       const receipt = res.response?.result as
         | { status?: string; to?: string | null; blockNumber?: string; logs?: { address?: string; topics?: string[] }[] }
         | null;
-      setResult(verifyAttestationReceipt(receipt, contractAddress.trim(), effectiveHash));
+      setResult(verifyAttestationReceipt(receipt, contract, hash));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Receipt check failed.');
     } finally {
       setChecking(false);
     }
+  }
+
+  function verifyReferenceAnchor() {
+    if (!REFERENCE_ANCHOR) return;
+    const ref = {
+      hash: REFERENCE_ANCHOR.hash,
+      contract: DEPLOYED_REGISTRY_ADDRESS,
+      tx: REFERENCE_ANCHOR.tx,
+    };
+    setReportHash(ref.hash);
+    setContractAddress(ref.contract);
+    setTxHash(ref.tx);
+    void checkOnChain(ref);
   }
 
   return (
@@ -181,9 +199,27 @@ export function AttestationPanel({
             </p>
           </div>
         )}
+        {REFERENCE_ANCHOR && (
+          <div>
+            <button
+              type="button"
+              onClick={verifyReferenceAnchor}
+              disabled={checking}
+              className="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:text-white"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Verify the reference anchor
+            </button>
+            <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">
+              Fills the three fields with the latest anchor (27 Oct 2026, block{' '}
+              {hexToDecimal(REFERENCE_ANCHOR.block) ?? REFERENCE_ANCHOR.block}) and checks it on
+              chain. Read-only, like everything else in this panel.
+            </p>
+          </div>
+        )}
         <button
           type="button"
-          onClick={checkOnChain}
+          onClick={() => void checkOnChain()}
           disabled={!canCheck || checking}
           className="btn-primary inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium"
         >

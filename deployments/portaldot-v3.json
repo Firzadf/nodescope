@@ -1,0 +1,20 @@
+{
+  "contractName": "NodeScopeAttestation",
+  "contract": "0xd48da7eff3264bdd51a86b873da9ff6997aae99c",
+  "chainId": 420420777,
+  "rpcUrl": "https://test-evm-rpc-v3.portaldot.dev",
+  "deployer": "0xaD62d0aA606240e2C5156e04C82e61C81044959f",
+  "deployTx": "0x1c2a055523a4cf8b73d771df4d3c54d21392a85f86a14a4d68213bf6db5f4904",
+  "deployBlock": "0x34ccc",
+  "deployedAt": "2026-10-27T10:15:19Z",
+  "anchor": {
+    "reportFile": "/mnt/c/Users/LP/Downloads/nodescope-diagnostic-report-2026-10-27 (1).json",
+    "reportHash": "0x528f38d58920b2c7fef730c27e95200e429a126874746e8cead5c1146c768a5b",
+    "endpoint": "https://test-evm-rpc-v3.portaldot.dev",
+    "chainId": 420420777,
+    "blockParam": 216343,
+    "txHash": "0xc74a08f3835b0c5b7d813ab15597488affa1987bce79a88d843dfdc31a9ec913",
+    "block": "0x34d1a",
+    "anchoredAt": "2026-10-27T10:23:06Z"
+  }
+}

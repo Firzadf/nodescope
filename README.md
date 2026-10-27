@@ -22,7 +22,7 @@ Judges and operators do not need to trust any number in this README. `docs/REPRO
 
 ---
 
-**Current Status:** Phase 1 (Health Check Snapshots) and Phase 2 (Snapshot Comparison) complete, plus Trends & Verdict, Multi-Endpoint Comparison, a V3 era marker (Pre-V3/Post-V3 against go-live 24 Oct 2026, 06:00 WIB), a Substrate WebSocket probe, a combined EVM + Substrate verdict, a public /verify page, a Mainnet Profile info page that claims no mainnet EVM check, and sidebar links to /verify and /mainnet plus a palette jump to the Combined Verdict. Portaldot V3.0 EVM endpoint verified and integrated. 463 passing tests across 66 test files, verified 27 Oct 2026.
+**Current Status:** Phase 1 (Health Check Snapshots) and Phase 2 (Snapshot Comparison) complete, plus Trends & Verdict, Multi-Endpoint Comparison, a V3 era marker (Pre-V3/Post-V3 against go-live 24 Oct 2026, 06:00 WIB), a Substrate WebSocket probe, a combined EVM + Substrate verdict, a public /verify page, a Mainnet Profile info page that claims no mainnet EVM check, and sidebar links to /verify and /mainnet plus a palette jump to the Combined Verdict. Portaldot V3.0 EVM endpoint verified and integrated. 464 passing tests across 66 test files, verified 27 Oct 2026.
 
 ## Project Overview
 
@@ -313,11 +313,14 @@ When endpoint profile is set to `portaldot_v3_evm`:
 
 A report's SHA-256 hash can be anchored on the Portaldot V3 testnet with the user's own wallet tool (the app never signs). The app and `/verify` then check the anchor by reading the transaction receipt through the RPC — there is no public EVM explorer for this chain.
 
-- Registry contract (ownerless): `0x74c88d3090aD6915BFDc373eD6F037e2da4557Ce` (chain 420420777)
-- Anchor transaction: `0xa7cd3cbd060335d851494c1f48e15124ec8d32ccfa3fe03413c85cf895625448` (block 179228)
-- Anchored report hash: `0x0bc787de4c634a55699e92d90b7280fffebdbcd557c4312044134e4df9dfa286` (exported 2026-10-24T20:12:08Z, 14 records)
-- Contract source: `contracts/NodeScopeAttestation.sol` · Full write-up: `docs/ATTESTATION.md`
-- Verify it: https://nodescope.vercel.app/verify?hash=0x0bc787de4c634a55699e92d90b7280fffebdbcd557c4312044134e4df9dfa286&contract=0x74c88d3090aD6915BFDc373eD6F037e2da4557Ce&tx=0xa7cd3cbd060335d851494c1f48e15124ec8d32ccfa3fe03413c85cf895625448
+- Registry contract (ownerless): `0xd48da7eff3264bdd51a86b873da9ff6997aae99c` (chain 420420777, deployed 27 Oct 2026, deploy tx `0x1c2a055523a4cf8b73d771df4d3c54d21392a85f86a14a4d68213bf6db5f4904`, block 216268 / 0x34ccc)
+- Anchor transaction (latest): `0xc74a08f3835b0c5b7d813ab15597488affa1987bce79a88d843dfdc31a9ec913` (block 216346 / 0x34d1a)
+- Anchored report hash (latest): `0x528f38d58920b2c7fef730c27e95200e429a126874746e8cead5c1146c768a5b` (exported 2026-10-27T10:20:20Z, 12 records, diagnostic with session trends)
+- All three anchors on this registry: diagnostic report 1 (`0x08ac72ad0f7a818bc18a8624232811fc4f994cf065bbd2cad1eea4b0bb002df4`, tx `0xba35df8e2f182d75885b75b75f0dd97340f4ce64333840d1cf06a252441e9476`, block 216341), Fee Lab fee report (`0x246d6d43b308b8801109910bb52d8ad8d264376e7c8557255b3704176ada0464`, tx `0x0c08335507cfb2a0df4b0236543607aed04527ec26361e6e0022c9100c88f2c9`, block 216343), diagnostic report 2 (`0x528f38d58920b2c7fef730c27e95200e429a126874746e8cead5c1146c768a5b`, tx `0xc74a08f3835b0c5b7d813ab15597488affa1987bce79a88d843dfdc31a9ec913`, block 216346)
+- Earlier anchor (25 Oct 2026, supplement, previous registry): registry `0x74c88d3090aD6915BFDc373eD6F037e2da4557Ce`, anchor tx `0xa7cd3cbd060335d851494c1f48e15124ec8d32ccfa3fe03413c85cf895625448` (block 179228), report hash `0x0bc787de4c634a55699e92d90b7280fffebdbcd557c4312044134e4df9dfa286` (exported 2026-10-24T20:12:08Z, 14 records)
+- Contract source: `contracts/NodeScopeAttestation.sol` · Deployment record: `deployments/portaldot-v3.json` · Full write-ups: `docs/EVIDENCE.md`, `docs/DEPLOYMENT.md`, `docs/ATTESTATION.md`
+- Verify the latest anchor: https://nodescope.vercel.app/verify?hash=0x528f38d58920b2c7fef730c27e95200e429a126874746e8cead5c1146c768a5b&contract=0xd48da7eff3264bdd51a86b873da9ff6997aae99c&tx=0xc74a08f3835b0c5b7d813ab15597488affa1987bce79a88d843dfdc31a9ec913
+- Verify the earlier anchor: https://nodescope.vercel.app/verify?hash=0x0bc787de4c634a55699e92d90b7280fffebdbcd557c4312044134e4df9dfa286&contract=0x74c88d3090aD6915BFDc373eD6F037e2da4557Ce&tx=0xa7cd3cbd060335d851494c1f48e15124ec8d32ccfa3fe03413c85cf895625448
 
 ## Architecture
 
@@ -389,7 +392,7 @@ src/
 
 **Test Framework:** Vitest 5 with @testing-library/react  
 **Coverage Target:** 80%+  
-**Current Status:** 463 passing tests across 66 test files, verified 27 Oct 2026
+**Current Status:** 464 passing tests across 66 test files, verified 27 Oct 2026
 
 ### Test Files
 
@@ -418,7 +421,7 @@ src/
 | `artifactInput.test.ts` | Custom artifact parsing, coded failures |
 | `feeLabShare.test.ts` | Fee Lab share-link round-trip and forgiving parse |
 | 6 files not listed above | Component and utility tests added in later phases, including Landing and Command Palette |
-| **Total** | **463 passing tests, 66 test files** (suite verified 27 Oct 2026; the landing page, /judges, and this README are checked against one constants file by `src/utils/siteConsistency.test.tsx` and `npm run check:consistency`) |
+| **Total** | **464 passing tests, 66 test files** (suite verified 27 Oct 2026; the landing page, /judges, and this README are checked against one constants file by `src/utils/siteConsistency.test.tsx` and `npm run check:consistency`) |
 
 ### Running Tests
 
@@ -532,7 +535,7 @@ MIT (as per Portaldot Hacker House requirements).
 
 **Project Status:** Check-in submitted Oct 22, 2026. Repository public with 42 commits as of 25 Oct 2026, development records retained. Final sprint to the 6 Nov 2026 code freeze is in progress.
 
-- ✅ Phase 1 & Phase 2 complete, plus Trends & Verdict, Multi-Endpoint Comparison, V3 era marker, and Substrate WebSocket probe, 463 tests across 66 files
+- ✅ Phase 1 & Phase 2 complete, plus Trends & Verdict, Multi-Endpoint Comparison, V3 era marker, and Substrate WebSocket probe, 464 tests across 66 files
 - ✅ **FASE 2 — Ecosystem & Business (roadmap juara):** CLI (`check` + `fees`), GitHub Action pre-deploy gate, Fee Lab custom artifacts + share link, findings doc for Portaldot, business model, adoption outreach
 - ✅ Portaldot V3.0 EVM integration verified, chain ID 420420777 validated, methods documented
 - ✅ Demo video, live deployment, and screenshots published

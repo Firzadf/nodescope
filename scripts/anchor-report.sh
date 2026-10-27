@@ -103,6 +103,8 @@ REPORT_HASH="$(python3 -c "
 import json, re, sys
 d = json.load(open(sys.argv[1]))
 h = (d.get('integrity') or {}).get('hash') or ''
+if re.fullmatch(r'[0-9a-fA-F]{64}', h or ''):
+    h = '0x' + h
 if not re.fullmatch(r'0x[0-9a-fA-F]{64}', h or ''):
     raise SystemExit('ERROR: report has no valid integrity.hash (0x + 64 hex chars)')
 print(h.lower())

@@ -20,6 +20,12 @@ import {
   REGISTRY_CONTRACT,
   SITE_TEST_FILES,
   SITE_TESTS,
+  SUPPLEMENT_ANCHOR_BLOCK,
+  SUPPLEMENT_ANCHOR_TX,
+  SUPPLEMENT_REGISTRY,
+  SUPPLEMENT_REPORT_EXPORTED_AT,
+  SUPPLEMENT_REPORT_HASH,
+  SUPPLEMENT_REPORT_RECORDS,
 } from '../utils/siteConstants';
 
 const SAMPLE_HASH: string = sampleReport.integrity.hash;
@@ -114,6 +120,41 @@ export function JudgesPage() {
               className="text-[#7DB4FF] hover:text-white"
             >
               Check this anchor on /verify
+            </a>
+          </p>
+        </section>
+
+        <section className="mt-10">
+          <h2 className="text-xl font-semibold text-white">Earlier anchor (25 Oct 2026, supplement)</h2>
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
+            The anchor above is the current evidence. This earlier anchor, on the first registry
+            deployed 25 Oct 2026, is kept here for history, not as a replacement: it still
+            verifies, and it proves a report with its hash existed at block{' '}
+            {SUPPLEMENT_ANCHOR_BLOCK}.
+          </p>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-xl border border-line bg-panel/60 p-4">
+              <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-500">Earlier registry</p>
+              <p className="mt-2 break-all font-data text-[13px] text-slate-200">{SUPPLEMENT_REGISTRY}</p>
+              <p className="mt-1 text-xs text-slate-500">Portaldot V3 testnet · chain {PORTALDOT_CHAIN_ID} · ownerless</p>
+            </div>
+            <div className="rounded-xl border border-line bg-panel/60 p-4">
+              <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-500">Earlier anchor transaction</p>
+              <p className="mt-2 break-all font-data text-[13px] text-slate-200">{SUPPLEMENT_ANCHOR_TX}</p>
+              <p className="mt-1 text-xs text-slate-500">Anchor block {SUPPLEMENT_ANCHOR_BLOCK} · receipt status success</p>
+            </div>
+            <div className="rounded-xl border border-line bg-panel/60 p-4">
+              <p className="font-data text-[11px] uppercase tracking-[0.16em] text-slate-500">Earlier anchored report hash</p>
+              <p className="mt-2 break-all font-data text-[13px] text-slate-200">{SUPPLEMENT_REPORT_HASH}</p>
+              <p className="mt-1 text-xs text-slate-500">Exported {SUPPLEMENT_REPORT_EXPORTED_AT} · {SUPPLEMENT_REPORT_RECORDS} records</p>
+            </div>
+          </div>
+          <p className="mt-3 text-sm">
+            <a
+              href={`/verify?hash=${SUPPLEMENT_REPORT_HASH}&contract=${SUPPLEMENT_REGISTRY}&tx=${SUPPLEMENT_ANCHOR_TX}`}
+              className="text-[#7DB4FF] hover:text-white"
+            >
+              Check this earlier anchor on /verify
             </a>
           </p>
         </section>

@@ -1,4 +1,5 @@
 import { isAddress, isReportHash } from './attestation';
+import deployments from '../../deployments/portaldot-v3.json';
 
 /**
  * Shareable verification links.
@@ -11,14 +12,34 @@ import { isAddress, isReportHash } from './attestation';
  * the receipt on chain and checks it read-only, and an invalid value in
  * the link is ignored, never treated as verified.
  *
+ * The default registry comes from deployments/portaldot-v3.json, written
+ * by scripts/deploy-attestation.sh and scripts/anchor-report.sh — never
+ * from a second hand-written copy of the address. The 25 Oct 2026 anchor
+ * on the earlier registry is kept separately as SUPPLEMENT_* in
+ * utils/siteConstants and shown on /judges with its date label.
+ *
  * Canonical form:
  *   /verify?hash=0x…&contract=0x…&tx=0x…
  * where hash is the report SHA-256, contract is the registry address,
  * and tx is the anchoring transaction hash.
  */
 
-export const DEPLOYED_REGISTRY_ADDRESS = '0x74c88d3090aD6915BFDc373eD6F037e2da4557Ce';
-export const DEPLOYED_REGISTRY_CHAIN_ID = 420420777;
+export const DEPLOYED_REGISTRY_ADDRESS: string = deployments.contract;
+export const DEPLOYED_REGISTRY_CHAIN_ID: number = deployments.chainId;
+
+/**
+ * The latest anchor recorded in deployments/portaldot-v3.json, or null
+ * when the file records a deployment with no anchor yet. The attestation
+ * panel offers it as a one-click fill-in; it never signs anything.
+ */
+export const REFERENCE_ANCHOR: { hash: string; tx: string; block: string } | null =
+  deployments.anchor == null
+    ? null
+    : {
+        hash: deployments.anchor.reportHash as string,
+        tx: deployments.anchor.txHash as string,
+        block: deployments.anchor.block as string,
+      };
 
 export interface ShareParams {
   hash?: string;
