@@ -35,7 +35,7 @@ describe('runReliabilityProbe', () => {
       }
       throw new Error(`unexpected ${body.method}`);
     });
-    const report = await runReliabilityProbe('https://test-evm-rpc-v3.portaldot.dev', { samples: 3, timeoutMs: 1000 });
+    const report = await runReliabilityProbe('https://rpc.example.test', { samples: 3, timeoutMs: 1000 });
     expect(report.samples).toBe(3);
     expect(report.errors).toBe(1);
     expect(report.http5xx).toBe(1);
@@ -44,5 +44,30 @@ describe('runReliabilityProbe', () => {
     expect(report.stateChanging.map((m) => m.method)).toEqual(['eth_sendRawTransaction']);
     expect(called.every((method) => (READ_ONLY_PROBE_METHODS as readonly string[]).includes(method))).toBe(true);
     expect(called).not.toContain('author_insertKey');
+    expect(report.exposedMethodsWithheld).toBe(false);
+  });
+
+  it('withholds exposed-method names on an official Portaldot host', async () => {
+    vi.stubGlobal('fetch', async (_url: string, init: RequestInit) => {
+      const body = JSON.parse(String(init.body)) as { method: string };
+      if (body.method === 'eth_blockNumber') {
+        return { ok: true, status: 200, statusText: 'OK', text: async () => JSON.stringify({ jsonrpc: '2.0', id: 1, result: '0x10' }) };
+      }
+      if (body.method === 'rpc_methods') {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          text: async () => JSON.stringify({ jsonrpc: '2.0', id: 1, result: { methods: ['eth_blockNumber', 'dev_exampleProbe'] } }),
+        };
+      }
+      return { ok: true, status: 200, statusText: 'OK', text: async () => JSON.stringify({ jsonrpc: '2.0', id: 1, result: null }) };
+    });
+    const report = await runReliabilityProbe('https://test-evm-rpc-v3.portaldot.dev', { samples: 1, timeoutMs: 1000 });
+    expect(report.exposedMethodsWithheld).toBe(true);
+    expect(report.exposedMethodsNote).toMatch(/withheld pending responsible disclosure/);
+    expect(report.unsafe).toEqual([]);
+    expect(report.stateChanging).toEqual([]);
+    expect(JSON.stringify(report)).not.toContain('dev_exampleProbe');
   });
 });

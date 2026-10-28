@@ -13,7 +13,7 @@ import { computeHealthScore, HEAD_STALL_MIN_GAP_SECONDS, HEALTH_SCORE_FORMULA } 
 import { HEAD_SAMPLE_STALL_SECONDS } from './healthScore';
 import { mapAddress } from './addressMap';
 import { unitsFromProperties } from './unitsSanity';
-import { classifyAdvertisedMethods, classifyHistory, readOnlyProbeIsDisjointFromUnsafe, READ_ONLY_STATE_CALLS } from './rpcSecurity';
+import { classifyAdvertisedMethods, classifyHistory, EXPOSED_METHODS_WITHHELD_NOTE, presentExposedMethodNames, readOnlyProbeIsDisjointFromUnsafe, READ_ONLY_STATE_CALLS } from './rpcSecurity';
 import { operatorFindings } from './operatorFindings';
 import { alertKindForCycle, detectStallTransition } from './alertWebhook';
 
@@ -174,27 +174,31 @@ describe('units and unsafe methods', () => {
     expect(mismatch.decimalTrap).toBe(false);
   });
 
-  it('never calls an unsafe method, and classifies the ones the testnet advertises', () => {
+  it('never calls an unsafe method, and classifies a generic advertised list', () => {
     expect(readOnlyProbeIsDisjointFromUnsafe()).toBe(true);
     expect(READ_ONLY_STATE_CALLS).toEqual(['ReviveApi_account_id', 'ReviveApi_address']);
     const flagged = classifyAdvertisedMethods([
       'eth_blockNumber',
       'author_insertKey',
-      'author_rotateKeys',
-      'offchain_localStorageSet',
-      'system_addReservedPeer',
       'eth_sendRawTransaction',
-      'eth_sendTransaction',
-      'dev_getBlockStats',
+      'dev_exampleProbe',
     ]);
-    expect(flagged.unsafe.map((m) => m.method)).toEqual([
-      'author_insertKey',
-      'author_rotateKeys',
-      'offchain_localStorageSet',
-      'system_addReservedPeer',
-      'dev_getBlockStats',
-    ]);
-    expect(flagged.stateChanging.map((m) => m.method)).toEqual(['eth_sendRawTransaction', 'eth_sendTransaction']);
+    expect(flagged.unsafe.map((m) => m.method)).toEqual(['author_insertKey', 'dev_exampleProbe']);
+    expect(flagged.stateChanging.map((m) => m.method)).toEqual(['eth_sendRawTransaction']);
+  });
+
+  it('withholds exposed-method names for official Portaldot hosts and keeps them for any other host', () => {
+    const names = ['dev_exampleProbe'];
+    const official = presentExposedMethodNames('https://test-evm-rpc-v3.portaldot.dev', names);
+    expect(official.withheld).toBe(true);
+    expect(official.names).toEqual([]);
+    expect(official.note).toBe(EXPOSED_METHODS_WITHHELD_NOTE);
+    expect(JSON.stringify(official)).not.toContain('dev_exampleProbe');
+    const wss = presentExposedMethodNames('wss://test-node-v3.portaldot.dev/ws', names);
+    expect(wss.withheld).toBe(true);
+    const custom = presentExposedMethodNames('https://rpc.example.test', names);
+    expect(custom.withheld).toBe(false);
+    expect(custom.names).toEqual(names);
   });
 
   it('classifies history without calling anything', () => {

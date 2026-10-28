@@ -1,5 +1,5 @@
 import { sendJsonRpcRequest } from './rpcClient';
-import { classifyAdvertisedMethods, classifyHistory, type FlaggedMethod, type HistoryClass } from '../utils/rpcSecurity';
+import { classifyAdvertisedMethods, classifyHistory, presentExposedMethodNames, type FlaggedMethod, type HistoryClass } from '../utils/rpcSecurity';
 import { percentileMs } from '../../shared/liveStatus.mjs';
 
 export interface ReliabilityReport {
@@ -15,6 +15,9 @@ export interface ReliabilityReport {
   historyBlock: string | null;
   unsafe: FlaggedMethod[];
   stateChanging: FlaggedMethod[];
+  /** True on the published Portaldot hosts: names are omitted, note is set. */
+  exposedMethodsWithheld: boolean;
+  exposedMethodsNote: string | null;
   methodCount: number | null;
   discoveryError: string | null;
 }
@@ -94,6 +97,9 @@ export async function runReliabilityProbe(
   const methodsRes = await sendJsonRpcRequest(endpoint, 'rpc_methods', [], timeoutMs);
   const methods = methodsRes.success ? parseMethods(methodsRes.response?.result) : null;
   const flagged = classifyAdvertisedMethods(methods ?? []);
+  const unsafePresented = presentExposedMethodNames(endpoint, flagged.unsafe.map((m) => m.method));
+  const statePresented = presentExposedMethodNames(endpoint, flagged.stateChanging.map((m) => m.method));
+  const withheld = unsafePresented.withheld || statePresented.withheld;
   return {
     samples,
     errors,
@@ -105,8 +111,10 @@ export async function runReliabilityProbe(
     history,
     historyDetail,
     historyBlock,
-    unsafe: flagged.unsafe,
-    stateChanging: flagged.stateChanging,
+    unsafe: withheld ? [] : flagged.unsafe,
+    stateChanging: withheld ? [] : flagged.stateChanging,
+    exposedMethodsWithheld: withheld,
+    exposedMethodsNote: withheld ? unsafePresented.note : null,
     methodCount: methods ? methods.length : null,
     discoveryError: methods ? null : methodsRes.error,
   };

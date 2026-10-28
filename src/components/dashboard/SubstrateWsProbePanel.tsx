@@ -92,11 +92,13 @@ export function SubstrateWsProbePanel({ onResult, initialResult = null, restored
             {result.peers === 0 && result.shouldHavePeers !== false && (
               <p className="text-xs text-amber-300">No peers, and the node says it should have them.</p>
             )}
-            {result.advertisedUnsafeMethods && result.advertisedUnsafeMethods.length > 0 && (
+            {result.exposedMethodsWithheld ? (
+              <p className="text-xs leading-relaxed text-slate-300">{result.exposedMethodsNote}</p>
+            ) : result.advertisedUnsafeMethods && result.advertisedUnsafeMethods.length > 0 ? (
               <p className="text-xs text-red-300">
                 Unsafe operator methods advertised, not called: {result.advertisedUnsafeMethods.join(', ')}
               </p>
-            )}
+            ) : null}
             <p className="text-[11px] text-slate-500">
               One connection, closed after the answers arrive. Finality lag subtracts two Substrate
               heads. An EVM block number is a different counter and is never subtracted from these.

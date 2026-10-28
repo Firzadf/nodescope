@@ -104,6 +104,38 @@ export function classifyAdvertisedMethods(methods: string[]): { unsafe: FlaggedM
   return { unsafe, stateChanging };
 }
 
+/** Published Portaldot endpoints. Exposed-method names for these hosts are not shown. */
+export const OFFICIAL_PORTALDOT_RPC_HOSTS = [
+  'test-evm-rpc-v3.portaldot.dev',
+  'test-node-v3.portaldot.dev',
+] as const;
+
+export const EXPOSED_METHODS_WITHHELD_NOTE =
+  'Exposed-method findings for official Portaldot endpoints are withheld pending responsible disclosure to the Portaldot team.';
+
+export function isOfficialPortaldotEndpoint(target: string): boolean {
+  const raw = target.trim();
+  if (!raw) return false;
+  try {
+    const url = new URL(raw.includes('://') ? raw : `https://${raw}`);
+    return (OFFICIAL_PORTALDOT_RPC_HOSTS as readonly string[]).includes(url.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
+/** Drop method names when the target is an official Portaldot host. Other hosts keep the full list. */
+export function presentExposedMethodNames(endpoint: string, names: string[]): {
+  withheld: boolean;
+  note: string | null;
+  names: string[];
+} {
+  if (isOfficialPortaldotEndpoint(endpoint)) {
+    return { withheld: true, note: EXPOSED_METHODS_WITHHELD_NOTE, names: [] };
+  }
+  return { withheld: false, note: null, names };
+}
+
 export function readOnlyProbeIsDisjointFromUnsafe(): boolean {
   const called = new Set<string>(READ_ONLY_PROBE_METHODS);
   for (const method of UNSAFE_OPERATOR_METHODS) {

@@ -44,7 +44,7 @@ export function ReliabilityPanel({ endpoint, initial = null, onResult }: Reliabi
         <p className="text-xs leading-relaxed text-slate-400">
           Six <code className="font-data text-slate-300">eth_blockNumber</code> calls for the error rate and latency spread,
           one header and one balance about 10,000 blocks back for archival-versus-pruned, and <code className="font-data text-slate-300">rpc_methods</code> to
-          list unsafe operator methods. Those methods are named, never called.
+          list unsafe operator methods. Those methods are named, never called. On the published Portaldot testnet hosts the names are withheld.
         </p>
         <button type="button" onClick={() => void run()} disabled={running || !endpoint} className="rounded-lg border border-sky-500/40 bg-sky-500/15 px-4 py-2 text-sm font-medium text-sky-300 disabled:opacity-50">
           {running ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Probing…</span> : 'Run reliability probe'}
@@ -62,7 +62,9 @@ export function ReliabilityPanel({ endpoint, initial = null, onResult }: Reliabi
             </dl>
             <p className="text-xs text-slate-400">{report.historyDetail}</p>
             {report.discoveryError && <p className="text-xs text-amber-300">rpc_methods: {report.discoveryError}</p>}
-            {report.unsafe.length > 0 ? (
+            {report.exposedMethodsWithheld ? (
+              <p className="text-xs leading-relaxed text-slate-300">{report.exposedMethodsNote}</p>
+            ) : report.unsafe.length > 0 ? (
               <div>
                 <p className="text-xs font-medium text-red-300">Unsafe operator methods advertised ({report.unsafe.length})</p>
                 <p className="mt-1 font-data text-[11px] leading-relaxed text-slate-300">{report.unsafe.map((m) => m.method).join(', ')}</p>
@@ -70,7 +72,7 @@ export function ReliabilityPanel({ endpoint, initial = null, onResult }: Reliabi
             ) : report.methodCount !== null ? (
               <p className="text-xs text-emerald-300">No unsafe operator methods in the advertised list.</p>
             ) : null}
-            {report.stateChanging.length > 0 && (
+            {!report.exposedMethodsWithheld && report.stateChanging.length > 0 && (
               <p className="font-data text-[11px] text-slate-500">State-changing, not invoked: {report.stateChanging.map((m) => m.method).join(', ')}</p>
             )}
           </div>

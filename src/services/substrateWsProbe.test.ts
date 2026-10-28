@@ -73,11 +73,11 @@ describe('probeSubstrateWs', () => {
   });
 
   it('records finality lag and sync, and does not fail when an optional method errors', async () => {
-    const result = await probeSubstrateWs('wss://test-node-v3.portaldot.dev', {
+    const result = await probeSubstrateWs('wss://node.example.test', {
       wsFactory: () =>
         fakeWs({
           1: { peers: 0, isSyncing: false, shouldHavePeers: true },
-          2: 'PortaldotV3 Test',
+          2: 'Example',
           3: '3.0.0',
           4: { number: '0x38ab3' },
           5: '0xd95fb0bc00d6d672a8f7e51e7078ed052b602cce0528d83c0c362eed87325696',
@@ -90,6 +90,7 @@ describe('probeSubstrateWs', () => {
     expect(result.headerNumberDecimal).toBe('232115');
     expect(result.finalizedNumberDecimal).toBe('232113');
     expect(result.finalityLagBlocks).toBe(2);
+    expect(result.exposedMethodsWithheld).toBe(false);
     expect(result.advertisedUnsafeMethods).toEqual(['author_insertKey']);
     expect(result.peers).toBe(0);
     expect(result.syncCurrentBlock).toBe('232115');
@@ -119,5 +120,21 @@ describe('probeSubstrateWs', () => {
     expect(optionalDown.status).toBe('ok');
     expect(optionalDown.finalizedNumberDecimal).toBeNull();
     expect(optionalDown.headerNumberDecimal).toBe('16');
+
+    const withheld = await probeSubstrateWs('wss://test-node-v3.portaldot.dev', {
+      wsFactory: () =>
+        fakeWs({
+          1: { peers: 1, isSyncing: false, shouldHavePeers: true },
+          2: 'Example',
+          3: '3.0.0',
+          4: { number: '0x10' },
+          8: { methods: ['system_health', 'dev_exampleProbe'] },
+        }),
+    });
+    expect(withheld.status).toBe('ok');
+    expect(withheld.exposedMethodsWithheld).toBe(true);
+    expect(withheld.exposedMethodsNote).toMatch(/withheld pending responsible disclosure/);
+    expect(withheld.advertisedUnsafeMethods).toEqual([]);
+    expect(JSON.stringify(withheld)).not.toContain('dev_exampleProbe');
   });
 });

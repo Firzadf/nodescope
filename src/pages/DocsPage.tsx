@@ -101,6 +101,7 @@ export function DocsPage() {
             transport. It is expected when a Substrate method is asked of the EVM endpoint (or the
             reverse) — it proves the transport answered, it does not prove the node is broken. The
             RPC console ships presets that demonstrate this on purpose.
+            The reliability probe and the Substrate probe also read <code className="font-data text-slate-300">rpc_methods</code> and can list unsafe operator methods. Those methods are never called. On the published Portaldot testnet hosts the names are withheld pending disclosure to the Portaldot team. Any other endpoint shows the full list.
           </p>
         </section>
 

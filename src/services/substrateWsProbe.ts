@@ -16,7 +16,7 @@
  * No polling, no background timers: one click, one connection, then close.
  */
 
-import { flagAdvertisedMethod } from '../utils/rpcSecurity';
+import { flagAdvertisedMethod, presentExposedMethodNames } from '../utils/rpcSecurity';
 
 export const DEFAULT_SUBSTRATE_WS_URL = 'wss://test-node-v3.portaldot.dev';
 
@@ -41,8 +41,11 @@ export interface SubstrateWsProbeResult {
   syncStartingBlock?: string | null;
   syncCurrentBlock?: string | null;
   syncHighestBlock?: string | null;
-  /** Unsafe operator methods named by rpc_methods. Listed, never called. */
+  /** Unsafe operator methods named by rpc_methods. Empty when withheld. Listed, never called. */
   advertisedUnsafeMethods?: string[];
+  /** Official Portaldot hosts: names are omitted and this note is shown instead. */
+  exposedMethodsWithheld?: boolean;
+  exposedMethodsNote?: string | null;
   error: string | null;
 }
 
@@ -91,6 +94,8 @@ export async function probeSubstrateWs(
     syncCurrentBlock: null,
     syncHighestBlock: null,
     advertisedUnsafeMethods: [],
+    exposedMethodsWithheld: false,
+    exposedMethodsNote: null,
   };
 
   // Hardening from the REA self-audit: a Substrate probe must not run over
@@ -167,7 +172,8 @@ export async function probeSubstrateWs(
         : methodsRaw && typeof methodsRaw === 'object' && Array.isArray((methodsRaw as { methods?: unknown }).methods)
           ? (methodsRaw as { methods: unknown[] }).methods
           : [];
-      const unsafeNames = methodList.filter((m): m is string => typeof m === 'string').filter((m) => flagAdvertisedMethod(m)?.flag === 'unsafe-operator').map((m) => m);
+      const unsafeNames = methodList.filter((m): m is string => typeof m === 'string').filter((m) => flagAdvertisedMethod(m)?.flag === 'unsafe-operator');
+      const presented = presentExposedMethodNames(url, unsafeNames);
       const asBlock = (v: unknown) => (typeof v === 'number' || typeof v === 'string' ? String(v) : null);
       let lag: number | null = null;
       if (headerDec !== null && finDec !== null) {
@@ -191,7 +197,9 @@ export async function probeSubstrateWs(
         syncStartingBlock: asBlock(sync?.startingBlock),
         syncCurrentBlock: asBlock(sync?.currentBlock),
         syncHighestBlock: asBlock(sync?.highestBlock),
-        advertisedUnsafeMethods: unsafeNames,
+        advertisedUnsafeMethods: presented.names,
+        exposedMethodsWithheld: presented.withheld,
+        exposedMethodsNote: presented.note,
         status: error ? 'error' : 'ok',
         error,
       });

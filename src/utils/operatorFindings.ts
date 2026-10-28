@@ -5,6 +5,18 @@ import type { StallAssessment } from './stall';
 import type { UnitsSanity } from './unitsSanity';
 import { SYNC_GAP_FULL_BLOCKS } from '../../shared/liveStatus.mjs';
 import { parseHeight } from '../../shared/liveStatus.mjs';
+import { EXPOSED_METHODS_WITHHELD_NOTE } from './rpcSecurity';
+
+function withheldExposedMethodsFinding(): Finding {
+  return {
+    ruleId: 'rpc.exposed-methods-withheld',
+    severity: 'info',
+    title: 'Exposed-method findings withheld',
+    evidence: EXPOSED_METHODS_WITHHELD_NOTE,
+    explanation: EXPOSED_METHODS_WITHHELD_NOTE,
+    recommendation: 'Share this class of finding with the Portaldot team in private. It is not included in a public report.',
+  };
+}
 
 /** Findings an operator can act on. Each one names the measurement. */
 export function operatorFindings(input: {
@@ -63,7 +75,9 @@ export function operatorFindings(input: {
       }
     }
   }
-  if (ws?.status === 'ok' && ws.advertisedUnsafeMethods && ws.advertisedUnsafeMethods.length > 0) {
+  if (ws?.status === 'ok' && ws.exposedMethodsWithheld) {
+    out.push(withheldExposedMethodsFinding());
+  } else if (ws?.status === 'ok' && ws.advertisedUnsafeMethods && ws.advertisedUnsafeMethods.length > 0) {
     out.push({
       ruleId: 'rpc.unsafe-methods-wss',
       severity: 'error',
@@ -122,14 +136,16 @@ export function operatorFindings(input: {
       recommendation: 'No action. The depth checked is recorded in the evidence.',
     });
   }
-  if (rel && rel.unsafe.length > 0) {
+  if (rel?.exposedMethodsWithheld) {
+    if (!out.some((f) => f.ruleId === 'rpc.exposed-methods-withheld')) out.push(withheldExposedMethodsFinding());
+  } else if (rel && rel.unsafe.length > 0) {
     out.push({
       ruleId: 'rpc.unsafe-methods',
       severity: 'error',
       title: 'Public RPC advertises unsafe operator methods',
       evidence: rel.unsafe.map((m) => m.method).join(', '),
-      explanation: 'These names came from rpc_methods. None of them were called. author_insertKey, author_rotateKeys, offchain_localStorageSet, and the peer/log admin methods should not be reachable on a public endpoint.',
-      recommendation: 'Restart the node with the unsafe RPC methods disabled for external callers.',
+      explanation: 'These names came from rpc_methods. None of them were called.',
+      recommendation: 'Disable unsafe RPC methods for external callers.',
     });
   }
   const units = input.units;
