@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import { formatTimeAgo, isStale } from '../../utils/relativeTime';
 import { overallVerdictFrom, type OverallVerdict } from '../../utils/overallVerdict';
 import type { HealthCheckSnapshot } from '../../types/healthCheck';
 import type { SubstrateWsProbeResult } from '../../services/substrateWsProbe';
@@ -65,6 +67,15 @@ export function VerdictBar({ latestHealthSnapshot, wsProbeResult, latencyMs, lat
     latestHealthSnapshot !== null
       ? new Date(latestHealthSnapshot.timestamp).toLocaleString()
       : '—';
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (latestHealthSnapshot === null) return;
+    setNow(Date.now());
+    const id = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, [latestHealthSnapshot]);
+  const lastTs = latestHealthSnapshot !== null ? new Date(latestHealthSnapshot.timestamp).getTime() : null;
+  const stale = lastTs !== null && isStale(lastTs, now);
 
   return (
     <div className="sticky top-0 z-20 -mx-1 px-1 py-2 bg-ink/95 backdrop-blur">
@@ -86,7 +97,15 @@ export function VerdictBar({ latestHealthSnapshot, wsProbeResult, latencyMs, lat
           </span>
         </span>
         <span className="text-xs text-slate-400">
-          Last checked <span className="text-slate-200 font-data">{lastChecked}</span>
+          Last checked{' '}
+          {lastTs !== null ? (
+            <time dateTime={new Date(lastTs).toISOString()} title={lastChecked} className={`font-data ${stale ? 'text-amber-300' : 'text-slate-200'}`}>
+              {formatTimeAgo(lastTs, now)}
+              {stale ? ' · stale, re-run to refresh' : ''}
+            </time>
+          ) : (
+            <span className="text-slate-200 font-data">—</span>
+          )}
         </span>
       </div>
     </div>
