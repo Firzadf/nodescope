@@ -114,7 +114,7 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
             type="button"
             onClick={exportAsJson}
             disabled={exporting || recordCount === 0}
-            className="btn-primary px-5 py-2.5 font-medium rounded-lg text-sm flex items-center gap-2"
+            className="btn-primary px-5 py-2.5 font-medium rounded-lg text-sm flex shrink-0 items-center gap-2 whitespace-nowrap"
           >
             {exporting ? <span className="w-4 h-4 animate-spin border-2 border-white border-t-transparent rounded-full" /> : <Download className="w-4 h-4" />}
             {exporting ? 'Generating...' : 'Export as JSON'}
