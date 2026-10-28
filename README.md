@@ -449,7 +449,7 @@ src/
 | `artifactInput.test.ts` | Custom artifact parsing, coded failures |
 | `feeLabShare.test.ts` | Fee Lab share-link round-trip and forgiving parse |
 | 52 files not listed above | Component and utility tests added in later phases, including Landing and Command Palette |
-| **Total** | **514 passing tests, 75 test files** (suite verified 29 Oct 2026; the landing page, /judges, and this README are checked against one constants file by `src/utils/siteConsistency.test.tsx` and `npm run check:consistency`) |
+| **Total** | **517 passing tests, 75 test files** (suite verified 29 Oct 2026; the landing page, /judges, and this README are checked against one constants file by `src/utils/siteConsistency.test.tsx` and `npm run check:consistency`) |
 
 ### Running Tests
 
@@ -474,7 +474,7 @@ npm test -- snapshotComparer.test.ts
 - ✅ **Phase 1 — Health Check Snapshots**
 - ✅ **Phase 2 — Snapshot Comparison**
 - ✅ **Post-Phase-2 fixes** — snapshot recency, latency-only status, Connect button first-load state, banner logic
-- ✅ **Demo video:** [https://www.youtube.com/watch?v=qne3_eZdcKA](https://www.youtube.com/watch?v=qne3_eZdcKA)
+- ✅ **Demo video:** [https://youtu.be/14aZxVTCrz0](https://youtu.be/14aZxVTCrz0)
 - ✅ **Live app:** [https://nodescope.vercel.app/](https://nodescope.vercel.app/)
 - ✅ **Screenshots:** [docs/screenshots/](docs/screenshots/README.md)
 - ✅ **DoraHacks BUIDL:** [https://dorahacks.io/build/50146/](https://dorahacks.io/build/50146/)
