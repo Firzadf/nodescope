@@ -512,9 +512,9 @@ const en: LandingCopy = {
   galleryLabel: 'NodeScope · screenshot',
   screenshots: [
     { src: '/screenshots/01-endpoint-config.jpg', caption: '01 — Endpoint configuration' },
-    { src: '/screenshots/02-health-check-results.jpg', caption: '02 — Health score, every point sourced' },
+    { src: '/screenshots/02-health-check-results.jpg', caption: '02 — Health score' },
     { src: '/screenshots/03-snapshot-comparison.jpg', caption: '03 — Snapshot comparison' },
-    { src: '/screenshots/04-findings-categorized.jpg', caption: '04 — Check results & derived findings' },
+    { src: '/screenshots/04-findings-categorized.jpg', caption: '04 — Check findings' },
     { src: '/screenshots/05-report-export.jpg', caption: '05 — Report export' },
   ],
   v3Title: 'Portaldot V3, as published',
@@ -1005,9 +1005,9 @@ const id: LandingCopy = {
   galleryLabel: 'NodeScope · screenshot',
   screenshots: [
     { src: '/screenshots/01-endpoint-config.jpg', caption: '01 — Konfigurasi endpoint' },
-    { src: '/screenshots/02-health-check-results.jpg', caption: '02 — Health score, tiap poin ada sumbernya' },
+    { src: '/screenshots/02-health-check-results.jpg', caption: '02 — Skor kesehatan' },
     { src: '/screenshots/03-snapshot-comparison.jpg', caption: '03 — Perbandingan snapshot' },
-    { src: '/screenshots/04-findings-categorized.jpg', caption: '04 — Hasil cek & temuan turunan' },
+    { src: '/screenshots/04-findings-categorized.jpg', caption: '04 — Temuan cek' },
     { src: '/screenshots/05-report-export.jpg', caption: '05 — Ekspor laporan' },
   ],
   v3Title: 'Portaldot V3, sesuai publikasi',

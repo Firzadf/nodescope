@@ -1134,13 +1134,13 @@ export function Landing() {
                   key={s.src}
                   type="button"
                   onClick={() => setLightbox(i)}
-                  className={`group relative bg-panel text-left ${i === 0 ? 'col-span-2 lg:col-span-1' : ''}`}
+                  className={`group relative flex flex-col justify-start bg-panel text-left ${i === 0 ? 'col-span-2 lg:col-span-1' : ''}`}
                 >
                   <span className="block overflow-hidden">
                     <img src={s.src} alt={s.caption} className="plate aspect-[16/10] w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]" loading="lazy" />
                   </span>
-                  <span className="flex items-center justify-between gap-2 border-t border-line px-4 py-3 font-data text-[11px] uppercase tracking-[0.14em] text-slate-400">
-                    {s.caption}
+                  <span className="flex flex-1 items-start justify-between gap-2 border-t border-line px-4 py-3 font-data text-[11px] uppercase tracking-[0.14em] text-slate-400">
+                    <span>{s.caption}</span>
                     <span aria-hidden="true" className="text-signal-ink opacity-0 transition-opacity group-hover:opacity-100">↗</span>
                   </span>
                 </button>
