@@ -79,7 +79,7 @@ npm run lint
 npm run build
 ```
 
-At the last full verification, 29 Oct 2026, the suite passed 514 tests across
+At the last full verification, 29 Oct 2026, the suite passed 516 tests across
 75 files, lint reported 0 errors, and the production build succeeded. If a
 future change breaks that, the suite, not this document, is the authority.
 

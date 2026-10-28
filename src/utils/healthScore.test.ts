@@ -5,6 +5,7 @@ import {
   bandFor,
   HEALTH_SCORE_WEIGHTS,
   HEALTH_SCORE_FORMULA,
+  lostPointsNote,
 } from './healthScore';
 import { attachHealthScore, buildDiagnosticReport } from './reportBuilder';
 import { stampReportIntegrity, verifyReport } from './reportIntegrity';
@@ -162,5 +163,22 @@ describe('health score in NEW reports', () => {
   it('leaves a report with no measurements unchanged', () => {
     const base = buildDiagnosticReport([], new Date('2026-10-27T10:00:00Z'));
     expect(attachHealthScore(base, [], null)).toBe(base);
+  });
+});
+
+describe('lostPointsNote', () => {
+  it('names where the missing points went, from the same score object as the gauge', () => {
+    // All RPCs answer and WSS answers, but the head is stalled for 899 s.
+    const a = snap('a', 1_000_000, '0x38ab3');
+    const b = snap('b', 1_899_000, '0x38ab3');
+    const s = computeHealthScore({ snapshots: [a, b], wsProbe: wsOk });
+    expect(s.band).not.toBe('healthy');
+    expect(lostPointsNote(s)).toMatch(/−20 head progression/);
+  });
+
+  it('is empty when nothing was lost', () => {
+    const a = snap('a', 1_000_000, '0x100');
+    const b = snap('b', 1_060_000, '0x105');
+    expect(lostPointsNote(computeHealthScore({ snapshots: [a, b], wsProbe: wsOk }))).toBe('');
   });
 });

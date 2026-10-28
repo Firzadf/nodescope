@@ -19,6 +19,8 @@ export interface WatchCycleResult {
   blockHeight: string | null;
   score: number | null;
   coverage: number | null;
+  /** Where the missing points went, from the same score object as the gauge. */
+  scoreNote?: string;
 }
 
 interface WatchAlertsPanelProps {
@@ -101,7 +103,7 @@ export function WatchAlertsPanel({ runCycle, current, onToast, tickMsOverride }:
       const from = prevVerdict.current;
       prevVerdict.current = r.verdict;
       pushLog(
-        `${r.verdict.replace('_', ' ')} · block ${r.blockHeight ?? '—'} · score ${r.score ?? '—'}${transition ? ` · ${transition.toUpperCase()}` : ''}`,
+        `${r.verdict.replace('_', ' ')} · block ${r.blockHeight ?? '—'} · score ${r.score ?? '—'}${r.scoreNote ? ` (${r.scoreNote})` : ''}${transition ? ` · ${transition.toUpperCase()}` : ''}`,
         r.verdict === 'healthy' ? 'ok' : r.verdict === 'down' ? 'bad' : 'warn',
       );
       if (transition && urlRef.current) {

@@ -3,6 +3,8 @@ import { Play, Loader2, CheckCircle2, XCircle, Circle } from 'lucide-react';
 import { Card } from '../common/Card';
 import { runFullDiagnosticSteps, type FullDiagnosticStepStatus } from '../../utils/fullDiagnostic';
 import { overallVerdictFrom } from '../../utils/overallVerdict';
+import { computeHealthScore } from '../../utils/healthScore';
+import { getHealthSnapshots } from '../../services/healthSnapshotStorage';
 import { hexToDecimal } from '../../utils/combinedVerdict';
 import { probeSubstrateWs, DEFAULT_SUBSTRATE_WS_URL, type SubstrateWsProbeResult } from '../../services/substrateWsProbe';
 import { discoverCapabilities } from '../../services/capabilityDiscovery';
@@ -42,8 +44,19 @@ const STEP_LABELS: Array<{ id: string; label: string }> = [
   { id: 'verdict', label: 'Combined verdict' },
 ];
 
+/**
+ * Same rule as the verdict bar and Watch: the Health Score band can pull an
+ * all-green transport result down to DEGRADED (e.g. a stalled head).
+ */
 function verdictLabel(snapshot: HealthCheckSnapshot | null, probe: SubstrateWsProbeResult | null): string {
-  switch (overallVerdictFrom(snapshot, probe)) {
+  const score = computeHealthScore({ snapshots: getHealthSnapshots(), wsProbe: probe });
+  const verdict = overallVerdictFrom(snapshot, probe, score.band);
+  const suffix = score.score === null ? '' : ` · Health Score ${score.score}/100`;
+  return verdictWord(verdict) + suffix;
+}
+
+function verdictWord(verdict: ReturnType<typeof overallVerdictFrom>): string {
+  switch (verdict) {
     case 'healthy':
       return 'HEALTHY';
     case 'degraded':

@@ -254,3 +254,11 @@ export function computeHealthScore(input: HealthScoreInput): HealthScore {
     components,
   };
 }
+
+/** Short "where the points went" note, e.g. "−20 head progression, −5 latency". */
+export function lostPointsNote(score: HealthScore): string {
+  return score.components
+    .filter((c) => c.measured && c.points !== null && c.points < c.weight)
+    .map((c) => `−${c.weight - (c.points ?? 0)} ${c.label.toLowerCase()}`)
+    .join(', ');
+}

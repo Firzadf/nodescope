@@ -35,7 +35,7 @@ import { extractEvmSide } from './utils/combinedVerdict';
 import { FullDiagnosticRunner } from './components/dashboard/FullDiagnosticRunner';
 import { WatchAlertsPanel, type WatchCycleResult } from './components/dashboard/WatchAlertsPanel';
 import { overallVerdictFrom } from './utils/overallVerdict';
-import { computeHealthScore } from './utils/healthScore';
+import { computeHealthScore, lostPointsNote } from './utils/healthScore';
 import { probeSubstrateWs } from './services/substrateWsProbe';
 import { sanitizeEndpointOrigin } from './utils/reportBuilder';
 // Fee Lab is lazy: its panel code stays out of the first load (the
@@ -274,6 +274,7 @@ function App() {
       blockHeight: extractEvmSide(snapshot)?.blockHeightDecimal ?? null,
       score: score.score,
       coverage: score.coverage,
+      scoreNote: lostPointsNote(score),
     };
   };
   // Session restore wrappers: a fresh run replaces restored data and is
