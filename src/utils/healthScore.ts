@@ -259,6 +259,11 @@ export function computeHealthScore(input: HealthScoreInput): HealthScore {
 export function lostPointsNote(score: HealthScore): string {
   return score.components
     .filter((c) => c.measured && c.points !== null && c.points < c.weight)
-    .map((c) => `−${c.weight - (c.points ?? 0)} ${c.label.toLowerCase()}`)
+    .map((c) => `−${formatPoints(c.weight - (c.points ?? 0))} ${c.label.toLowerCase()}`)
     .join(', ');
+}
+
+/** One decimal at most, no float noise: 0.3000000000000007 -> "0.3", 20 -> "20". */
+export function formatPoints(n: number): string {
+  return String(Math.round(n * 10) / 10);
 }

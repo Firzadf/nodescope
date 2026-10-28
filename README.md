@@ -25,7 +25,7 @@ instead of the headline multiple.
 - Fees finding, measured 27 Oct 2026: a contract deploy costs 124.098 tPOT
   on EVM vs 122.191 tPOT native all-in — 1.016x all-in, not the 804x
   fee-only headline. Most of the gap is a refundable storage deposit.
-- 516 passing tests across 75 test files. CI green on Ubuntu and Windows
+- 517 passing tests across 75 test files. CI green on Ubuntu and Windows
   (Foundry on Ubuntu), plus a `verify:evidence` job that rechecks every
   anchor on chain.
 
@@ -420,7 +420,7 @@ src/
 
 **Test Framework:** Vitest 5 with @testing-library/react  
 **Coverage Target:** 80%+  
-**Current Status:** 516 passing tests across 75 test files, verified 29 Oct 2026
+**Current Status:** 517 passing tests across 75 test files, verified 29 Oct 2026
 
 ### Test Files
 
@@ -563,7 +563,7 @@ MIT (as per Portaldot Hacker House requirements).
 
 **Project Status:** Check-in submitted Oct 22, 2026. Repository public with 42 commits as of 25 Oct 2026, development records retained. Final sprint to the 6 Nov 2026 code freeze is in progress.
 
-- ✅ Phase 1 & Phase 2 complete, plus Trends & Verdict, Multi-Endpoint Comparison, V3 era marker, and Substrate WebSocket probe, Health Score with one shared verdict, Watch & Alerts, 516 tests across 75 files
+- ✅ Phase 1 & Phase 2 complete, plus Trends & Verdict, Multi-Endpoint Comparison, V3 era marker, and Substrate WebSocket probe, Health Score with one shared verdict, Watch & Alerts, 517 tests across 75 files
 - ✅ **FASE 2 — Ecosystem & Business (roadmap juara):** CLI (`check` + `fees`), GitHub Action pre-deploy gate, Fee Lab custom artifacts + share link, findings doc for Portaldot, business model, adoption outreach
 - ✅ Portaldot V3.0 EVM integration verified, chain ID 420420777 validated, methods documented
 - ✅ Demo video, live deployment, and screenshots published

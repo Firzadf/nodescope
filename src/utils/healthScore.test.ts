@@ -6,6 +6,7 @@ import {
   HEALTH_SCORE_WEIGHTS,
   HEALTH_SCORE_FORMULA,
   lostPointsNote,
+  formatPoints,
 } from './healthScore';
 import { attachHealthScore, buildDiagnosticReport } from './reportBuilder';
 import { stampReportIntegrity, verifyReport } from './reportIntegrity';
@@ -180,5 +181,13 @@ describe('lostPointsNote', () => {
     const a = snap('a', 1_000_000, '0x100');
     const b = snap('b', 1_060_000, '0x105');
     expect(lostPointsNote(computeHealthScore({ snapshots: [a, b], wsProbe: wsOk }))).toBe('');
+  });
+});
+
+describe('formatPoints', () => {
+  it('rounds to one decimal without float noise', () => {
+    expect(formatPoints(20 - 19.7)).toBe('0.3');
+    expect(formatPoints(1.1000000000000014)).toBe('1.1');
+    expect(formatPoints(20)).toBe('20');
   });
 });
