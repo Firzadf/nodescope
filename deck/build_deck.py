@@ -9,7 +9,7 @@ status notes. Every number on it is a verified fact, not a claim:
 - the fee figures come from the anchored Fee Lab report
   (evidence/reports/fee-2026-10-27.json): EVM 124.098 tPOT, native
   all-in 122.191 tPOT, all-in ratio 1.0156, fee-only ratio 803.68;
-- test counts come from the suite itself (467 tests, 67 files).
+- test counts come from the suite itself (517 tests, 75 files).
 
 Regenerate with:  python3 deck/build_deck.py
 Requires fpdf2 (pip install fpdf2). DejaVu fonts are used when present
@@ -224,8 +224,8 @@ def slide_solution(d: Deck) -> None:
     d.set_font("sans", "", 15)
     d.set_text_color(*MUTED)
     d.set_xy(MARGIN + 24, py + 50)
-    d.multi_cell(360, 22, "Timestamped snapshots. Deterministic before/after "
-           "comparison. Reports verified by SHA-256.", align="L")
+    d.multi_cell(360, 22, "Health Score 0-100 with every point explained. "
+           "Watch & Discord/Slack alerts. Reports verified by SHA-256.", align="L")
     d.panel(MARGIN + 440, py, 408, 170)
     d.set_font("sans", "B", 18)
     d.set_text_color(*TEXT)
@@ -239,8 +239,8 @@ def slide_solution(d: Deck) -> None:
     d.set_font("sans", "B", 16)
     d.set_text_color(*ACCENT)
     d.set_xy(MARGIN, py + 190)
-    d.cell(0, 22, "No background polling. No black-box score. "
-           "No simulated data shown as live.")
+    d.cell(0, 22, "Nothing polls unless you start Watch. Every score point "
+           "explained. No simulated data.")
     d.slide_footer("Innovation  ·  Technical Feasibility")
 
 
@@ -252,8 +252,8 @@ def slide_demo(d: Deck) -> None:
         ("01", "Open /app. The testnet endpoint is already filled in."),
         ("02", "Run full diagnostic: connect, health check, capability discovery, "
                "Substrate probe, snapshot, combined verdict."),
-        ("03", "Read the verdict bar: overall verdict, checks passed, WSS status, "
-               "latency, last-checked time."),
+        ("03", "Read the verdict and Health Score: a stalled head reads DEGRADED "
+               "even when every RPC answers, with the lost points named."),
         ("04", "Compare two snapshots: new and resolved findings, block delta, "
                "latency trend."),
         ("05", "Export the report and verify it at /verify. No account. No wallet."),
@@ -345,13 +345,13 @@ def slide_tech(d: Deck) -> None:
     d.kicker("Engineering")
     top = d.headline("Built to be rechecked, not to be believed.")
     items = [
-        ("467 tests across 67 files", "Vitest, run on every push."),
+        ("517 tests across 75 files", "Vitest, run on every push."),
         ("5/5 Foundry contract tests", "The attestation contract, tested in isolation."),
         ("CI on Ubuntu and Windows", "Node on both; Foundry on Ubuntu."),
         ("CLI and GitHub Action", "check and fees without the browser; a pre-deploy "
          "cost gate teams can run."),
         ("Deterministic comparison", "Same inputs, same diff. Reports verified by SHA-256."),
-        ("Read-only by design", "No wallet, no signing, no background polling."),
+        ("Read-only by design", "No wallet, no signing. Watch runs only when you start it."),
     ]
     y = max(150, top + 16)
     for title, text in items:
@@ -433,8 +433,8 @@ def slide_roadmap_team(d: Deck) -> None:
     d.kicker("Roadmap · Team")
     d.headline("What happens next.")
     steps = [
-        ("Hosted monitoring and alerts",
-         "For node operators, when demand exists."),
+        ("Hosted 24/7 monitoring",
+         "Watch & alerts already run in the browser and CLI; hosted, when demand exists."),
         ("Pre-deploy cost gate in CI",
          "The GitHub Action as a check teams run before deploying."),
         ("Mainnet check",
