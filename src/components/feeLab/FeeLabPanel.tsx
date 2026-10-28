@@ -459,7 +459,7 @@ export function FeeLabPanel() {
                 lang={LANG_HTML[l]}
                 aria-pressed={lang === l}
                 onClick={() => setLang(l)}
-                className={`rounded-full px-2.5 py-1 font-data text-[10px] ${l === 'zh' ? 'tracking-normal' : 'uppercase tracking-[0.14em]'} transition-colors ${lang === l ? 'bg-signal text-graphite' : 'text-slate-400 hover:text-graphite'}`}
+                className={`cursor-pointer select-none rounded-full px-2.5 py-1 font-data text-[10px] ${l === 'zh' ? 'tracking-normal' : 'uppercase tracking-[0.14em]'} transition-[color,background-color,transform] duration-150 active:scale-95 focus-visible:outline-2 focus-visible:outline-signal ${lang === l ? 'bg-signal text-graphite' : 'text-slate-400 hover:bg-signal/15 hover:text-graphite'}`}
               >
                 {LANG_LABEL[l]}
               </button>

@@ -935,3 +935,12 @@ select {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Tailwind v4 resets buttons to cursor: default; make every enabled button
+   read as clickable. */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+}

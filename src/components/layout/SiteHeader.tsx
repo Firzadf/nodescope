@@ -87,7 +87,7 @@ export function SiteHeader({
               lang={LANG_HTML[l]}
               aria-pressed={lang === l}
               onClick={() => setLang(l)}
-              className={`px-2.5 py-1.5 font-data text-[10px] ${l === 'zh' ? 'tracking-normal' : 'uppercase tracking-[0.14em]'} transition-colors ${lang === l ? toggleActive : 'text-slate-400 hover:text-white'}`}
+              className={`cursor-pointer select-none px-2.5 py-1.5 font-data text-[10px] ${l === 'zh' ? 'tracking-normal' : 'uppercase tracking-[0.14em]'} transition-[color,background-color,transform] duration-150 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-signal ${lang === l ? toggleActive : 'text-slate-400 hover:bg-signal/15 hover:text-white'}`}
             >
               {LANG_LABEL[l]}
             </button>
