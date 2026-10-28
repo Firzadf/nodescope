@@ -17,18 +17,33 @@ node cli/nodescope.mjs check https://test-evm-rpc-v3.portaldot.dev --json
 ## check
 
 ```bash
-nodescope check <rpc-url> [--json] [--timeout-ms N]
+nodescope check <rpc-url> [--json] [--format text|json|prometheus]
+  [--wss <wss-url>] [--reliability N] [--metrics-file <path>]
+  [--timeout-ms N]
 ```
 
 Calls `eth_chainId`, `eth_blockNumber`, `web3_clientVersion`, and
-`net_version` — the same method set as the app's Portaldot V3 EVM profile —
-and prints a verdict in the app's vocabulary:
+`net_version`, then `eth_getBlockByNumber` for the best-block timestamp.
+`--wss` also reads finality, peers, and sync. The verdict matches the app:
 
-- `healthy` — every method answered and the chain id is 420420777.
-- `degraded` — partial answers, or a chain id mismatch.
+- `healthy` — every method answered, the chain id is 420420777, and the head is moving.
+- `degraded` — partial answers, or a chain id mismatch, and the head is not stalled.
+- `stalled` — the RPC answered and the best head (timestamp ≥ 90s old) or the finalized head has not advanced. Chain paused but RPC answers.
 - `down` — nothing answered.
 
-Exit code: 0 healthy, 1 degraded/down, 2 usage error.
+Exit code: 0 healthy, 1 degraded/stalled/down, 2 usage error.
+
+### Prometheus (`--format prometheus`)
+
+Prints the text exposition: `nodescope_up`, `nodescope_health_score` (formula `nodescope.health-score.v2`), `nodescope_verdict`, `nodescope_stalled`, `nodescope_best_block`, `nodescope_finalized_block`, `nodescope_finality_lag_blocks`, `nodescope_peers`, `nodescope_syncing`, `nodescope_best_head_age_seconds`. With `--reliability N` (1–20) it also prints the error ratio and p50/p95 latency. Missing signals are omitted.
+
+```bash
+nodescope check https://test-evm-rpc-v3.portaldot.dev \
+  --wss wss://test-node-v3.portaldot.dev \
+  --format prometheus --metrics-file /var/lib/node_exporter/nodescope.prom
+```
+
+Grafana: add that file to the node_exporter textfile collector, or scrape a copy Alloy tails. The metric names above are the dashboard queries. `--watch 60 --metrics-file …` replaces the file each cycle.
 
 ### Alerts: `--webhook` and `--watch`
 
@@ -44,8 +59,11 @@ nodescope check <rpc-url> --webhook https://hooks.slack.com/services/… --watch
   `degraded` or `down`. A healthy node sends nothing.
 - `--watch N` (N ≥ 30 seconds): repeats the check every N seconds until
   Ctrl-C. The first check is the baseline; after that a message goes out
-  only on a transition — **degrade** (healthy → degraded/down, degraded →
-  down) or **recover** (back up). Steady state sends nothing.
+  only on a transition — **degrade**, **recover**, **stall**, or **resume**.
+  Stall/resume replaces the generic degrade/recover for that cycle.
+  stalled → down is a degrade, not a resume. Steady state sends nothing.
+  With `--format prometheus` each cycle's exposition goes to stdout (the
+  human line goes to stderr) and, with `--metrics-file`, to that file.
 - Same transition rule as the app's Watch & alerts panel. Read-only toward
   the chain: the only writes are the webhook POSTs.
 

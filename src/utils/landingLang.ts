@@ -579,11 +579,11 @@ const en: LandingCopy = {
   roadmapNewItems: [
     {
       title: 'Health Score 0–100, formula published',
-      body: 'Five weighted components — RPC availability 30, chain identity 15, head progression 20, latency 20, transport parity 15 — each shown with its points and the input it came from. Missing data is never scored; coverage is printed next to the number, and below 50% coverage there is no number at all. New exports carry the score inside the SHA-256 stamp.',
+      body: 'Eight weighted components in nodescope.health-score.v2 — availability 20, chain identity 10, head progression 15, finality lag 15, latency 10, transport parity 10, peers and sync 10, RPC reliability 10. v1 (30/15/20/20/15) still reproduces older reports. A paused head is the verdict STALLED. Missing data is never scored.',
     },
     {
       title: 'Watch mode + Discord / Slack alerts',
-      body: 'Opt-in and tab-scoped: press Start watch and each cycle runs the health check and the Substrate probe once (30 s floor). A message goes to your webhook only on a degrade or recover transition, or when you press Send test. The webhook URL stays in your browser. The CLI has the same rule behind --webhook and --watch.',
+      body: 'Opt-in and tab-scoped: press Start watch and each cycle runs the health check, the block timestamp, and the Substrate probe once (30 s floor). A message goes to your webhook only on degrade, recover, stall, or resume, or when you press Send test. The webhook URL stays in your browser. The CLI has the same rule behind --webhook and --watch.',
     },
     {
       title: 'Pre-deploy cost gate (GitHub Action)',
@@ -591,19 +591,22 @@ const en: LandingCopy = {
     },
   ],
   scoreTitle: 'Health Score',
-  scoreRight: 'One number · formula published · nodescope.health-score.v1',
+  scoreRight: 'One number · formula published · nodescope.health-score.v2',
   scoreIntro:
     'The verdict explains; the score summarizes. Every point comes from a measurement NodeScope already makes, and every component prints the input it was computed from. A component with no data counts on neither side of the fraction.',
   scoreHeaders: ['Component', 'Weight', 'Rule'],
   scoreRows: [
-    { label: 'RPC availability', weight: 30, rule: '30 × checks answered ÷ checks eligible (latest snapshot). -32601 “method not found” is not a failure and is not eligible.' },
-    { label: 'Chain identity', weight: 15, rule: '15 when eth_chainId = 420420777, otherwise 0.' },
-    { label: 'Head progression', weight: 20, rule: 'Two newest snapshots, same endpoint: advanced 20 · same height under 30 s apart 10 · stalled ≥ 30 s or regressed 0.' },
-    { label: 'Latency', weight: 20, rule: 'Median of successful checks: 20 at ≤ 300 ms, 0 at ≥ 2000 ms, linear in between.' },
-    { label: 'Transport parity (WSS)', weight: 15, rule: 'Substrate probe answered 10, +5 when not syncing and peers > 0.' },
+    { label: 'RPC availability', weight: 20, rule: '20 × checks answered ÷ checks eligible (latest snapshot). -32601 “method not found” is not a failure and is not eligible.' },
+    { label: 'Chain identity', weight: 10, rule: '10 when eth_chainId = 420420777, otherwise 0.' },
+    { label: 'Head progression', weight: 15, rule: 'Timestamp 90s or older scores 0. Else two snapshots: advanced 15 · same height under 30s scores half · stalled or regressed 0.' },
+    { label: 'Finality lag', weight: 15, rule: 'Best minus finalized on WSS. Full marks at lag ≤ 4 blocks, zero at ≥ 64, linear between.' },
+    { label: 'Latency', weight: 10, rule: 'Median of successful checks: 10 at ≤ 300 ms, 0 at ≥ 2000 ms, linear in between.' },
+    { label: 'Transport parity (WSS)', weight: 10, rule: 'Substrate probe answered 10. A failed probe scores 0. Peers are scored separately.' },
+    { label: 'Peers & sync', weight: 10, rule: '4 if peers > 0 (or none expected), 3 if not syncing, 3 if the sync gap is ≤ 8 blocks or unreported.' },
+    { label: 'RPC reliability', weight: 10, rule: '10 × (1 − error ratio) × p95 factor over repeated eth_blockNumber. Unmeasured until that probe runs.' },
   ],
   scoreFormula: 'score = round(100 × Σ points ÷ Σ measured weight) · shown only when measured weight ≥ 50',
-  scoreFootnote: 'Bands: 90–100 healthy · 70–89 degraded · 0–69 critical. The score is new and lives next to the deterministic verdict, not in place of it.',
+  scoreFootnote: 'Bands: 90–100 healthy · 70–89 degraded · 0–69 critical. v2 is the score new reports use. v1 still reproduces older ones. STALLED is a verdict, not a band: chain paused but RPC answers.',
   scoreCta: 'Read the full methodology',
   marqueeLive: 'Live block',
   marqueeItems: [
@@ -1072,11 +1075,11 @@ const id: LandingCopy = {
   roadmapNewItems: [
     {
       title: 'Health Score 0–100, rumus dipublikasikan',
-      body: 'Lima komponen berbobot — ketersediaan RPC 30, identitas chain 15, progres head 20, latensi 20, paritas transport 15 — masing-masing tampil dengan poin dan input asalnya. Data yang tidak ada tidak pernah diberi skor; coverage dicetak di samping angka, dan di bawah 50% tidak ada angka sama sekali. Ekspor baru membawa skor di dalam stempel SHA-256.',
+      body: 'Delapan komponen berbobot di nodescope.health-score.v2 — ketersediaan 20, identitas chain 10, progres head 15, lag finality 15, latensi 10, paritas transport 10, peer dan sync 10, keandalan RPC 10. v1 (30/15/20/20/15) tetap mereproduksi laporan lama. Head yang macet menjadi verdict STALLED. Data yang tidak ada tidak pernah diberi skor.',
     },
     {
       title: 'Mode pantau + peringatan Discord / Slack',
-      body: 'Opt-in dan hanya selama tab terbuka: tekan Start watch dan tiap siklus menjalankan health check dan probe Substrate sekali (minimal 30 dtk). Pesan ke webhook hanya saat transisi turun atau pulih, atau saat kamu menekan Send test. URL webhook tetap di browser kamu. CLI punya aturan yang sama lewat --webhook dan --watch.',
+      body: 'Opt-in dan hanya selama tab terbuka: tekan Start watch dan tiap siklus menjalankan health check, timestamp blok, dan probe Substrate sekali (minimal 30 dtk). Pesan ke webhook hanya saat transisi turun, pulih, stall, atau resume, atau saat kamu menekan Send test. URL webhook tetap di browser kamu. CLI punya aturan yang sama lewat --webhook dan --watch.',
     },
     {
       title: 'Gerbang biaya pra-deploy (GitHub Action)',
@@ -1084,19 +1087,22 @@ const id: LandingCopy = {
     },
   ],
   scoreTitle: 'Health Score',
-  scoreRight: 'Satu angka · rumus dipublikasikan · nodescope.health-score.v1',
+  scoreRight: 'Satu angka · rumus dipublikasikan · nodescope.health-score.v2',
   scoreIntro:
     'Verdict menjelaskan; skor merangkum. Setiap poin berasal dari pengukuran yang memang sudah dilakukan NodeScope, dan setiap komponen mencetak input asalnya. Komponen tanpa data tidak dihitung di sisi mana pun dari pecahan.',
   scoreHeaders: ['Komponen', 'Bobot', 'Aturan'],
   scoreRows: [
-    { label: 'Ketersediaan RPC', weight: 30, rule: '30 × cek yang dijawab ÷ cek yang layak (snapshot terbaru). -32601 “method not found” bukan kegagalan dan tidak dihitung.' },
-    { label: 'Identitas chain', weight: 15, rule: '15 jika eth_chainId = 420420777, selain itu 0.' },
-    { label: 'Progres head', weight: 20, rule: 'Dua snapshot terbaru, endpoint sama: naik 20 · tinggi sama dengan jarak < 30 dtk 10 · macet ≥ 30 dtk atau mundur 0.' },
-    { label: 'Latensi', weight: 20, rule: 'Median cek yang sukses: 20 pada ≤ 300 ms, 0 pada ≥ 2000 ms, linier di antaranya.' },
-    { label: 'Paritas transport (WSS)', weight: 15, rule: 'Probe Substrate menjawab 10, +5 jika tidak syncing dan peers > 0.' },
+    { label: 'Ketersediaan RPC', weight: 20, rule: '20 × cek yang dijawab ÷ cek yang layak (snapshot terbaru). -32601 “method not found” bukan kegagalan dan tidak dihitung.' },
+    { label: 'Identitas chain', weight: 10, rule: '10 jika eth_chainId = 420420777, selain itu 0.' },
+    { label: 'Progres head', weight: 15, rule: 'Timestamp 90 dtk atau lebih tua bernilai 0. Selain itu dua snapshot: naik 15 · tinggi sama di bawah 30 dtk separuh · macet atau mundur 0.' },
+    { label: 'Lag finality', weight: 15, rule: 'Best dikurangi finalized di WSS. Nilai penuh jika lag ≤ 4 blok, nol jika ≥ 64, linier di antaranya.' },
+    { label: 'Latensi', weight: 10, rule: 'Median cek yang sukses: 10 pada ≤ 300 ms, 0 pada ≥ 2000 ms, linier di antaranya.' },
+    { label: 'Paritas transport (WSS)', weight: 10, rule: 'Probe Substrate menjawab 10. Probe gagal bernilai 0. Peer dinilai terpisah.' },
+    { label: 'Peer & sync', weight: 10, rule: '4 jika peers > 0 (atau memang tidak diharapkan), 3 jika tidak syncing, 3 jika jarak sync ≤ 8 blok atau tidak dilaporkan.' },
+    { label: 'Keandalan RPC', weight: 10, rule: '10 × (1 − rasio error) × faktor p95 dari eth_blockNumber berulang. Tidak diukur sebelum probe itu dijalankan.' },
   ],
   scoreFormula: 'skor = round(100 × Σ poin ÷ Σ bobot terukur) · hanya tampil jika bobot terukur ≥ 50',
-  scoreFootnote: 'Rentang: 90–100 sehat · 70–89 menurun · 0–69 kritis. Skor ini baru dan berdiri di samping verdict deterministik, bukan menggantikannya.',
+  scoreFootnote: 'Rentang: 90–100 sehat · 70–89 menurun · 0–69 kritis. v2 adalah skor laporan baru. v1 tetap mereproduksi laporan lama. STALLED adalah verdict, bukan rentang: chain macet tetapi RPC menjawab.',
   scoreCta: 'Baca metodologi lengkap',
   marqueeLive: 'Blok live',
   marqueeItems: [

@@ -27,7 +27,7 @@ describe('HealthScoreHero', () => {
     render(<HealthScoreHero snapshots={[]} wsProbe={null} onRunHealthCheck={run} />);
     expect(screen.getByText('Not scored')).toBeInTheDocument();
     expect(screen.getByText(/No measurement yet/)).toBeInTheDocument();
-    expect(screen.getAllByText('not measured')).toHaveLength(5);
+    expect(screen.getAllByText('not measured')).toHaveLength(8);
     fireEvent.click(screen.getByRole('button', { name: 'Run first health check' }));
     expect(run).toHaveBeenCalled();
   });
@@ -35,7 +35,7 @@ describe('HealthScoreHero', () => {
   it('shows the score, coverage, per-component points and the formula link', () => {
     render(<HealthScoreHero snapshots={[snap('a', 1_000_000, '0x100'), snap('b', 1_076_000, '0x10c')]} wsProbe={null} />);
     expect(screen.getByText('Healthy')).toBeInTheDocument();
-    expect(screen.getByText('85%')).toBeInTheDocument();
+    expect(screen.getByText('55%')).toBeInTheDocument();
     expect(screen.getAllByText(/Head advanced \+12 blocks in 76 s/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole('link', { name: /Formula/ })).toHaveAttribute('href', '/docs#health-score');
     expect(screen.getByRole('img', { name: /Block height: 2 samples/ })).toBeInTheDocument();

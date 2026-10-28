@@ -54,7 +54,7 @@ inputs:
     default: '20'
 outputs:
   verdict:
-    description: 'Node health verdict: healthy, degraded, or down.'
+    description: 'Node health verdict: healthy, degraded, stalled, or down. stalled means the RPC answered and the head has not advanced.'
     value: ${{ steps.check.outputs.verdict }}
   evm-tpot:
     description: 'EVM deploy cost in tPOT, or empty when the EVM leg was unavailable or the fees step was skipped.'

@@ -35,9 +35,16 @@ import { extractEvmSide } from './utils/combinedVerdict';
 import { FullDiagnosticRunner } from './components/dashboard/FullDiagnosticRunner';
 import { WatchAlertsPanel, type WatchCycleResult } from './components/dashboard/WatchAlertsPanel';
 import { overallVerdictFrom } from './utils/overallVerdict';
-import { computeHealthScore, lostPointsNote } from './utils/healthScore';
+import { computeHealthScoreV2, lostPointsNote } from './utils/healthScore';
 import { probeSubstrateWs } from './services/substrateWsProbe';
 import { sanitizeEndpointOrigin } from './utils/reportBuilder';
+import { observeChainMotion } from './services/chainMotion';
+import { stallFromSession, type ChainMotion } from './utils/stall';
+import type { ReliabilityReport } from './services/reliabilityProbe';
+import type { UnitsSanity } from './utils/unitsSanity';
+import { ReliabilityPanel } from './components/dashboard/ReliabilityPanel';
+import { UnitsAddressPanel } from './components/dashboard/UnitsAddressPanel';
+import { StatusBadgePanel } from './components/dashboard/StatusBadgePanel';
 // Fee Lab is lazy: its panel code stays out of the first load (the
 // @polkadot/api chunk was already lazy via dynamic import).
 const FeeLabPanel = lazy(() => import('./components/feeLab/FeeLabPanel').then((m) => ({ default: m.FeeLabPanel })));
@@ -77,6 +84,9 @@ function App() {
   const [wsProbeResult, setWsProbeResult] = useState<SubstrateWsProbeResult | null>(() => loadWsProbe(endpoint)?.result ?? null);
   const [probeRestoredAt, setProbeRestoredAt] = useState<number | null>(() => loadWsProbe(endpoint)?.storedAt ?? null);
   const [isHealthChecking, setIsHealthChecking] = useState(false);
+  const [motion, setMotion] = useState<ChainMotion | null>(null);
+  const [reliability, setReliability] = useState<ReliabilityReport | null>(null);
+  const [units, setUnits] = useState<UnitsSanity | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(initialSidebarCollapsed);
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -252,29 +262,47 @@ function App() {
 
   // Watch & alerts: one user-started cycle = one EVM health check + one
   // Substrate probe, summarized into the verdict and the Health Score.
+  const currentStall = useMemo(
+    () => stallFromSession(healthSnapshots, wsProbeResult, motion),
+    [healthSnapshots, wsProbeResult, motion],
+  );
   const currentScore = useMemo(
-    () => computeHealthScore({ snapshots: healthSnapshots, wsProbe: wsProbeResult }),
-    [healthSnapshots, wsProbeResult],
+    () => computeHealthScoreV2({
+      snapshots: healthSnapshots,
+      wsProbe: wsProbeResult,
+      motion,
+      reliability: reliability ? { samples: reliability.samples, errors: reliability.errors, http5xx: reliability.http5xx, p50Ms: reliability.p50Ms, p95Ms: reliability.p95Ms } : null,
+    }),
+    [healthSnapshots, wsProbeResult, motion, reliability],
   );
   const currentWatchState: WatchCycleResult = {
-    verdict: overallVerdictFrom(latestHealthSnapshot, wsProbeResult, currentScore.band),
+    verdict: overallVerdictFrom(latestHealthSnapshot, wsProbeResult, currentScore.band, currentStall.state),
     endpointOrigin: sanitizeEndpointOrigin(endpoint),
-    blockHeight: extractEvmSide(latestHealthSnapshot)?.blockHeightDecimal ?? null,
+    blockHeight: extractEvmSide(latestHealthSnapshot)?.blockHeightDecimal ?? currentStall.bestHeight,
     score: currentScore.score,
     coverage: currentScore.coverage,
+    stall: currentStall.state,
+    stallExplanation: currentStall.state === 'unknown' ? null : currentStall.explanation,
   };
   const runWatchCycle = async (): Promise<WatchCycleResult> => {
     const snapshot = await doHealthCheck();
     const probe = await probeSubstrateWs();
     handleWsProbeResultChange(probe);
-    const score = computeHealthScore({ snapshots: getHealthSnapshots(), wsProbe: probe });
+    const observed = await observeChainMotion(endpoint);
+    const nextMotion: ChainMotion = { ...observed, finalizedHeight: probe.finalizedNumberDecimal ?? null };
+    setMotion(nextMotion);
+    const snapshots = getHealthSnapshots();
+    const score = computeHealthScoreV2({ snapshots, wsProbe: probe, motion: nextMotion });
+    const stall = stallFromSession(snapshots, probe, nextMotion);
     return {
-      verdict: overallVerdictFrom(snapshot, probe, score.band),
+      verdict: overallVerdictFrom(snapshot, probe, score.band, stall.state),
       endpointOrigin: snapshot.endpointOrigin,
-      blockHeight: extractEvmSide(snapshot)?.blockHeightDecimal ?? null,
+      blockHeight: extractEvmSide(snapshot)?.blockHeightDecimal ?? stall.bestHeight,
       score: score.score,
       coverage: score.coverage,
       scoreNote: lostPointsNote(score),
+      stall: stall.state,
+      stallExplanation: stall.explanation,
     };
   };
   // Session restore wrappers: a fresh run replaces restored data and is
@@ -455,6 +483,12 @@ function App() {
                         onCapabilitySnapshot={handleCapabilitySnapshotChange}
                         onGoHistory={() => handleSectionChange('history')}
                         onToast={pushToast}
+                        onMotion={async (probe) => {
+                          const observed = await observeChainMotion(endpoint);
+                          const next = { ...observed, finalizedHeight: probe.finalizedNumberDecimal ?? null };
+                          setMotion(next);
+                          return next;
+                        }}
                       />
                       <EndpointConfig
                         endpoint={endpoint}
@@ -470,6 +504,15 @@ function App() {
                     </>
                   }
                   alertsSlot={<WatchAlertsPanel runCycle={runWatchCycle} current={currentWatchState} onToast={pushToast} />}
+                  motion={motion}
+                  reliability={reliability}
+                  signalsSlot={
+                    <>
+                      <ReliabilityPanel endpoint={endpoint} initial={reliability} onResult={setReliability} />
+                      <UnitsAddressPanel initialUnits={units} onUnits={setUnits} />
+                      <StatusBadgePanel verdict={currentWatchState.verdict} score={currentScore.score} detail={currentStall.explanation} />
+                    </>
+                  }
                 />
               </div>
             )}
@@ -545,7 +588,7 @@ function App() {
                   </div>
                   <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500 pb-1">Session ledger · Exportable JSON</p>
                 </div>
-                <DiagnosticReport history={history} healthSnapshots={healthSnapshots} wsProbeResult={wsProbeResult} onExported={() => pushToast('Report exported — verify it on /verify')} />
+                <DiagnosticReport history={history} healthSnapshots={healthSnapshots} wsProbeResult={wsProbeResult} motion={motion} stall={currentStall} reliability={reliability} units={units} onExported={() => pushToast('Report exported — verify it on /verify')} />
                 <HistoryList
                   history={history}
                   onSelect={(item) => {

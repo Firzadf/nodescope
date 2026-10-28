@@ -1,4 +1,5 @@
 import type { OverallVerdict } from './overallVerdict';
+import type { StallState } from './stall';
 
 /**
  * Alert webhooks (Discord / Slack), read-only toward the chain.
@@ -7,21 +8,25 @@ import type { OverallVerdict } from './overallVerdict';
  *   put in a report, a share link, or a URL, and never sent anywhere but
  *   the webhook host itself.
  * - Messages go out only on a verdict TRANSITION while the user is
- *   watching (degrade: healthy → degraded/down, or degraded → down;
- *   recover: back up to a better level), plus the explicit "Send test".
- *   No transition, no message. `not_checked` is never a transition.
+ *   watching (degrade / recover), on a stall transition (stall / resume),
+ *   plus the explicit "Send test". No transition, no message.
+ *   `not_checked` is never a transition. A stall/resume replaces the
+ *   generic degrade/recover for that same cycle so the webhook says the
+ *   specific thing that happened.
  * - Nothing here touches the chain beyond the health checks the user
  *   started; nothing signs.
  */
 
 export type WebhookKind = 'discord' | 'slack';
-export type TransitionKind = 'degrade' | 'recover';
+export type TransitionKind = 'degrade' | 'recover' | 'stall' | 'resume';
 
 export const WEBHOOK_STORAGE_KEY = 'nodescope-alert-webhook';
 
+/** Higher is healthier. STALLED sits between DEGRADED and DOWN. */
 const RANK: Record<Exclude<OverallVerdict, 'not_checked'>, number> = {
-  healthy: 2,
-  degraded: 1,
+  healthy: 3,
+  degraded: 2,
+  stalled: 1,
   down: 0,
 };
 
@@ -55,11 +60,41 @@ export function maskWebhookUrl(raw: string): string {
   }
 }
 
-export function detectTransition(prev: OverallVerdict | null, next: OverallVerdict): TransitionKind | null {
+export function detectTransition(prev: OverallVerdict | null, next: OverallVerdict): 'degrade' | 'recover' | null {
   if (prev === null || prev === 'not_checked' || next === 'not_checked') return null;
   if (RANK[next] < RANK[prev]) return 'degrade';
   if (RANK[next] > RANK[prev]) return 'recover';
   return null;
+}
+
+/**
+ * Stall alerts are their own transitions. The first known state is the
+ * baseline (null or unknown → anything is silent). Entering stalled is
+ * `stall`. Leaving stalled for a live head is `resume`. Leaving stalled
+ * because the RPC stopped answering (next is unknown, verdict DOWN) is
+ * not a resume — the caller sends degrade instead.
+ */
+export function detectStallTransition(prev: StallState | null, next: StallState): 'stall' | 'resume' | null {
+  if (prev === null || prev === 'unknown') return null;
+  if (prev !== 'stalled' && next === 'stalled') return 'stall';
+  if (prev === 'stalled' && next === 'live') return 'resume';
+  return null;
+}
+
+/**
+ * One webhook per cycle. Stall/resume is the message when the chain
+ * pauses or starts again. A verdict change that is not that pause
+ * (including stalled → down) keeps degrade/recover.
+ */
+export function alertKindForCycle(
+  prevVerdict: OverallVerdict | null,
+  nextVerdict: OverallVerdict,
+  prevStall: StallState | null,
+  nextStall: StallState,
+): TransitionKind | null {
+  const stall = detectStallTransition(prevStall, nextStall);
+  if (stall) return stall;
+  return detectTransition(prevVerdict, nextVerdict);
 }
 
 export interface AlertEvent {
@@ -70,6 +105,8 @@ export interface AlertEvent {
   blockHeight: string | null;
   score: number | null;
   coverage: number | null;
+  /** Plain stall/resume sentence, when that is the kind. */
+  detail?: string | null;
   at: Date;
 }
 
@@ -77,13 +114,18 @@ export function alertText(e: AlertEvent): string {
   const head =
     e.kind === 'test'
       ? 'NodeScope test alert — this webhook is wired up.'
-      : e.kind === 'degrade'
-        ? `NodeScope: node DEGRADED (${e.from} → ${e.to})`
-        : `NodeScope: node RECOVERED (${e.from} → ${e.to})`;
+      : e.kind === 'stall'
+        ? `NodeScope: chain STALLED (${e.from} → ${e.to}). Chain paused but RPC answers.`
+        : e.kind === 'resume'
+          ? `NodeScope: chain RESUMED (${e.from} → ${e.to}).`
+          : e.kind === 'degrade'
+            ? `NodeScope: node DEGRADED (${e.from} → ${e.to})`
+            : `NodeScope: node RECOVERED (${e.from} → ${e.to})`;
   const lines = [
     head,
     `Endpoint: ${e.endpointOrigin}`,
     `Verdict: ${e.to.replace('_', ' ')}`,
+    ...(e.detail ? [e.detail] : []),
     `Block: ${e.blockHeight ?? 'not observed'}`,
     `Health Score: ${e.score === null ? 'not scored' : `${e.score}/100`}${e.coverage !== null ? ` (coverage ${e.coverage}%)` : ''}`,
     `At: ${e.at.toISOString()}`,

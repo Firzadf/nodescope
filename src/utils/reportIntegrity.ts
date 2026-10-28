@@ -20,7 +20,7 @@ import {
 
 export const INTEGRITY_SCOPE =
   'SHA-256 over the canonical JSON of this report, excluding the integrity block itself. ' +
-  'Covers schemaVersion, exportedAt, recordCount, records, findings and sessionTrends when present.';
+  'Covers schemaVersion, exportedAt, recordCount, records, and findings, sessionTrends, substrateWsProbe, healthScore, and operatorSignals when present.';
 
 const SHA256_HEX_PATTERN = /^[0-9a-f]{64}$/;
 

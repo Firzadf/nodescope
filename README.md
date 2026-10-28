@@ -25,7 +25,7 @@ instead of the headline multiple.
 - Fees finding, measured 27 Oct 2026: a contract deploy costs 124.098 tPOT
   on EVM vs 122.191 tPOT native all-in — 1.016x all-in, not the 804x
   fee-only headline. Most of the gap is a refundable storage deposit.
-- 520 passing tests across 76 test files. CI green on Ubuntu and Windows
+- 543 passing tests across 80 test files. CI green on Ubuntu and Windows
   (Foundry on Ubuntu), plus a `verify:evidence` job that rechecks every
   anchor on chain.
 
@@ -173,12 +173,16 @@ npm run preview
 
 ### Health Score, Verdict & Watch & Alerts (Complete ✅)
 
-- **Health Score 0–100** — a published formula (`nodescope.health-score.v1`) with five weighted components: RPC availability (30), chain identity (15), head progression (20), latency (20), and Substrate WSS parity (15). Each point shows where it came from, and the raw score object goes into the next exported report. Below 50% coverage there is no score, not a guessed one.
-- **One verdict everywhere** — the sticky verdict bar, the Watch log, and webhook alerts share one rule: HEALTHY only when every EVM check passes, the WSS probe answers, **and** the Health Score band is healthy (≥ 90). A node whose RPC answers but whose head has stopped advancing scores 0/20 on head progression and reads **DEGRADED** with its score shown. DOWN stays reserved for "no transport answered at all".
-- **Watch & Alerts** — user-started interval checks (30s, 1m, 5m); each cycle runs the EVM health check and the Substrate probe once and logs verdict, block, and score. Watch keeps running while you move between app sections.
-- **Discord / Slack webhooks** — HTTPS Discord or Slack webhook URLs only. Messages go out on degrade/recover transitions (not every cycle) and on "Send test". The URL is stored only in the browser's localStorage, shown masked, and never included in reports or share links.
+- **Health Score 0–100** — new reports use `nodescope.health-score.v2`: RPC availability 20, chain identity 10, head progression 15, finality lag 15, latency 10, WSS transport 10, peers and sync 10, RPC reliability 10. `nodescope.health-score.v1` (30/15/20/20/15) is unchanged, so older reports still recompute. Below 50% coverage there is no score. The formula is on `/docs#health-score`.
+- **One verdict everywhere** — HEALTHY only when every EVM check passes, the WSS probe answers, the score band is healthy, and the head is not stalled. **STALLED** means the RPC answered and the best head and/or the finalized head has not moved past the threshold (best-block timestamp ≥ 90s, or two samples 30s apart at the same height; finalized head ≥ 180s). DOWN stays reserved for "no transport answered at all". A low score can pull HEALTHY down to DEGRADED. It cannot hide a stall.
+- **Finality, peers, and sync** — the Substrate probe reads `chain_getFinalizedHead` and `system_syncState` as well as `system_health`. Finality lag is best minus finalized on that same socket. Zero peers while the node expects them is a finding.
+- **Reliability and exposed methods** — a user-triggered probe repeats `eth_blockNumber`, checks one old block for historical state, and lists unsafe operator methods from `rpc_methods` on the EVM endpoint. The Substrate probe does the same for the WebSocket (`author_insertKey` and the rest). Those methods are never called.
+- **Units and addresses** — `system_properties` decimals versus the EVM default of 18 (the 10,000× trap when native decimals are 14), and an H160 ↔ AccountId32 helper using pallet-revive's AccountId32Mapper (H160 followed by twelve `0xEE` bytes; otherwise `keccak256` of the account). A `ReviveApi` state_call confirms it, read-only.
+- **Status badge** — `/api/badge?target=portaldot-v3-testnet` returns an SVG of the live verdict and score. Cached, no secrets, published testnet hosts only.
+- **Watch & Alerts** — user-started interval checks (30s, 1m, 5m). Each cycle logs verdict, block, score, and a stall explanation. Watch keeps running while you move between app sections.
+- **Discord / Slack webhooks** — messages go out on degrade/recover and on stall/resume, and on "Send test". The URL stays in this browser.
 - **Last-checked timestamp** — relative time in the verdict bar (`just now`, `12 min ago`), absolute time on hover, and an amber "stale" marker after one hour.
-- **Persistent watch from the CLI** — `nodescope check <rpc-url> --webhook <url> --watch 60` keeps watching without a browser tab.
+- **Persistent watch from the CLI** — `nodescope check <rpc-url> --wss <wss-url> --webhook <url> --watch 60` keeps watching without a browser tab. `--format prometheus` and `--metrics-file` write the Grafana exposition. `--reliability N` adds the repeated-call error ratio.
 
 ### Core Infrastructure (Complete ✅)
 
@@ -222,7 +226,7 @@ other Portaldot builders can gate a deploy on them:
 
 - **CLI — `npx nodescope`** (from a repo checkout; the package stays
   private and nothing is published to npm). `nodescope check <rpc>`
-  prints a healthy / degraded / down verdict for an EVM endpoint.
+  prints a healthy / degraded / stalled / down verdict for an EVM endpoint.
   `nodescope fees --artifact <solc artifact JSON>` prices the same
   deploy on EVM (eth_estimateGas × eth_gasPrice) and native (ReviveApi
   dry-run + paymentInfo), with `--max-tpot` failing the run when the
@@ -420,7 +424,7 @@ src/
 
 **Test Framework:** Vitest 5 with @testing-library/react  
 **Coverage Target:** 80%+  
-**Current Status:** 520 passing tests across 76 test files, verified 29 Oct 2026
+**Current Status:** 543 passing tests across 80 test files, verified 28 Oct 2026
 
 ### Test Files
 
@@ -449,7 +453,7 @@ src/
 | `artifactInput.test.ts` | Custom artifact parsing, coded failures |
 | `feeLabShare.test.ts` | Fee Lab share-link round-trip and forgiving parse |
 | 53 files not listed above | Component and utility tests added in later phases, including Landing and Command Palette |
-| **Total** | **520 passing tests, 76 test files** (suite verified 29 Oct 2026; the landing page, /judges, and this README are checked against one constants file by `src/utils/siteConsistency.test.tsx` and `npm run check:consistency`) |
+| **Total** | **543 passing tests, 80 test files** (suite verified 28 Oct 2026; the landing page, /judges, and this README are checked against one constants file by `src/utils/siteConsistency.test.tsx` and `npm run check:consistency`) |
 
 ### Running Tests
 
@@ -563,7 +567,7 @@ MIT (as per Portaldot Hacker House requirements).
 
 **Project Status:** Check-in submitted Oct 22, 2026. Repository public with 42 commits as of 25 Oct 2026, development records retained. Final sprint to the 6 Nov 2026 code freeze is in progress.
 
-- ✅ Phase 1 & Phase 2 complete, plus Trends & Verdict, Multi-Endpoint Comparison, V3 era marker, and Substrate WebSocket probe, Health Score with one shared verdict, Watch & Alerts, 520 tests across 76 files
+- ✅ Phase 1 & Phase 2 complete, plus Trends & Verdict, Multi-Endpoint Comparison, V3 era marker, Substrate WebSocket probe, Health Score v2 (v1 still reproduces), STALLED, finality and peer health, RPC reliability, units and address mapping, Prometheus export, status badge, Watch & Alerts, 543 tests across 80 files
 - ✅ **FASE 2 — Ecosystem & Business (roadmap juara):** CLI (`check` + `fees`), GitHub Action pre-deploy gate, Fee Lab custom artifacts + share link, findings doc for Portaldot, business model, adoption outreach
 - ✅ Portaldot V3.0 EVM integration verified, chain ID 420420777 validated, methods documented
 - ✅ Demo video, live deployment, and screenshots published

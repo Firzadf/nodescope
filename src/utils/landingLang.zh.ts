@@ -305,11 +305,11 @@ export const zh: LandingCopy = {
   roadmapNewItems: [
     {
       title: '健康评分 0–100，公式公开',
-      body: '五个加权组成部分——RPC 可用性 30、链身份 15、链头推进 20、延迟 20、传输一致性 15——每项都显示其得分及所依据的输入。缺失数据绝不计分；覆盖率显示在分数旁边，覆盖率低于 50% 时则完全不给出分数。新的导出文件会将评分纳入 SHA-256 签章。',
+      body: 'nodescope.health-score.v2 的八个加权部分——可用性 20、链身份 10、链头推进 15、最终性滞后 15、延迟 10、传输一致性 10、对等节点与同步 10、RPC 可靠性 10。v1（30/15/20/20/15）仍可复现旧报告。链头停滞时结论为 STALLED。缺失数据绝不计分。',
     },
     {
       title: '监视模式 + Discord / Slack 告警',
-      body: '需主动开启，且仅限当前标签页：点击 Start watch 后，每个周期会运行一次健康检查和 Substrate 探测（最短 30 秒）。只有在状态降级或恢复切换时，或你点击 Send test 时，才会向你的 webhook 发送消息。Webhook URL 只保存在你的浏览器中。CLI 在 --webhook 和 --watch 下遵循同样的规则。',
+      body: '需主动开启，且仅限当前标签页：点击 Start watch 后，每个周期会运行一次健康检查、区块时间戳和 Substrate 探测（最短 30 秒）。只有在降级、恢复、stall 或 resume 切换时，或你点击 Send test 时，才会向 webhook 发送消息。Webhook URL 只保存在你的浏览器中。CLI 在 --webhook 和 --watch 下遵循同样的规则。',
     },
     {
       title: '部署前成本关卡（GitHub Action）',
@@ -317,19 +317,22 @@ export const zh: LandingCopy = {
     },
   ],
   scoreTitle: '健康评分',
-  scoreRight: '一个数字 · 公式公开 · nodescope.health-score.v1',
+  scoreRight: '一个数字 · 公式公开 · nodescope.health-score.v2',
   scoreIntro:
     '结论负责解释，评分负责概括。每一分都来自 NodeScope 本就在进行的测量，每个组成部分都会显示其计算所依据的输入。没有数据的组成部分既不计入分子，也不计入分母。',
   scoreHeaders: ['组成部分', '权重', '规则'],
   scoreRows: [
-    { label: 'RPC 可用性', weight: 30, rule: '30 × 已响应检查数 ÷ 符合条件的检查数（最新快照）。-32601 “method not found” 不算失败，也不计入符合条件的检查。' },
-    { label: '链身份', weight: 15, rule: 'eth_chainId = 420420777 时得 15，否则为 0。' },
-    { label: '链头推进', weight: 20, rule: '同一端点最新的两个快照：区块推进得 20 · 相隔不足 30 秒且高度相同得 10 · 停滞 ≥ 30 秒或回退得 0。' },
-    { label: '延迟', weight: 20, rule: '成功检查的中位数：≤ 300 ms 得 20，≥ 2000 ms 得 0，中间线性计算。' },
-    { label: '传输一致性（WSS）', weight: 15, rule: 'Substrate 探测有响应得 10，未在同步且 peers > 0 时再加 5。' },
+    { label: 'RPC 可用性', weight: 20, rule: '20 × 已响应检查数 ÷ 符合条件的检查数（最新快照）。-32601 “method not found” 不算失败，也不计入符合条件的检查。' },
+    { label: '链身份', weight: 10, rule: 'eth_chainId = 420420777 时得 10，否则为 0。' },
+    { label: '链头推进', weight: 15, rule: '时间戳达到或超过 90 秒得 0。否则同一端点两个快照：推进得 15 · 相隔不足 30 秒且高度相同得一半 · 停滞或回退得 0。' },
+    { label: '最终性滞后', weight: 15, rule: 'WSS 上的 best 减去 finalized。滞后 ≤ 4 个区块得满分，≥ 64 得 0，中间线性计算。' },
+    { label: '延迟', weight: 10, rule: '成功检查的中位数：≤ 300 ms 得 10，≥ 2000 ms 得 0，中间线性计算。' },
+    { label: '传输一致性（WSS）', weight: 10, rule: 'Substrate 探测有响应得 10。探测失败得 0。对等节点另行计分。' },
+    { label: '对等节点与同步', weight: 10, rule: 'peers > 0（或不期望有对等节点）得 4，未在同步得 3，同步差距 ≤ 8 个区块或未报告得 3。' },
+    { label: 'RPC 可靠性', weight: 10, rule: '重复 eth_blockNumber 的 10 × (1 − 错误率) × p95 系数。未运行该探测时不计分。' },
   ],
   scoreFormula: 'score = round(100 × Σ points ÷ Σ measured weight) · 仅在 measured weight ≥ 50 时显示',
-  scoreFootnote: '分档：90–100 健康 · 70–89 降级 · 0–69 严重。评分是新增功能，与确定性结论并存，而非取而代之。',
+  scoreFootnote: '分档：90–100 健康 · 70–89 降级 · 0–69 严重。新报告使用 v2。v1 仍可复现旧报告。STALLED 是结论而不是分档：链已暂停但 RPC 仍在应答。',
   scoreCta: '阅读完整方法说明',
   marqueeLive: '实时区块',
   marqueeItems: [

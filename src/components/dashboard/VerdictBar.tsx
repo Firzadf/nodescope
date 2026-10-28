@@ -5,10 +5,12 @@ import type { HealthCheckSnapshot } from '../../types/healthCheck';
 import type { SubstrateWsProbeResult } from '../../services/substrateWsProbe';
 import type { EndpointProfile } from '../../types/endpoint';
 import type { HealthScoreBand } from '../../utils/healthScore';
+import type { StallState } from '../../utils/stall';
 
 const LABEL: Record<OverallVerdict, string> = {
   healthy: 'HEALTHY',
   degraded: 'DEGRADED',
+  stalled: 'STALLED',
   down: 'DOWN',
   not_checked: 'NOT CHECKED YET',
 };
@@ -16,6 +18,7 @@ const LABEL: Record<OverallVerdict, string> = {
 const COLOR: Record<OverallVerdict, string> = {
   healthy: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10',
   degraded: 'text-amber-400 border-amber-500/30 bg-amber-500/10',
+  stalled: 'text-orange-300 border-orange-400/40 bg-orange-500/10',
   down: 'text-red-400 border-red-500/30 bg-red-500/10',
   not_checked: 'text-slate-400 border-line bg-white/[0.03]',
 };
@@ -29,6 +32,9 @@ interface VerdictBarProps {
   /** Health Score band and value; a band below healthy pulls HEALTHY to DEGRADED. */
   scoreBand?: HealthScoreBand | null;
   score?: number | null;
+  /** When stalled, the bar says STALLED even if the score band is healthy. */
+  stall?: StallState | null;
+  stallExplanation?: string | null;
 }
 
 /**
@@ -48,9 +54,9 @@ function probeHostLabel(url: string | null): string {
  * comes from overallVerdictFrom, which shares panel 07's EVM-side extraction.
  * With no data at all it reads NOT CHECKED YET, never DOWN.
  */
-export function VerdictBar({ latestHealthSnapshot, wsProbeResult, latencyMs, latencyMethod, endpointProfile, scoreBand = null, score = null }: VerdictBarProps) {
-  const overall = overallVerdictFrom(latestHealthSnapshot, wsProbeResult, scoreBand);
-  const pulledByScore = overall === 'degraded' && overallVerdictFrom(latestHealthSnapshot, wsProbeResult) === 'healthy';
+export function VerdictBar({ latestHealthSnapshot, wsProbeResult, latencyMs, latencyMethod, endpointProfile, scoreBand = null, score = null, stall = null, stallExplanation = null }: VerdictBarProps) {
+  const overall = overallVerdictFrom(latestHealthSnapshot, wsProbeResult, scoreBand, stall);
+  const pulledByScore = overall === 'degraded' && overallVerdictFrom(latestHealthSnapshot, wsProbeResult, null, null) === 'healthy';
   const evmPassed = latestHealthSnapshot
     ? latestHealthSnapshot.checks.filter((c) => c.success).length
     : null;
@@ -88,6 +94,9 @@ export function VerdictBar({ latestHealthSnapshot, wsProbeResult, latencyMs, lat
         <span className={`inline-flex items-center rounded-full border px-3 py-1 font-data text-[11px] font-semibold tracking-[0.16em] ${COLOR[overall]}`}>
           {LABEL[overall]}
         </span>
+        {overall === 'stalled' && stallExplanation ? (
+          <span className="text-xs text-orange-200">{stallExplanation}</span>
+        ) : null}
         {pulledByScore && score !== null ? (
           <span className="text-xs text-slate-400">
             Score <span className="text-amber-300 font-data">{score}/100</span>

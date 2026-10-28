@@ -38,6 +38,9 @@ import { PORTALDOT_CHAIN_ID } from './siteConstants';
  */
 
 export const HEALTH_SCORE_FORMULA = 'nodescope.health-score.v1';
+export const HEALTH_SCORE_FORMULA_V2 = 'nodescope.health-score.v2';
+
+export type HealthScoreFormulaId = typeof HEALTH_SCORE_FORMULA | typeof HEALTH_SCORE_FORMULA_V2;
 
 export type HealthScoreComponentId =
   | 'availability'
@@ -45,6 +48,12 @@ export type HealthScoreComponentId =
   | 'head_progression'
   | 'latency'
   | 'transport_parity';
+
+export type HealthScoreV2ComponentId =
+  | HealthScoreComponentId
+  | 'finality'
+  | 'peer_sync'
+  | 'rpc_reliability';
 
 export const HEALTH_SCORE_WEIGHTS: Record<HealthScoreComponentId, number> = {
   availability: 30,
@@ -70,7 +79,7 @@ export const HEALTH_SCORE_LABELS: Record<HealthScoreComponentId, string> = {
 export type HealthScoreBand = 'healthy' | 'degraded' | 'critical';
 
 export interface HealthScoreComponent {
-  id: HealthScoreComponentId;
+  id: HealthScoreV2ComponentId;
   label: string;
   weight: number;
   measured: boolean;
@@ -81,7 +90,7 @@ export interface HealthScoreComponent {
 }
 
 export interface HealthScore {
-  formula: typeof HEALTH_SCORE_FORMULA;
+  formula: HealthScoreFormulaId;
   /** 0–100, or null when coverage is below MIN_COVERAGE_TO_SCORE. */
   score: number | null;
   band: HealthScoreBand | null;
@@ -267,3 +276,24 @@ export function lostPointsNote(score: HealthScore): string {
 export function formatPoints(n: number): string {
   return String(Math.round(n * 10) / 10);
 }
+
+/**
+ * v2 is the score new reports, the diagnostic UI, Watch, and the badge
+ * use. v1 (`computeHealthScore`) is unchanged so an old report's inputs
+ * still recompute to the same number. The weights, stall thresholds, and
+ * finality curve live in shared/liveStatus.mjs — the CLI and the badge
+ * import that file directly.
+ */
+export {
+  BEST_STALL_AGE_SECONDS,
+  FINALITY_FULL_LAG_BLOCKS,
+  FINALITY_ZERO_LAG_BLOCKS,
+  FINALIZED_STALL_AGE_SECONDS,
+  FORMULA_V2,
+  HEAD_SAMPLE_STALL_SECONDS,
+  V2_LABELS as HEALTH_SCORE_V2_LABELS,
+  WEIGHTS_V2 as HEALTH_SCORE_V2_WEIGHTS,
+  assessStall,
+  computeHealthScoreV2,
+  finalityPoints,
+} from '../../shared/liveStatus.mjs';

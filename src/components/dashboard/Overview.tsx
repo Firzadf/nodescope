@@ -9,7 +9,9 @@ import { CombinedVerdictPanel } from './CombinedVerdictPanel';
 import { VerdictBar } from './VerdictBar';
 import { HealthScoreHero } from './HealthScoreHero';
 import { useMemo, type ReactNode } from 'react';
-import { computeHealthScore } from '../../utils/healthScore';
+import { computeHealthScoreV2 } from '../../utils/healthScore';
+import { stallFromSession, type ChainMotion, type StallAssessment } from '../../utils/stall';
+import type { ReliabilityReport } from '../../services/reliabilityProbe';
 import type { SubstrateWsProbeResult } from '../../services/substrateWsProbe';
 import { CapabilityDiscoveryPanel } from '../diagnostics/CapabilityDiscoveryPanel';
 import type { NodeMetricsDetailed } from '../../types/node';
@@ -40,6 +42,10 @@ interface OverviewProps {  endpoint: string;
   alertsSlot?: ReactNode;
   /** Run-full-diagnostic + endpoint configuration, owned by App. */
   setupSlot?: ReactNode;
+  motion?: ChainMotion | null;
+  reliability?: ReliabilityReport | null;
+  /** Reliability, units, and the status badge. Owned by App so exports see them. */
+  signalsSlot?: ReactNode;
 }
 
 /**
@@ -101,11 +107,23 @@ export function Overview({
   capabilityRestoredAt = null,
   alertsSlot,
   setupSlot,
+  motion = null,
+  reliability = null,
+  signalsSlot,
 }: OverviewProps) {
   const isDisconnected = connectionStatus === 'disconnected';
   const verdictScore = useMemo(
-    () => computeHealthScore({ snapshots: healthSnapshots, wsProbe: wsProbeResult }),
-    [healthSnapshots, wsProbeResult],
+    () => computeHealthScoreV2({
+      snapshots: healthSnapshots,
+      wsProbe: wsProbeResult,
+      motion,
+      reliability: reliability ? { samples: reliability.samples, errors: reliability.errors, http5xx: reliability.http5xx, p50Ms: reliability.p50Ms, p95Ms: reliability.p95Ms } : null,
+    }),
+    [healthSnapshots, wsProbeResult, motion, reliability],
+  );
+  const stall: StallAssessment = useMemo(
+    () => stallFromSession(healthSnapshots, wsProbeResult ?? null, motion),
+    [healthSnapshots, wsProbeResult, motion],
   );
 
   // Format header values from detailed metrics
@@ -126,10 +144,14 @@ export function Overview({
         endpointProfile={endpointProfile}
         scoreBand={verdictScore.band}
         score={verdictScore.score}
+        stall={stall.state}
+        stallExplanation={stall.state === 'stalled' ? stall.explanation : null}
       />
       <HealthScoreHero
         snapshots={healthSnapshots}
-        wsProbe={wsProbeResult}
+        wsProbe={wsProbeResult ?? null}
+        motion={motion}
+        reliability={reliability}
         onRunHealthCheck={onRunHealthCheck ? () => void onRunHealthCheck() : undefined}
         running={isHealthChecking}
       />
@@ -226,6 +248,7 @@ export function Overview({
         <CombinedVerdictPanel latestHealthSnapshot={latestHealthSnapshot} wsProbeResult={wsProbeResult} probeRestoredAt={probeRestoredAt} />
       )}
 
+      {signalsSlot}
       <div id="capabilities" className="scroll-mt-6">
         <CapabilityDiscoveryPanel
           endpoint={endpoint}

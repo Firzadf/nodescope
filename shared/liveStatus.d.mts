@@ -1,0 +1,61 @@
+export const FORMULA_V2: 'nodescope.health-score.v2';
+export const PORTALDOT_CHAIN_ID: number;
+export const WEIGHTS_V2: {
+  availability: number;
+  chain_identity: number;
+  head_progression: number;
+  finality: number;
+  latency: number;
+  transport_parity: number;
+  peer_sync: number;
+  rpc_reliability: number;
+};
+export const V2_LABELS: Record<string, string>;
+export const LATENCY_FULL_MARKS_MS: number;
+export const LATENCY_ZERO_MS: number;
+export const MIN_COVERAGE_TO_SCORE: number;
+export const HEAD_SAMPLE_STALL_SECONDS: number;
+export const BEST_STALL_AGE_SECONDS: number;
+export const FINALIZED_STALL_AGE_SECONDS: number;
+export const FINALITY_FULL_LAG_BLOCKS: number;
+export const FINALITY_ZERO_LAG_BLOCKS: number;
+export const FINALITY_STALL_LAG_BLOCKS: number;
+export const FINALITY_STALL_MIN_AGE_SECONDS: number;
+export const SYNC_GAP_FULL_BLOCKS: number;
+export const BADGE_EVM_HOST: string;
+export const BADGE_WSS_HOST: string;
+export const BADGE_CACHE_CONTROL: string;
+
+export function bandFor(score: number): 'healthy' | 'degraded' | 'critical';
+export function parseHeight(value: unknown): bigint | null;
+export function latencyPoints(medianMs: number, weight: number): number;
+export function finalityPoints(lag: number, weight?: number): number;
+export function computeHealthScoreV2(input: Record<string, unknown>): {
+  formula: 'nodescope.health-score.v2';
+  score: number | null;
+  band: 'healthy' | 'degraded' | 'critical' | null;
+  coverage: number;
+  components: Array<{
+    id: 'availability' | 'chain_identity' | 'head_progression' | 'finality' | 'latency' | 'transport_parity' | 'peer_sync' | 'rpc_reliability';
+    label: string;
+    weight: number;
+    measured: boolean;
+    points: number | null;
+    detail: string;
+  }>;
+};
+export function assessStall(input: Record<string, unknown>): {
+  state: 'stalled' | 'live' | 'unknown';
+  kind: 'best' | 'finalized' | 'both' | null;
+  reasons: string[];
+  explanation: string;
+  bestAgeSeconds: number | null;
+  finalizedAgeSeconds: number | null;
+  finalityLagBlocks: number | null;
+  bestHeight: string | null;
+  finalizedHeight: string | null;
+};
+export function formatPrometheus(reading: Record<string, unknown>): string;
+export function percentileMs(samples: number[], p: number): number | null;
+export function renderBadgeSvg(status: { verdict?: string; score?: number | null; detail?: string }): string;
+export function badgeTarget(searchParams: { get(name: string): string | null }): { ok: boolean; error?: string; evm?: string; wss?: string };

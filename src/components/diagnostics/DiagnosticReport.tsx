@@ -7,6 +7,7 @@ import type { Finding } from '../../types/diagnostic';
 import type { HealthCheckSnapshot } from '../../types/healthCheck';
 import {
   attachHealthScore,
+  attachOperatorSignals,
   attachSessionTrends,
   attachSubstrateWsProbe,
   buildDiagnosticReport,
@@ -14,6 +15,9 @@ import {
 } from '../../utils/reportBuilder';
 import type { SubstrateWsProbeResult } from '../../services/substrateWsProbe';
 import { stampReportIntegrity } from '../../utils/reportIntegrity';
+import type { ChainMotion, StallAssessment } from '../../utils/stall';
+import type { ReliabilityReport } from '../../services/reliabilityProbe';
+import type { UnitsSanity } from '../../utils/unitsSanity';
 import { computeSessionTrends } from '../../utils/sessionTrends';
 import { evaluateHistoryFindings } from '../../services/diagnosticRules';
 
@@ -22,10 +26,14 @@ interface DiagnosticReportProps {
   latencyThresholdMs?: number;
   healthSnapshots?: HealthCheckSnapshot[];
   wsProbeResult?: SubstrateWsProbeResult | null;
+  motion?: ChainMotion | null;
+  stall?: StallAssessment | null;
+  reliability?: ReliabilityReport | null;
+  units?: UnitsSanity | null;
   onExported?: () => void;
 }
 
-export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots = [], wsProbeResult = null, onExported }: DiagnosticReportProps) {
+export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots = [], wsProbeResult = null, motion = null, stall = null, reliability = null, units = null, onExported }: DiagnosticReportProps) {
   const sessionTrends = useMemo(() => computeSessionTrends(healthSnapshots), [healthSnapshots]);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -38,13 +46,17 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
       const exportRuleConfig = latencyThresholdMs !== undefined ? { latencyThresholdMs } : {};
       const exportFindings: Finding[] = evaluateHistoryFindings(history, exportRuleConfig);
       const report = await stampReportIntegrity(
-        attachHealthScore(
-          attachSubstrateWsProbe(
-            attachSessionTrends(buildDiagnosticReport(history, exportFindings), healthSnapshots),
+        attachOperatorSignals(
+          attachHealthScore(
+            attachSubstrateWsProbe(
+              attachSessionTrends(buildDiagnosticReport(history, exportFindings), healthSnapshots),
+              wsProbeResult,
+            ),
+            healthSnapshots,
             wsProbeResult,
+            { motion, reliability },
           ),
-          healthSnapshots,
-          wsProbeResult,
+          { stall, wsProbe: wsProbeResult, reliability, units },
         ),
       );
       const blob = new Blob([JSON.stringify(report, null, 2)], {

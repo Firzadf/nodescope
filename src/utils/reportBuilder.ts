@@ -10,7 +10,11 @@ import {
   parseBlockHeight,
 } from './metricParsers';
 import { BLOCK_INTERVAL_NOTE, computeSessionTrends, type SessionTrends } from './sessionTrends';
-import { computeHealthScore, type HealthScore } from './healthScore';
+import { computeHealthScoreV2, type HealthScore } from './healthScore';
+import type { ChainMotion, StallAssessment } from './stall';
+import type { ReliabilityReport } from '../services/reliabilityProbe';
+import type { UnitsSanity } from './unitsSanity';
+import { operatorFindings } from './operatorFindings';
 
 export const REPORT_SCHEMA_VERSION = 'nodescope.diagnostic-report.v1';
 
@@ -75,14 +79,25 @@ export interface DiagnosticReportExport {
    */
   substrateWsProbe?: SubstrateWsProbeResult;
   /**
-   * Optional Health Score block (formula nodescope.health-score.v1),
-   * attached additively to NEW exports only, before the integrity stamp,
-   * so the SHA-256 hash covers it. Reports exported before this field
-   * existed (including the anchored evidence files) are unchanged and
-   * still verify: v1 consumers ignore unknown fields.
+   * Optional Health Score block. New exports use
+   * nodescope.health-score.v2. Reports that already carry v1, including
+   * the anchored evidence files, are unchanged and still verify.
    */
   healthScore?: HealthScoreExport;
+  /**
+   * Optional operator signals (stall, finality inputs already on the
+   * probe, reliability, units). Additive. Omitted when none were run.
+   */
+  operatorSignals?: OperatorSignalsExport;
   integrity?: ReportIntegrity;
+}
+
+export interface OperatorSignalsExport {
+  schema: 'nodescope.operator-signals.v1';
+  stall: StallAssessment | null;
+  reliability: ReliabilityReport | null;
+  units: UnitsSanity | null;
+  findings: ReturnType<typeof operatorFindings>;
 }
 
 export interface HealthScoreExport extends HealthScore {
@@ -250,8 +265,35 @@ export function attachHealthScore(
   report: DiagnosticReportExport,
   snapshots: HealthCheckSnapshot[],
   wsProbe: SubstrateWsProbeResult | null,
+  extras?: { motion?: ChainMotion | null; reliability?: ReliabilityReport | null },
 ): DiagnosticReportExport {
-  if (snapshots.length === 0 && !wsProbe) return report;
-  const score = computeHealthScore({ snapshots, wsProbe });
+  if (snapshots.length === 0 && !wsProbe && !extras?.motion && !extras?.reliability) return report;
+  const score = computeHealthScoreV2({
+    snapshots,
+    wsProbe,
+    motion: extras?.motion ?? null,
+    reliability: extras?.reliability
+      ? { samples: extras.reliability.samples, errors: extras.reliability.errors, http5xx: extras.reliability.http5xx, p50Ms: extras.reliability.p50Ms, p95Ms: extras.reliability.p95Ms }
+      : null,
+  });
   return { ...report, healthScore: { ...score, methodology: HEALTH_SCORE_METHODOLOGY_URL } };
+}
+
+export function attachOperatorSignals(
+  report: DiagnosticReportExport,
+  input: { stall: StallAssessment | null; wsProbe: SubstrateWsProbeResult | null; reliability: ReliabilityReport | null; units: UnitsSanity | null },
+): DiagnosticReportExport {
+  const stallWorthSaving = input.stall !== null && input.stall.state !== 'unknown';
+  if (!stallWorthSaving && !input.reliability && !input.units) return report;
+  const findings = operatorFindings(input);
+  return {
+    ...report,
+    operatorSignals: {
+      schema: 'nodescope.operator-signals.v1',
+      stall: input.stall,
+      reliability: input.reliability,
+      units: input.units,
+      findings,
+    },
+  };
 }

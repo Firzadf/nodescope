@@ -33,15 +33,18 @@
  * entry in package.json. Publishing is a separate manual step by the user.
  *
  * Exit codes:
- *   check: 0 healthy, 1 degraded/down, 2 usage error.
+ *   check: 0 healthy, 1 degraded/stalled/down, 2 usage error.
  *   fees:  0 priced and within budget, 1 EVM leg unavailable or budget
  *          exceeded, 2 usage/artifact error. A native leg that is
  *          unavailable is a warning in the output, not a failure: the EVM
  *          leg alone still gates the deploy cost.
  */
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, renameSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { assessStall, computeHealthScoreV2, formatPrometheus } from '../shared/liveStatus.mjs';
+
+export { formatPrometheus };
 
 export const DEFAULT_EVM_RPC = 'https://test-evm-rpc-v3.portaldot.dev';
 export const DEFAULT_WSS = 'wss://test-node-v3.portaldot.dev';
@@ -160,11 +163,12 @@ export async function checkNode(rpcUrl, opts = {}) {
   const timeoutMs = opts.timeoutMs ?? 10000;
   const checks = [];
   for (const method of HEALTH_METHODS) {
+    const started = Date.now();
     try {
       const value = await rpcCall(rpcUrl, method, [], timeoutMs);
-      checks.push({ method, ok: true, value: typeof value === 'string' || typeof value === 'number' ? value : JSON.stringify(value), error: null });
+      checks.push({ method, ok: true, value: typeof value === 'string' || typeof value === 'number' ? value : JSON.stringify(value), latencyMs: Date.now() - started, error: null });
     } catch (e) {
-      checks.push({ method, ok: false, value: null, error: e instanceof Error ? e.message : String(e) });
+      checks.push({ method, ok: false, value: null, latencyMs: Date.now() - started, error: e instanceof Error ? e.message : String(e) });
     }
   }
   const chainCheck = checks.find((c) => c.method === 'eth_chainId');
@@ -188,15 +192,218 @@ export async function checkNode(rpcUrl, opts = {}) {
     }
   }
   const answered = checks.filter((c) => c.ok).length;
-  const verdict = answered === 0 ? 'down' : answered === checks.length && !chainMismatch ? 'healthy' : 'degraded';
+  let blockTimestamp = null;
+  if (answered > 0) {
+    try {
+      const block = await rpcCall(rpcUrl, 'eth_getBlockByNumber', ['latest', false], timeoutMs);
+      if (block && typeof block.timestamp === 'string' && /^0x[0-9a-fA-F]+$/.test(block.timestamp)) {
+        blockTimestamp = Number(BigInt(block.timestamp));
+      }
+    } catch {
+      blockTimestamp = null;
+    }
+  }
+  let substrate = null;
+  if (opts.wss) {
+    try {
+      substrate = await probeSubstrateFinality(opts.wss, timeoutMs);
+    } catch (e) {
+      substrate = { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
+  }
+  let reliability = null;
+  if (opts.reliability) {
+    reliability = await reliabilitySample(rpcUrl, opts.reliability, timeoutMs);
+  }
+  const observedAt = Date.now();
+  const bestHeight = blockNumber !== null ? String(blockNumber) : null;
+  const stall = assessStall({
+    nowMs: observedAt,
+    rpcAnswered: answered > 0 || substrate?.ok === true,
+    bestSamples: [],
+    bestTimestampSec: blockTimestamp,
+    finalizedTimestampSec: null,
+    bestHeight,
+    finalizedHeight: substrate?.finalizedBlock != null ? String(substrate.finalizedBlock) : null,
+  });
+  let verdict = answered === 0 ? 'down' : answered === checks.length && !chainMismatch ? 'healthy' : 'degraded';
+  if (answered > 0 && stall.state === 'stalled') verdict = 'stalled';
+  const snapshot = {
+    timestamp: observedAt,
+    endpointOrigin: rpcUrl,
+    endpointProfile: 'cli',
+    checks: checks.map((c) => ({ method: c.method, success: c.ok, outcome: c.ok ? 'success' : 'network_error', latencyMs: c.latencyMs, observedValue: c.value })),
+  };
+  const wsProbe = substrate?.ok
+    ? {
+        status: 'ok',
+        chain: substrate.chain,
+        peers: substrate.peers,
+        isSyncing: substrate.isSyncing,
+        shouldHavePeers: substrate.shouldHavePeers,
+        headerNumberDecimal: substrate.bestBlock != null ? String(substrate.bestBlock) : null,
+        finalizedNumberDecimal: substrate.finalizedBlock != null ? String(substrate.finalizedBlock) : null,
+        syncCurrentBlock: substrate.syncCurrent,
+        syncHighestBlock: substrate.syncHighest,
+      }
+    : substrate
+      ? { status: 'error', error: substrate.error }
+      : null;
+  const score = computeHealthScoreV2({
+    snapshots: answered > 0 ? [snapshot] : [],
+    wsProbe,
+    motion: blockTimestamp !== null ? { bestTimestampSec: blockTimestamp, observedAtMs: observedAt, bestHeight } : null,
+    reliability,
+  });
   return {
     verdict,
     rpc: rpcUrl,
     chainId,
     chainMismatch,
     blockNumber,
+    blockTimestamp,
+    bestAgeSeconds: stall.bestAgeSeconds,
+    stall: stall.state,
+    stallExplanation: stall.explanation,
+    finalizedBlock: substrate?.finalizedBlock ?? null,
+    finalityLag: substrate?.lag ?? stall.finalityLagBlocks,
+    peers: substrate?.peers ?? null,
+    isSyncing: substrate?.isSyncing ?? null,
+    sync: substrate?.ok ? { current: substrate.syncCurrent, highest: substrate.syncHighest } : null,
+    score: score.score,
+    scoreBand: score.band,
+    coverage: score.coverage,
+    formula: score.formula,
+    reliability,
     checks,
   };
+}
+
+async function reliabilitySample(rpcUrl, samples, timeoutMs) {
+  const n = Math.min(20, Math.max(1, Number(samples) || 1));
+  const latencies = [];
+  let errors = 0;
+  let http5xx = 0;
+  for (let i = 0; i < n; i++) {
+    const started = Date.now();
+    try {
+      await rpcCall(rpcUrl, 'eth_blockNumber', [], timeoutMs);
+      latencies.push(Date.now() - started);
+    } catch (e) {
+      errors += 1;
+      const msg = e instanceof Error ? e.message : String(e);
+      if (/HTTP 5\d\d/.test(msg)) http5xx += 1;
+    }
+  }
+  const sorted = [...latencies].sort((a, b) => a - b);
+  const pick = (p) => (sorted.length === 0 ? null : sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil((p / 100) * sorted.length) - 1))]);
+  return { samples: n, errors, http5xx, p50Ms: pick(50), p95Ms: pick(95) };
+}
+
+/** Read-only finality and peer snapshot. Optional methods that fail do not fail the probe. */
+export async function probeSubstrateFinality(url, timeoutMs = 10000) {
+  const calls = [
+    ['system_health', []],
+    ['system_chain', []],
+    ['chain_getHeader', []],
+    ['chain_getFinalizedHead', []],
+    ['system_syncState', []],
+  ];
+  const answers = await wsRpc(url, calls, timeoutMs);
+  const health = answers[0];
+  const header = answers[2];
+  const finHash = typeof answers[3] === 'string' ? answers[3] : null;
+  let finHeader = null;
+  if (finHash && /^0x[0-9a-fA-F]{64}$/.test(finHash)) {
+    try {
+      const more = await wsRpc(url, [['chain_getHeader', [finHash]]], timeoutMs);
+      finHeader = more[0];
+    } catch {
+      finHeader = null;
+    }
+  }
+  const best = header?.number ? Number(BigInt(header.number)) : null;
+  const fin = finHeader?.number ? Number(BigInt(finHeader.number)) : null;
+  const sync = answers[4] && typeof answers[4] === 'object' ? answers[4] : null;
+  return {
+    ok: true,
+    chain: typeof answers[1] === 'string' ? answers[1] : null,
+    peers: typeof health?.peers === 'number' ? health.peers : null,
+    isSyncing: typeof health?.isSyncing === 'boolean' ? health.isSyncing : null,
+    shouldHavePeers: typeof health?.shouldHavePeers === 'boolean' ? health.shouldHavePeers : null,
+    bestBlock: best,
+    finalizedBlock: fin,
+    lag: best !== null && fin !== null ? best - fin : null,
+    syncCurrent: sync?.currentBlock != null ? String(sync.currentBlock) : null,
+    syncHighest: sync?.highestBlock != null ? String(sync.highestBlock) : null,
+  };
+}
+
+function wsRpc(url, calls, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    let ws;
+    try {
+      ws = new WebSocket(url);
+    } catch (e) {
+      reject(e instanceof Error ? e : new Error(String(e)));
+      return;
+    }
+    const results = new Array(calls.length);
+    const got = new Set();
+    const timer = setTimeout(() => {
+      try { ws.close(); } catch { /* closed */ }
+      reject(new Error(`WebSocket timed out after ${timeoutMs} ms`));
+    }, timeoutMs);
+    ws.onopen = () => {
+      calls.forEach(([method, params], i) => {
+        ws.send(JSON.stringify({ jsonrpc: '2.0', id: i + 1, method, params }));
+      });
+    };
+    ws.onmessage = (event) => {
+      const parsed = JSON.parse(event.data);
+      if (typeof parsed.id !== 'number') return;
+      if (parsed.error) {
+        results[parsed.id - 1] = null;
+      } else {
+        results[parsed.id - 1] = parsed.result;
+      }
+      got.add(parsed.id);
+      if (got.size === calls.length) {
+        clearTimeout(timer);
+        try { ws.close(); } catch { /* closed */ }
+        resolve(results);
+      }
+    };
+    ws.onerror = () => {
+      clearTimeout(timer);
+      reject(new Error('WebSocket error'));
+    };
+  });
+}
+
+export function prometheusReading(result) {
+  return formatPrometheus({
+    up: result.verdict === 'down' ? 0 : 1,
+    verdict: result.verdict,
+    score: result.score,
+    stalled: result.stall === 'stalled',
+    bestBlock: result.blockNumber,
+    finalizedBlock: result.finalizedBlock,
+    finalityLag: result.finalityLag,
+    peers: result.peers,
+    syncing: result.isSyncing,
+    bestAgeSeconds: result.bestAgeSeconds,
+    rpcSamples: result.reliability?.samples ?? null,
+    rpcErrors: result.reliability?.errors ?? null,
+    rpcP50: result.reliability?.p50Ms ?? null,
+    rpcP95: result.reliability?.p95Ms ?? null,
+  });
+}
+
+export function writeMetricsFile(path, text) {
+  const tmp = `${path}.tmp`;
+  writeFileSync(tmp, text);
+  renameSync(tmp, path);
 }
 
 /**
@@ -451,7 +658,7 @@ export function budgetCheck(allInPlanck, maxTpot) {
 /* Alert webhooks (port of src/utils/alertWebhook.ts, Node side: no CORS).  */
 /* ------------------------------------------------------------------------ */
 
-const VERDICT_RANK = { healthy: 2, degraded: 1, down: 0 };
+const VERDICT_RANK = { healthy: 3, degraded: 2, stalled: 1, down: 0 };
 
 export function detectWebhookKind(raw) {
   let u;
@@ -475,13 +682,31 @@ export function detectTransition(prev, next) {
   return null;
 }
 
+/** Same stall/resume rule as the app. Unknown and the first sample are the baseline. */
+export function detectStallTransition(prev, next) {
+  if (prev == null || prev === 'unknown') return null;
+  if (prev !== 'stalled' && next === 'stalled') return 'stall';
+  if (prev === 'stalled' && next === 'live') return 'resume';
+  return null;
+}
+
+export function alertKindForCycle(prevVerdict, nextVerdict, prevStall, nextStall) {
+  const stall = detectStallTransition(prevStall, nextStall);
+  if (stall) return stall;
+  return detectTransition(prevVerdict, nextVerdict);
+}
+
 export function checkAlertText(kind, prev, result, at = new Date()) {
   const head =
     kind === 'degrade'
       ? `NodeScope: node DEGRADED (${prev} → ${result.verdict})`
       : kind === 'recover'
         ? `NodeScope: node RECOVERED (${prev} → ${result.verdict})`
-        : `NodeScope: node ${String(result.verdict).toUpperCase()}`;
+        : kind === 'stall'
+          ? `NodeScope: chain STALLED (${prev} → ${result.verdict}). Chain paused but RPC answers.`
+          : kind === 'resume'
+            ? `NodeScope: chain RESUMED (${prev} → ${result.verdict}).`
+            : `NodeScope: node ${String(result.verdict).toUpperCase()}`;
   const failed = result.checks.filter((c) => !c.ok).map((c) => c.method);
   return [
     head,

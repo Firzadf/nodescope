@@ -71,4 +71,11 @@ describe('overallVerdictFrom', () => {
     expect(overallVerdictFrom(snapshot(4, 4), probe(true), null)).toBe('healthy');
     expect(overallVerdictFrom(snapshot(0, 4), probe(false), 'critical')).toBe('down');
   });
+
+  it('says STALLED when the RPC answered and the head is paused, and never calls that DOWN', () => {
+    expect(overallVerdictFrom(snapshot(4, 4), probe(true), 'healthy', 'stalled')).toBe('stalled');
+    expect(overallVerdictFrom(snapshot(4, 4), probe(true), 'critical', 'stalled')).toBe('stalled');
+    expect(overallVerdictFrom(snapshot(0, 4), probe(false), 'critical', 'stalled')).toBe('down');
+    expect(overallVerdictFrom(snapshot(4, 4), probe(true), 'degraded', 'live')).toBe('degraded');
+  });
 });
