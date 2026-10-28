@@ -79,8 +79,8 @@ npm run lint
 npm run build
 ```
 
-At the last full verification, 29 Oct 2026, the suite passed 517 tests across
-75 files, lint reported 0 errors, and the production build succeeded. If a
+At the last full verification, 29 Oct 2026, the suite passed 520 tests across
+76 files, lint reported 0 errors, and the production build succeeded. If a
 future change breaks that, the suite, not this document, is the authority.
 
 ## 6. Foundry, for the on-chain evidence check

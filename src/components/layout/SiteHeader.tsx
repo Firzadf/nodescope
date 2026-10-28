@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ArrowUpRight, Menu, X } from 'lucide-react';
-import type { Lang } from '../../utils/landingLang';
+import { LANGS, LANG_ARIA, LANG_HTML, LANG_LABEL, type Lang } from '../../utils/landingLang';
 import { BrandMark } from '../common/BrandMark';
 
 // Shared site header, used by the landing page and the /fees sub-landing
@@ -76,19 +76,20 @@ export function SiteHeader({
           </nav>
         )}
         <span className={`flex shrink-0 items-center border border-line ml-auto xl:ml-0`} role="group" aria-label={langGroupAria}>
-          {(['en', 'id'] as Lang[]).map((l) => (
+          {LANGS.map((l) => (
             <button
               key={l}
               type="button"
               // The accessible name contains the visible label verbatim
               // ("EN (English)"): a bare "English" fails axe's
               // label-content-name-mismatch for the visible "EN".
-              aria-label={l === 'en' ? 'EN (English)' : 'ID (Bahasa Indonesia)'}
+              aria-label={LANG_ARIA[l]}
+              lang={LANG_HTML[l]}
               aria-pressed={lang === l}
               onClick={() => setLang(l)}
-              className={`px-2.5 py-1.5 font-data text-[10px] uppercase tracking-[0.14em] transition-colors ${lang === l ? toggleActive : 'text-slate-400 hover:text-white'}`}
+              className={`px-2.5 py-1.5 font-data text-[10px] ${l === 'zh' ? 'tracking-normal' : 'uppercase tracking-[0.14em]'} transition-colors ${lang === l ? toggleActive : 'text-slate-400 hover:text-white'}`}
             >
-              {l.toUpperCase()}
+              {LANG_LABEL[l]}
             </button>
           ))}
         </span>

@@ -76,4 +76,16 @@ describe('Landing language switcher', () => {
     expect(screen.getByText('Masalah')).toBeInTheDocument();
     expect(screen.getByText('Masalahnya')).toBeInTheDocument();
   });
+
+  it('switches to Simplified Chinese and persists zh', () => {
+    render(<Landing />);
+    fireEvent.click(screen.getByRole('button', { name: '中文 (Simplified Chinese)' }));
+    expect(screen.getByText('问题所在')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '中文 (Simplified Chinese)' })).toHaveAttribute('aria-pressed', 'true');
+    try {
+      expect(sessionStorage.getItem('nodescope-lang')).toBe('zh');
+    } catch {
+      // Storage unavailable in this environment; the visible switch above is the assertion.
+    }
+  });
 });

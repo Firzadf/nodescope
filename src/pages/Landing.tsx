@@ -662,6 +662,14 @@ function TypewriterJson({ replayLabel }: { replayLabel: string }) {
 }
 
 
+/** Short labels rendered inline on the landing page, per language. */
+const INLINE_COPY: Record<'judgesPage' | 'totalWeight' | 'evidenceTable' | 'start', Record<Lang, string>> = {
+  judgesPage: { en: 'For judges', id: 'Halaman juri', zh: '评委页面' },
+  totalWeight: { en: 'Total weight', id: 'Total bobot', zh: '总权重' },
+  evidenceTable: { en: 'Evidence table for judges', id: 'Tabel bukti untuk juri', zh: '评委证据表' },
+  start: { en: 'Start', id: 'Mulai', zh: '开始' },
+};
+
 /* ---------------------------------- page ---------------------------------- */
 
 export function Landing() {
@@ -744,7 +752,7 @@ export function Landing() {
                   <ArrowRight className="h-4 w-4" />
                 </a>
                 <a href={JUDGES_URL} className="btn-ghost inline-flex items-center gap-2 px-5 py-3.5 text-[15px] font-medium">
-                  {lang === 'id' ? 'Halaman juri' : 'For judges'}
+                  {INLINE_COPY.judgesPage[lang]}
                   <ArrowUpRight className="h-4 w-4" />
                 </a>
                 <a href={DEMO_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-2 py-3.5 text-[15px] font-medium text-slate-300 underline decoration-slate-700 underline-offset-4 transition-colors hover:text-white">
@@ -846,7 +854,7 @@ export function Landing() {
             <div className="xl:col-span-4">
               <div className="graphite border border-graphite p-6">
                 <p className="font-data text-[10px] uppercase tracking-[0.22em] text-slate-400">{HEALTH_SCORE_FORMULA}</p>
-                <p className="mt-4 font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">{lang === 'id' ? 'Total bobot' : 'Total weight'}</p>
+                <p className="mt-4 font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">{INLINE_COPY.totalWeight[lang]}</p>
                 <p className="mt-1 font-data text-[96px] font-medium leading-none tracking-[-0.06em] text-white">
                   Σ100
                 </p>
@@ -1313,7 +1321,7 @@ export function Landing() {
             </ol>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <a href={JUDGES_URL} className="btn-ink inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold">
-                {lang === 'id' ? 'Tabel bukti untuk juri' : 'Evidence table for judges'}
+                {INLINE_COPY.evidenceTable[lang]}
                 <ArrowRight className="h-4 w-4" />
               </a>
               <p className="text-sm text-slate-500">{t.judgeFootnote}</p>
@@ -1326,7 +1334,7 @@ export function Landing() {
           <div aria-hidden="true" className="cta-glow pointer-events-none absolute left-1/2 top-full h-[520px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full" />
           <Reveal className="relative mx-auto max-w-[1240px]">
             <p className="font-data text-[12px] uppercase tracking-[0.2em] text-slate-500">
-              <span className="text-signal-ink">13</span> — {lang === 'id' ? 'Mulai' : 'Start'}
+              <span className="text-signal-ink">13</span> — {INLINE_COPY.start[lang]}
             </p>
             <h2 className="mt-6 max-w-[16ch] font-display text-[56px] leading-[0.92] tracking-[-0.02em] text-white md:text-[112px]" style={{ fontFamily: 'var(--font-serif)' }}>
               {t.ctaTitleA}

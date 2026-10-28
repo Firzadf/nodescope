@@ -1,9 +1,10 @@
-// EN/ID copy for the /fees sub-landing and the Fee Lab panel. The language
+// EN/ID/ZH copy (ZH lives in feesLang.zh.ts) for the /fees sub-landing and the Fee Lab panel. The language
 // itself is the shared session language from landingLang (one toggle, one
 // stored value, every page). Method names, endpoint URLs, chain IDs,
 // hashes, and the brand name NodeScope are never translated; they appear
 // identically in both languages.
 import type { Lang } from './landingLang';
+import { feeLabZh, feesZh } from './feesLang.zh';
 
 export interface FeesNavLink {
   href: string;
@@ -543,6 +544,7 @@ export const feesCopy: Record<Lang, FeesCopy> = {
     langGroupAria: 'Bahasa',
   },
   },
+  zh: feesZh,
 };
 
 export interface FeeLabCopy {
@@ -739,6 +741,7 @@ export const feeLabCopy: Record<Lang, FeeLabCopy> = {
       'pallet-revive membebankan deposit untuk setiap byte dan item yang ditinggalkan sebuah call di state. Deploy menyimpan seluruh kode contract, sehingga depositnya jauh lebih besar dari weight fee. Estimasi gas EVM sudah memasukkan deposit itu; jalur native melaporkannya terpisah sebagai hold.',
     loading: 'Memuat Fee Lab…',
   },
+  zh: feeLabZh,
 };
 
 // Comparison reasons are generated in English by compareLegs. Translate the
@@ -746,6 +749,7 @@ export const feeLabCopy: Record<Lang, FeeLabCopy> = {
 // text) passes through in English rather than being guessed.
 export function translateReason(reason: string, lang: Lang): string {
   if (lang === 'en') return reason;
+  if (lang === 'zh') return translateReasonZh(reason);
   let out = reason;
   out = out.replace(
     'Neither surface could be estimated.',
@@ -774,6 +778,24 @@ export function translateReason(reason: string, lang: Lang): string {
   out = out.replace(
     ' Native storage deposit is reserved (refundable when storage is freed); the EVM gas figure already folds it in.',
     ' Deposit storage native ditahan (bisa dikembalikan saat storage dibebaskan); angka gas EVM sudah memasukkannya.',
+  );
+  return out;
+}
+
+function translateReasonZh(reason: string): string {
+  let out = reason;
+  out = out.replace('Neither surface could be estimated.', '两个层面都无法估算。');
+  out = out.replace(/^Only native is available \(EVM: (.*)\)\.$/, '只有原生层面可用（EVM：$1）。');
+  out = out.replace(/^Only EVM is available \(native: (.*)\)\.$/, '只有 EVM 可用（原生：$1）。');
+  out = out.replace(
+    /^All-in costs are within (\d+)% — pick by wallet\/UX\.$/,
+    'All-in 成本相差在 $1% 以内——按钱包/用户体验选择即可。',
+  );
+  out = out.replace(/^EVM is cheaper all-in by ([\d.]+)%\.$/, 'EVM 的 all-in 成本便宜 $1%。');
+  out = out.replace(/^Native is cheaper all-in by ([\d.]+)%\.$/, '原生的 all-in 成本便宜 $1%。');
+  out = out.replace(
+    ' Native storage deposit is reserved (refundable when storage is freed); the EVM gas figure already folds it in.',
+    ' 原生存储押金为冻结金额（存储释放时可退还）；EVM gas 数值已将其计算在内。',
   );
   return out;
 }

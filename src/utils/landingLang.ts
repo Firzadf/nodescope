@@ -1,5 +1,5 @@
 /**
- * EN/ID copy for the landing page only. The app at /app, /verify, and
+ * EN/ID/ZH copy for the landing page only (ZH lives in landingLang.zh.ts). The app at /app, /verify, and
  * /mainnet are intentionally untouched by this module.
  *
  * Rules baked into this file:
@@ -12,12 +12,33 @@
  *   The Tutorial EN copy is a faithful translation of that Indonesian copy.
  */
 import { SITE_TESTS, SITE_TEST_FILES } from './siteConstants';
+import { zh } from './landingLang.zh';
 
-export type Lang = 'en' | 'id';
+export type Lang = 'en' | 'id' | 'zh';
+
+/** Order of the language toggle buttons, shared by every page. */
+export const LANGS: readonly Lang[] = ['en', 'id', 'zh'];
+
+/** Visible toggle label per language. */
+export const LANG_LABEL: Record<Lang, string> = { en: 'EN', id: 'ID', zh: '中文' };
+
+/**
+ * Accessible name per toggle button. It contains the visible label verbatim
+ * so axe's label-content-name-mismatch rule passes.
+ */
+export const LANG_ARIA: Record<Lang, string> = {
+  en: 'EN (English)',
+  id: 'ID (Bahasa Indonesia)',
+  zh: '中文 (Simplified Chinese)',
+};
+
+/** BCP 47 tag per language, for lang attributes. */
+export const LANG_HTML: Record<Lang, string> = { en: 'en', id: 'id', zh: 'zh-Hans' };
 
 export function readStoredLang(): Lang {
   try {
-    return sessionStorage.getItem('nodescope-lang') === 'id' ? 'id' : 'en';
+    const stored = sessionStorage.getItem('nodescope-lang');
+    return stored === 'id' || stored === 'zh' ? stored : 'en';
   } catch {
     return 'en';
   }
@@ -1247,4 +1268,4 @@ const id: LandingCopy = {
   menuToggleAria: 'Buka/tutup menu navigasi',
 };
 
-export const landingCopy: Record<Lang, LandingCopy> = { en, id };
+export const landingCopy: Record<Lang, LandingCopy> = { en, id, zh };

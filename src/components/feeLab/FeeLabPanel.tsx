@@ -51,7 +51,7 @@ import { buildFeeReport } from '../../utils/feeReport';
 import { stampReportIntegrity } from '../../utils/reportIntegrity';
 import { parseArtifactInput, ArtifactInputError } from '../../utils/artifactInput';
 import { buildFeeLabShareParams, parseFeeLabShareParams } from '../../utils/feeLabShare';
-import { readStoredLang, storeLang, type Lang } from '../../utils/landingLang';
+import { LANGS, LANG_ARIA, LANG_HTML, LANG_LABEL, readStoredLang, storeLang, type Lang } from '../../utils/landingLang';
 import { PORTALDOT_CHAIN_ID } from '../../utils/siteConstants';
 
 type OpId = 'transfer' | 'erc20' | 'deploy' | 'calldata';
@@ -451,16 +451,17 @@ export function FeeLabPanel() {
         <div className="flex flex-wrap items-center gap-3 pb-1">
           <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">Portaldot V3 · Chain {PORTALDOT_CHAIN_ID}</p>
           <span className="flex shrink-0 items-center gap-1 rounded-full border border-line bg-black/30 p-1" role="group" aria-label={p.langGroupAria}>
-            {(['en', 'id'] as Lang[]).map((l) => (
+            {LANGS.map((l) => (
               <button
                 key={l}
                 type="button"
-                aria-label={l === 'en' ? 'EN (English)' : 'ID (Bahasa Indonesia)'}
+                aria-label={LANG_ARIA[l]}
+                lang={LANG_HTML[l]}
                 aria-pressed={lang === l}
                 onClick={() => setLang(l)}
-                className={`rounded-full px-2.5 py-1 font-data text-[10px] uppercase tracking-[0.14em] transition-colors ${lang === l ? 'bg-signal text-graphite' : 'text-slate-400 hover:text-graphite'}`}
+                className={`rounded-full px-2.5 py-1 font-data text-[10px] ${l === 'zh' ? 'tracking-normal' : 'uppercase tracking-[0.14em]'} transition-colors ${lang === l ? 'bg-signal text-graphite' : 'text-slate-400 hover:text-graphite'}`}
               >
-                {l.toUpperCase()}
+                {LANG_LABEL[l]}
               </button>
             ))}
           </span>
