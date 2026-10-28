@@ -35,32 +35,53 @@ except ImportError:
 W, H = 960.0, 540.0
 MARGIN = 56.0
 
-INK = (6, 11, 29)
-PANEL = (14, 23, 48)
-LINE = (30, 42, 68)
-ACCENT = (125, 180, 255)
-TEXT = (230, 237, 247)
-MUTED = (138, 154, 181)
-FAINT = (100, 116, 139)
+# Brand palette, matching the app (src/index.css): PAPER is the printed lab
+# report, GRAPHITE the live readout band, one calibration-orange signal.
+PAPER_THEME = dict(
+    INK=(241, 237, 228),      # page background (paper)
+    PANEL=(234, 229, 218),
+    LINE=(205, 198, 184),
+    ACCENT=(178, 60, 5),      # signal-ink on paper, AA contrast
+    TEXT=(18, 18, 16),
+    MUTED=(86, 80, 70),
+    FAINT=(140, 132, 118),
+    SIGNAL=(255, 91, 20),
+)
+GRAPHITE_THEME = dict(
+    INK=(18, 18, 16),
+    PANEL=(28, 27, 24),
+    LINE=(58, 55, 49),
+    ACCENT=(255, 138, 76),
+    TEXT=(241, 237, 228),
+    MUTED=(176, 168, 154),
+    FAINT=(120, 113, 101),
+    SIGNAL=(255, 91, 20),
+)
+INK = PANEL = LINE = ACCENT = TEXT = MUTED = FAINT = SIGNAL = (0, 0, 0)
 
-DEJAVU_DIR = "/usr/share/fonts/truetype/dejavu"
-FONT_CANDIDATES = {
-    "sans": ["DejaVuSans.ttf", "DejaVuSans-Bold.ttf"],
-    "mono": ["DejaVuSansMono.ttf", "DejaVuSansMono-Bold.ttf"],
+
+def use_theme(theme: dict) -> None:
+    globals().update(theme)
+
+
+use_theme(PAPER_THEME)
+
+FONT_DIR = Path(__file__).resolve().parent / "fonts"
+FONTS = {
+    ("sans", ""): "Geist-Regular.ttf",
+    ("sans", "B"): "Geist-SemiBold.ttf",
+    ("mono", ""): "GeistMono-Regular.ttf",
+    ("mono", "B"): "GeistMono-Medium.ttf",
+    ("serif", ""): "InstrumentSerif-Regular.ttf",
+    ("serif", "I"): "InstrumentSerif-Italic.ttf",
 }
 
 
 def pick_fonts(pdf: FPDF) -> dict[str, str]:
-    """Register DejaVu when available, else use core fonts."""
-    names = {"sans": "helvetica", "mono": "courier"}
-    for family, files in FONT_CANDIDATES.items():
-        regular, bold = (os.path.join(DEJAVU_DIR, f) for f in files)
-        if os.path.exists(regular) and os.path.exists(bold):
-            tag = "dejavu" if family == "sans" else "dejavumono"
-            pdf.add_font(tag, "", regular)
-            pdf.add_font(tag, "B", bold)
-            names[family] = tag
-    return names
+    """Register the app's own typefaces: Geist, Geist Mono, Instrument Serif."""
+    for (family, style), file in FONTS.items():
+        pdf.add_font(family, style, str(FONT_DIR / file))
+    return {"sans": "sans", "mono": "mono", "serif": "serif"}
 
 
 class Deck(FPDF):
@@ -69,74 +90,128 @@ class Deck(FPDF):
         self.set_auto_page_break(auto=False)
         self.font_families = pick_fonts(self)
         self.slide_no = 0
+        self.set_title("NodeScope - Portaldot Hacker House 2026")
+        self.set_author("Firza Duta Fauzan")
 
     # -- primitives -----------------------------------------------------
-    def new_slide(self) -> None:
+    def new_slide(self, dark: bool = False) -> None:
+        use_theme(GRAPHITE_THEME if dark else PAPER_THEME)
         self.add_page()
         self.slide_no += 1
         self.set_fill_color(*INK)
         self.rect(0, 0, W, H, style="F")
+        # Calibration frame: corner ticks, like the app's report cards.
+        self.set_draw_color(*LINE)
+        self.set_line_width(0.8)
+        t, m = 14, 22
+        for x, y, dx, dy in ((m, m, 1, 1), (W - m, m, -1, 1), (m, H - m, 1, -1), (W - m, H - m, -1, -1)):
+            self.line(x, y, x + dx * t, y)
+            self.line(x, y, x, y + dy * t)
+        # Running head
+        self.set_font("mono", "", 8.5)
+        self.set_text_color(*FAINT)
+        self.set_xy(W - MARGIN - 300, 30)
+        self.cell(300, 10, "NODESCOPE  /  PORTALDOT V3  /  CHAIN 420420777", align="R")
 
-    def set_font(self, family: str, style: str, size: float) -> None:
-        # Accept both our logical names ("sans"/"mono") and the registered
-        # font tags fpdf2 itself passes back on add_page ("dejavu", ...).
+    def set_font(self, family: str, style: str = "", size: float = 0) -> None:
         tag = self.font_families.get(family, family)
+        if (tag, style) not in FONTS and style == "B" and tag == "serif":
+            style = ""
         super().set_font(tag, style, size)
 
     def kicker(self, text: str) -> None:
-        self.set_font("sans", "B", 11)
+        self.set_fill_color(*SIGNAL)
+        self.rect(MARGIN, 49, 7, 7, style="F")
+        self.set_font("mono", "B", 10)
         self.set_text_color(*ACCENT)
-        self.set_xy(MARGIN, 44)
-        self.cell(0, 14, text.upper())
+        self.set_xy(MARGIN + 16, 46)
+        self.cell(0, 13, text.upper())
 
-    def headline(self, text: str, size: float = 34) -> float:
-        # Left-aligned, never justified: fpdf2's multi_cell defaults to
-        # justified, which stretches inter-word spacing on wrapped lines.
-        # Returns the y below the last headline line, so content below can
-        # start after the headline's real height instead of a fixed y.
-        self.set_font("sans", "B", size)
+    def headline(self, text: str, size: float = 40) -> float:
+        # Instrument Serif, left-aligned (never justified). Returns the y below
+        # the last line so content can follow the headline's real height.
+        self.set_font("serif", "", size)
         self.set_text_color(*TEXT)
-        self.set_xy(MARGIN, 70)
-        self.multi_cell(W - 2 * MARGIN, size + 8, text, align="L")
+        self.set_xy(MARGIN, 72)
+        self.multi_cell(W - 2 * MARGIN, size * 1.08, text, align="L")
         return self.get_y()
 
-    def body(self, text: str, y: float, size: float = 15, color=MUTED) -> None:
+    def body(self, text: str, y: float, size: float = 15, color=None) -> None:
         self.set_font("sans", "", size)
-        self.set_text_color(*color)
+        self.set_text_color(*(color or MUTED))
         self.set_xy(MARGIN, y)
         self.multi_cell(W - 2 * MARGIN, size + 7, text, align="L")
 
     def slide_footer(self, criterion: str) -> None:
-        self.set_font("sans", "", 10)
+        self.set_draw_color(*LINE)
+        self.set_line_width(0.6)
+        self.line(MARGIN, H - 48, W - MARGIN, H - 48)
+        self.set_font("mono", "", 8.5)
         self.set_text_color(*FAINT)
-        self.set_xy(MARGIN, H - 36)
-        self.cell(0, 12, f"NodeScope  ·  {criterion}  ·  {self.slide_no}/10")
+        self.set_xy(MARGIN, H - 40)
+        self.cell(0, 12, f"NODESCOPE  ·  {criterion.upper()}")
+        self.set_xy(W - MARGIN - 80, H - 40)
+        self.cell(80, 12, f"{self.slide_no:02d} / 10", align="R")
 
     def panel(self, x: float, y: float, w: float, h: float) -> None:
         self.set_fill_color(*PANEL)
         self.set_draw_color(*LINE)
+        self.set_line_width(0.6)
         self.rect(x, y, w, h, style="DF")
+        # signal tick on the top-left corner
+        self.set_draw_color(*SIGNAL)
+        self.set_line_width(1.6)
+        self.line(x, y, x + 18, y)
+        self.line(x, y, x, y + 18)
+        self.set_line_width(0.6)
 
     def chip(self, x: float, y: float, text: str) -> float:
-        self.set_font("sans", "B", 13)
+        self.set_font("mono", "B", 11)
         tw = self.get_string_width(text) + 28
         self.set_draw_color(*ACCENT)
         self.set_fill_color(*INK)
-        self.rect(x, y, tw, 30, style="DF")
+        self.set_line_width(0.8)
+        self.rect(x, y, tw, 28, style="DF")
         self.set_text_color(*ACCENT)
         self.set_xy(x, y + 8)
-        self.cell(tw, 14, text, align="C")
-        return x + tw + 14
+        self.cell(tw, 12, text, align="C")
+        return x + tw + 12
 
     def mono_line(self, x: float, y: float, label: str, value: str) -> None:
-        self.set_font("sans", "B", 11)
-        self.set_text_color(*MUTED)
-        self.set_xy(x, y)
-        self.cell(120, 13, label)
         self.set_font("mono", "", 9)
+        self.set_text_color(*FAINT)
+        self.set_xy(x, y)
+        self.cell(120, 13, label.upper())
+        self.set_font("mono", "", 9.5)
         self.set_text_color(*TEXT)
         self.set_xy(x + 120, y)
         self.cell(0, 13, value)
+
+    def reticle(self, cx: float, cy: float, r: float, ink=None) -> None:
+        """The NodeScope mark: ring, dashed inner ring, crosshair ticks, needle."""
+        ink = ink or TEXT
+        u = r / 26.0
+        self.set_draw_color(*ink)
+        self.set_line_width(2.5 * u)
+        self.circle(cx, cy, 26 * u, style="D") if hasattr(self, "circle") else self.ellipse(cx - 26 * u, cy - 26 * u, 52 * u, 52 * u)
+        self.set_line_width(1.5 * u)
+        import math
+        n = int(2 * math.pi * 15 / 5)
+        for i in range(n):
+            a0 = i * 5 / 15
+            a1 = (i * 5 + 2) / 15
+            self.line(cx + 15 * u * math.cos(a0), cy + 15 * u * math.sin(a0),
+                      cx + 15 * u * math.cos(a1), cy + 15 * u * math.sin(a1))
+        self.set_line_width(2.5 * u)
+        for x1, y1, x2, y2 in ((0, -30, 0, -20), (0, 20, 0, 30), (-30, 0, -20, 0), (20, 0, 30, 0)):
+            self.line(cx + x1 * u, cy + y1 * u, cx + x2 * u, cy + y2 * u)
+        self.set_draw_color(*SIGNAL)
+        self.line(cx, cy, cx + 13 * u, cy - 13 * u)
+        self.set_fill_color(*SIGNAL)
+        self.ellipse(cx + 13 * u - 4 * u, cy - 13 * u - 4 * u, 8 * u, 8 * u, style="F")
+        self.set_fill_color(*ink)
+        self.ellipse(cx - 3.5 * u, cy - 3.5 * u, 7 * u, 7 * u, style="F")
+        self.set_line_width(0.6)
 
 
 # -- facts (verified; see module docstring) ------------------------------
@@ -153,32 +228,37 @@ ANCHORS = [
 
 
 def slide_title(d: Deck) -> None:
-    d.new_slide()
-    d.set_font("sans", "B", 11)
+    d.new_slide(dark=True)
+    d.reticle(W - 230, 250, 150)
+    d.set_fill_color(*SIGNAL)
+    d.rect(MARGIN, 83, 7, 7, style="F")
+    d.set_font("mono", "B", 10)
     d.set_text_color(*ACCENT)
-    d.set_xy(MARGIN, 64)
-    d.cell(0, 14, "PORTALDOT HACKER HOUSE 2026  ·  TRACK: NODE OPERATIONS AND TOOLING")
-    d.set_font("sans", "B", 92)
+    d.set_xy(MARGIN + 16, 80)
+    d.cell(0, 13, "PORTALDOT HACKER HOUSE 2026  ·  NODE OPERATIONS AND TOOLING")
+    d.set_font("serif", "", 104)
     d.set_text_color(*TEXT)
-    d.set_xy(MARGIN, 108)
-    d.cell(0, 95, "NodeScope")
-    d.set_font("sans", "", 30)
+    d.set_xy(MARGIN - 4, 112)
+    d.cell(0, 110, "NodeScope")
+    d.set_font("serif", "I", 34)
     d.set_text_color(*ACCENT)
-    d.set_xy(MARGIN, 214)
-    d.cell(0, 36, "Node truth suite for Portaldot V3")
-    d.set_font("sans", "", 17)
+    d.set_xy(MARGIN, 226)
+    d.cell(0, 40, "Node truth suite for Portaldot V3")
+    d.set_font("sans", "", 16)
     d.set_text_color(*MUTED)
-    d.set_xy(MARGIN, 262)
+    d.set_xy(MARGIN, 276)
     d.cell(0, 22, "Two pillars. One evidence discipline.")
     x = MARGIN
-    for chip in ("HEALTH", "FEES"):
-        x = d.chip(x, 310, chip)
-    d.set_font("sans", "", 13)
+    for chip in ("HEALTH", "FEES", "EVIDENCE"):
+        x = d.chip(x, 318, chip)
+    d.set_draw_color(*LINE)
+    d.line(MARGIN, 404, W - MARGIN, 404)
+    d.set_font("mono", "", 10)
     d.set_text_color(*MUTED)
-    d.set_xy(MARGIN, 400)
-    d.cell(0, 18, "nodescope.vercel.app  ·  github.com/Firzadf/nodescope")
-    d.set_xy(MARGIN, 424)
-    d.cell(0, 18, "dorahacks.io/build/50146  ·  Demo video: youtu.be/14aZxVTCrz0")
+    d.set_xy(MARGIN, 416)
+    d.cell(0, 14, "nodescope.vercel.app   ·   github.com/Firzadf/nodescope")
+    d.set_xy(MARGIN, 436)
+    d.cell(0, 14, "dorahacks.io/build/50146   ·   demo  youtu.be/14aZxVTCrz0")
 
 
 def slide_problem(d: Deck) -> None:
@@ -306,37 +386,39 @@ def slide_evidence(d: Deck) -> None:
 
 
 def slide_fees(d: Deck) -> None:
-    d.new_slide()
+    d.new_slide(dark=True)
     d.kicker("Fees finding · Measured 27 Oct 2026 · Contract deploy")
     top = d.headline("The headline says 804x. The bill says 1.016x.")
-    ny = max(160, top + 16)
-    d.set_font("sans", "B", 70)
+    ny = max(160, top + 18)
+    d.panel(MARGIN, ny, 400, 150)
+    d.panel(MARGIN + 448, ny, 400, 150)
+    d.set_font("serif", "", 84)
     d.set_text_color(*MUTED)
-    d.set_xy(MARGIN, ny)
-    d.cell(300, 70, "804x")
-    d.set_font("sans", "", 15)
-    d.set_text_color(*MUTED)
-    d.set_xy(MARGIN, ny + 70)
-    d.cell(300, 20, "fee-only")
-    d.set_font("sans", "B", 70)
+    d.set_xy(MARGIN + 24, ny + 14)
+    d.cell(360, 88, "804x")
+    d.set_font("mono", "", 10)
+    d.set_text_color(*FAINT)
+    d.set_xy(MARGIN + 26, ny + 110)
+    d.cell(360, 14, "FEE-ONLY  ·  THE HEADLINE")
+    d.set_font("serif", "", 84)
     d.set_text_color(*ACCENT)
-    d.set_xy(MARGIN + 330, ny)
-    d.cell(300, 70, "1.016x")
-    d.set_font("sans", "", 15)
-    d.set_text_color(*MUTED)
-    d.set_xy(MARGIN + 330, ny + 70)
-    d.cell(300, 20, "all-in")
-    d.set_font("sans", "", 15)
+    d.set_xy(MARGIN + 472, ny + 14)
+    d.cell(360, 88, "1.016x")
+    d.set_font("mono", "", 10)
+    d.set_text_color(*ACCENT)
+    d.set_xy(MARGIN + 474, ny + 110)
+    d.cell(360, 14, "ALL-IN  ·  WHAT YOU PAY")
+    d.set_font("mono", "", 11)
     d.set_text_color(*TEXT)
-    d.set_xy(MARGIN, ny + 118)
-    d.cell(0, 21, "EVM deploy: 124.098 tPOT  ·  Native all-in: 122.191 tPOT  ·  Within 2%")
+    d.set_xy(MARGIN, ny + 170)
+    d.cell(0, 16, "EVM deploy 124.098 tPOT   ·   Native all-in 122.191 tPOT   ·   within 2%")
     d.body("Most of the gap is a 122.037 tPOT storage deposit on the native side. "
            "A deposit is a hold, not a burned fee: it is refundable when storage "
-           "is freed. The EVM figure already folds it in.", ny + 160, size=15)
-    d.set_font("sans", "", 12)
+           "is freed. The EVM figure already folds it in.", ny + 198, size=14)
+    d.set_font("mono", "", 9)
     d.set_text_color(*FAINT)
-    d.set_xy(MARGIN, ny + 270)
-    d.cell(0, 16, "tPOT is a testnet token with no market price.")
+    d.set_xy(MARGIN, H - 66)
+    d.cell(0, 12, "tPOT IS A TESTNET TOKEN WITH NO MARKET PRICE.")
     d.slide_footer("Innovation")
 
 
