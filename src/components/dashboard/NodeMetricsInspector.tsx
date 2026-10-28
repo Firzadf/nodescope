@@ -182,6 +182,9 @@ export function NodeMetricsInspector({
   };
 
   const isActionDisabled = !endpoint.trim() || loadingMetric !== null;
+  // While one metric runs, the others are briefly locked but keep their look,
+  // so only the button you pressed changes; dimming stays for real unavailability.
+  const busyElsewhere = endpoint.trim() !== '' && loadingMetric !== null;
 
   return (
     <Card>
@@ -214,7 +217,7 @@ export function NodeMetricsInspector({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Metric 1: RPC Latency */}
-          <div className="bg-black/25 border border-line rounded-lg p-4 space-y-3">
+          <div className="flex flex-col bg-black/25 border border-line rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-cyan-400" />
@@ -236,7 +239,7 @@ export function NodeMetricsInspector({
               type="button"
               onClick={runLatencyCheck}
               disabled={isActionDisabled}
-              className="w-full py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-xs font-medium text-slate-200 rounded-md flex items-center justify-center gap-2 transition-colors"
+              className={`mt-auto w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 rounded-md flex items-center justify-center gap-2 transition-colors ${busyElsewhere ? 'disabled:cursor-progress' : 'disabled:opacity-50'}`}
             >
               {loadingMetric === 'latency' ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
               {loadingMetric === 'latency' ? 'Measuring...' : 'Test Latency'}
@@ -244,7 +247,7 @@ export function NodeMetricsInspector({
           </div>
 
           {/* Metric 2: Client Version */}
-          <div className="bg-black/25 border border-line rounded-lg p-4 space-y-3">
+          <div className="flex flex-col bg-black/25 border border-line rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Server className="w-4 h-4 text-cyan-400" />
@@ -266,7 +269,7 @@ export function NodeMetricsInspector({
               type="button"
               onClick={runVersionCheck}
               disabled={isActionDisabled}
-              className="w-full py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-xs font-medium text-slate-200 rounded-md flex items-center justify-center gap-2 transition-colors"
+              className={`mt-auto w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 rounded-md flex items-center justify-center gap-2 transition-colors ${busyElsewhere ? 'disabled:cursor-progress' : 'disabled:opacity-50'}`}
             >
               {loadingMetric === 'version' ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
               {loadingMetric === 'version' ? 'Querying...' : `Query Version (${defaultClientVersionMethodForProfile(endpointProfile)})`}
@@ -274,7 +277,7 @@ export function NodeMetricsInspector({
           </div>
 
           {/* Metric 3: Peer Count */}
-          <div className="bg-black/25 border border-line rounded-lg p-4 space-y-3">
+          <div className="flex flex-col bg-black/25 border border-line rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-cyan-400" />
@@ -303,7 +306,7 @@ export function NodeMetricsInspector({
               type="button"
               onClick={runPeerCheck}
               disabled={isActionDisabled || !hasPeerCountSupport(endpointProfile)}
-              className="w-full py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-xs font-medium text-slate-200 rounded-md flex items-center justify-center gap-2 transition-colors"
+              className={`mt-auto w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 rounded-md flex items-center justify-center gap-2 transition-colors ${busyElsewhere ? 'disabled:cursor-progress' : 'disabled:opacity-50'}`}
             >
               {loadingMetric === 'peer' ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
               {loadingMetric === 'peer' ? 'Checking...' : defaultPeerMethodForProfile(endpointProfile) ? `Query Peers (${defaultPeerMethodForProfile(endpointProfile)})` : 'Peers unavailable for EVM'}
@@ -311,7 +314,7 @@ export function NodeMetricsInspector({
           </div>
 
           {/* Metric 4: Block Height */}
-          <div className="bg-black/25 border border-line rounded-lg p-4 space-y-3">
+          <div className="flex flex-col bg-black/25 border border-line rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Database className="w-4 h-4 text-cyan-400" />
@@ -356,7 +359,7 @@ export function NodeMetricsInspector({
               type="button"
               onClick={runBlockHeightCheck}
               disabled={isActionDisabled}
-              className="w-full py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-xs font-medium text-slate-200 rounded-md flex items-center justify-center gap-2 transition-colors"
+              className={`mt-auto w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 rounded-md flex items-center justify-center gap-2 transition-colors ${busyElsewhere ? 'disabled:cursor-progress' : 'disabled:opacity-50'}`}
             >
               {loadingMetric === 'block' ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
               {loadingMetric === 'block' ? 'Querying Block...' : `Query via ${selectedBlockMethod}`}

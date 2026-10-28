@@ -4,6 +4,7 @@ import { overallVerdictFrom, type OverallVerdict } from '../../utils/overallVerd
 import type { HealthCheckSnapshot } from '../../types/healthCheck';
 import type { SubstrateWsProbeResult } from '../../services/substrateWsProbe';
 import type { EndpointProfile } from '../../types/endpoint';
+import type { HealthScoreBand } from '../../utils/healthScore';
 
 const LABEL: Record<OverallVerdict, string> = {
   healthy: 'HEALTHY',
@@ -25,6 +26,9 @@ interface VerdictBarProps {
   latencyMs: number | null;
   latencyMethod?: string;
   endpointProfile?: EndpointProfile;
+  /** Health Score band and value; a band below healthy pulls HEALTHY to DEGRADED. */
+  scoreBand?: HealthScoreBand | null;
+  score?: number | null;
 }
 
 /**
@@ -44,8 +48,9 @@ function probeHostLabel(url: string | null): string {
  * comes from overallVerdictFrom, which shares panel 07's EVM-side extraction.
  * With no data at all it reads NOT CHECKED YET, never DOWN.
  */
-export function VerdictBar({ latestHealthSnapshot, wsProbeResult, latencyMs, latencyMethod, endpointProfile }: VerdictBarProps) {
-  const overall = overallVerdictFrom(latestHealthSnapshot, wsProbeResult);
+export function VerdictBar({ latestHealthSnapshot, wsProbeResult, latencyMs, latencyMethod, endpointProfile, scoreBand = null, score = null }: VerdictBarProps) {
+  const overall = overallVerdictFrom(latestHealthSnapshot, wsProbeResult, scoreBand);
+  const pulledByScore = overall === 'degraded' && overallVerdictFrom(latestHealthSnapshot, wsProbeResult) === 'healthy';
   const evmPassed = latestHealthSnapshot
     ? latestHealthSnapshot.checks.filter((c) => c.success).length
     : null;
@@ -83,6 +88,11 @@ export function VerdictBar({ latestHealthSnapshot, wsProbeResult, latencyMs, lat
         <span className={`inline-flex items-center rounded-full border px-3 py-1 font-data text-[11px] font-semibold tracking-[0.16em] ${COLOR[overall]}`}>
           {LABEL[overall]}
         </span>
+        {pulledByScore && score !== null ? (
+          <span className="text-xs text-slate-400">
+            Score <span className="text-amber-300 font-data">{score}/100</span>
+          </span>
+        ) : null}
         <span className="text-xs text-slate-400">
           EVM <span className="text-slate-200 font-data">{evmText}</span>
         </span>

@@ -257,7 +257,7 @@ function App() {
     [healthSnapshots, wsProbeResult],
   );
   const currentWatchState: WatchCycleResult = {
-    verdict: overallVerdictFrom(latestHealthSnapshot, wsProbeResult),
+    verdict: overallVerdictFrom(latestHealthSnapshot, wsProbeResult, currentScore.band),
     endpointOrigin: sanitizeEndpointOrigin(endpoint),
     blockHeight: extractEvmSide(latestHealthSnapshot)?.blockHeightDecimal ?? null,
     score: currentScore.score,
@@ -269,7 +269,7 @@ function App() {
     handleWsProbeResultChange(probe);
     const score = computeHealthScore({ snapshots: getHealthSnapshots(), wsProbe: probe });
     return {
-      verdict: overallVerdictFrom(snapshot, probe),
+      verdict: overallVerdictFrom(snapshot, probe, score.band),
       endpointOrigin: snapshot.endpointOrigin,
       blockHeight: extractEvmSide(snapshot)?.blockHeightDecimal ?? null,
       score: score.score,
@@ -412,8 +412,10 @@ function App() {
         <Sidebar activeSection={activeSection} onSectionChange={handleSectionChange} onOpenPalette={() => setPaletteOpen(true)} collapsed={sidebarCollapsed} onToggleCollapse={toggleSidebar} />
         <main className="relative min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-10">
           <div className="relative max-w-7xl mx-auto space-y-6">
-            {activeSection === 'overview' && (
-              <div className="space-y-6 stagger">
+            {/* Overview stays mounted while hidden so a running Watch keeps
+                cycling when the user switches sections, like a monitor would. */}
+            {(
+              <div className="space-y-6 stagger" hidden={activeSection !== 'overview'}>
                 <div className="relative z-10 flex flex-wrap items-end justify-between gap-3 bg-ink pt-1">
                   <div>
                     <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">NodeScope / Overview</p>

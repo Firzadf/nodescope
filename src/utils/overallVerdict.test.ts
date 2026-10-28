@@ -63,4 +63,12 @@ describe('overallVerdictFrom', () => {
     expect(overallVerdictFrom(snapshot(0, 4), probe(false))).toBe('down');
     expect(overallVerdictFrom(snapshot(0, 4), null)).toBe('down');
   });
+
+  it('lets a below-healthy Health Score pull HEALTHY down to DEGRADED, never to DOWN', () => {
+    expect(overallVerdictFrom(snapshot(4, 4), probe(true), 'degraded')).toBe('degraded');
+    expect(overallVerdictFrom(snapshot(4, 4), probe(true), 'critical')).toBe('degraded');
+    expect(overallVerdictFrom(snapshot(4, 4), probe(true), 'healthy')).toBe('healthy');
+    expect(overallVerdictFrom(snapshot(4, 4), probe(true), null)).toBe('healthy');
+    expect(overallVerdictFrom(snapshot(0, 4), probe(false), 'critical')).toBe('down');
+  });
 });

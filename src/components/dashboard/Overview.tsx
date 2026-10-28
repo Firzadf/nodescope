@@ -8,7 +8,8 @@ import { SubstrateWsProbePanel } from './SubstrateWsProbePanel';
 import { CombinedVerdictPanel } from './CombinedVerdictPanel';
 import { VerdictBar } from './VerdictBar';
 import { HealthScoreHero } from './HealthScoreHero';
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
+import { computeHealthScore } from '../../utils/healthScore';
 import type { SubstrateWsProbeResult } from '../../services/substrateWsProbe';
 import { CapabilityDiscoveryPanel } from '../diagnostics/CapabilityDiscoveryPanel';
 import type { NodeMetricsDetailed } from '../../types/node';
@@ -102,6 +103,10 @@ export function Overview({
   setupSlot,
 }: OverviewProps) {
   const isDisconnected = connectionStatus === 'disconnected';
+  const verdictScore = useMemo(
+    () => computeHealthScore({ snapshots: healthSnapshots, wsProbe: wsProbeResult }),
+    [healthSnapshots, wsProbeResult],
+  );
 
   // Format header values from detailed metrics
   const latencyDisplay =
@@ -119,6 +124,8 @@ export function Overview({
         latencyMs={metricsDetailed.latency.value}
         latencyMethod={metricsDetailed.latency.sourceMethod}
         endpointProfile={endpointProfile}
+        scoreBand={verdictScore.band}
+        score={verdictScore.score}
       />
       <HealthScoreHero
         snapshots={healthSnapshots}
