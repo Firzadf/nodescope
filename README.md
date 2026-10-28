@@ -35,7 +35,7 @@ Judges and operators do not need to trust any number in this README. `docs/REPRO
 
 ## Demo Materials
 
-- **Demo video:** [Watch on YouTube](https://youtu.be/TyTudF3MUaI)
+- **Demo video:** [Watch on YouTube](https://youtu.be/14aZxVTCrz0)
 - **Live app:** [nodescope.vercel.app](https://nodescope.vercel.app/)
 - **DoraHacks BUIDL:** [NodeScope project](https://dorahacks.io/build/50146/)
 - **Screenshots:** [Representative screenshots](docs/screenshots/README.md)

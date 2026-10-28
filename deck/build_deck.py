@@ -178,7 +178,7 @@ def slide_title(d: Deck) -> None:
     d.set_xy(MARGIN, 400)
     d.cell(0, 18, "nodescope.vercel.app  ·  github.com/Firzadf/nodescope")
     d.set_xy(MARGIN, 424)
-    d.cell(0, 18, "dorahacks.io/build/50146  ·  Demo video: youtu.be/TyTudF3MUaI")
+    d.cell(0, 18, "dorahacks.io/build/50146  ·  Demo video: youtu.be/14aZxVTCrz0")
 
 
 def slide_problem(d: Deck) -> None:

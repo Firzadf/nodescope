@@ -24,7 +24,7 @@ import { HEALTH_SCORE_FORMULA } from '../utils/healthScore';
 
 const APP_URL = '/app';
 const JUDGES_URL = '/judges';
-const DEMO_URL = 'https://youtu.be/TyTudF3MUaI';
+const DEMO_URL = 'https://youtu.be/14aZxVTCrz0';
 const DOCUMENTED_CHAIN_ID = 420420777;
 const SIGNAL = '#ff5b14';
 const INK_MUTED = '#8a8478';
