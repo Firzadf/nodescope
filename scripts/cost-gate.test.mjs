@@ -111,7 +111,7 @@ describe('cost gate script', () => {
 });
 
 describe('cost gate composite action', () => {
-  const yml = readFileSync(join(actionDir, 'action.yml'), 'utf8');
+  const yml = readFileSync(join(actionDir, 'action.yml'), 'utf8').replace(/\r\n/g, '\n');
 
   it('declares the inputs the script reads and maps them through env, not inline interpolation', () => {
     for (const input of ['artifact', 'max-tpot', 'rpc', 'surface', 'wss', 'from']) {
