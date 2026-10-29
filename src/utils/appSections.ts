@@ -7,6 +7,7 @@ export const SECTION_PATHS: Record<string, string> = {
   diagnostics: '/app/diagnostics',
   history: '/app/history',
   'fee-lab': '/app/fee-lab',
+  nodes: '/app/nodes',
 };
 
 export function sectionFromPath(pathname: string): string {

@@ -7,6 +7,7 @@ describe('sectionFromPath', () => {
     expect(sectionFromPath('/app/diagnostics')).toBe('diagnostics');
     expect(sectionFromPath('/app/history')).toBe('history');
     expect(sectionFromPath('/app/fee-lab')).toBe('fee-lab');
+    expect(sectionFromPath('/app/nodes')).toBe('nodes');
   });
 
   it('normalizes trailing slashes, so /app/fee-lab/ opens Fee Lab', () => {

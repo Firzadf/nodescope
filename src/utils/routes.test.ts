@@ -13,6 +13,7 @@ describe('resolveRoute', () => {
     expect(resolveRoute('/docs')).toBe('docs');
     expect(resolveRoute('/judges')).toBe('judges');
     expect(resolveRoute('/fees')).toBe('fees');
+    expect(resolveRoute('/status')).toBe('status');
   });
 
   it('normalizes trailing slashes, including /app/fee-lab/ and /fees/', () => {

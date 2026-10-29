@@ -8,6 +8,7 @@ import type { HealthCheckSnapshot } from '../../types/healthCheck';
 import {
   attachHealthScore,
   attachOperatorSignals,
+  attachScoreHistory,
   attachSessionTrends,
   attachSubstrateWsProbe,
   buildDiagnosticReport,
@@ -46,6 +47,7 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
       const exportRuleConfig = latencyThresholdMs !== undefined ? { latencyThresholdMs } : {};
       const exportFindings: Finding[] = evaluateHistoryFindings(history, exportRuleConfig);
       const report = await stampReportIntegrity(
+        attachScoreHistory(
         attachOperatorSignals(
           attachHealthScore(
             attachSubstrateWsProbe(
@@ -57,6 +59,10 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
             { motion, reliability },
           ),
           { stall, wsProbe: wsProbeResult, reliability, units },
+        ),
+          healthSnapshots,
+          wsProbeResult,
+          motion,
         ),
       );
       const blob = new Blob([JSON.stringify(report, null, 2)], {

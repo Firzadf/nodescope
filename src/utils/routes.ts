@@ -11,6 +11,7 @@ export type RouteId =
   | 'docs'
   | 'judges'
   | 'fees'
+  | 'status'
   | 'not-found';
 
 export function normalizePath(pathname: string): string {
@@ -27,6 +28,7 @@ export function resolveRoute(pathname: string): RouteId {
   if (path === '/docs' || path.startsWith('/docs/')) return 'docs';
   if (path === '/judges' || path.startsWith('/judges/')) return 'judges';
   if (path === '/fees') return 'fees';
+  if (path === '/status' || path.startsWith('/status/')) return 'status';
   return 'not-found';
 }
 
@@ -38,5 +40,6 @@ export const ROUTE_TITLES: Record<RouteId, string> = {
   docs: 'NodeScope Docs — Checks, schema, verification',
   judges: 'NodeScope for Judges — 60-second verification',
   fees: 'Is 800x cheaper real? — NodeScope Fees',
+  status: 'Testnet status — NodeScope',
   'not-found': 'Page not found — NodeScope',
 };

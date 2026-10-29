@@ -4,6 +4,14 @@
 
 ### Added
 
+- `/status` shows the live Portaldot V3 testnet verdict, Health Score v2, heads, finality lag, peers, and latency. One check on open, plus Refresh. The badge embed is on the same page.
+- Score history chart on Overview, from the session's health checks. Stalls and degrade/recover/stall/resume marks are drawn on the line. New exports can include `scoreHistory`. Older reports still verify.
+- Multi-node view at `/app/nodes`: the published EVM RPC and WebSocket plus endpoints you add, sortable, with the lowest head marked behind. Check all, or Watch at the same 30 second floor.
+
+## 2026-10-28
+
+### Added
+
 - Health Score `nodescope.health-score.v2`. Weights: RPC availability 20, chain identity 10, head progression 15, finality lag 15, latency 10, WSS transport 10, peers and sync 10, RPC reliability 10. New reports, the diagnostic UI, Watch, the CLI, and the status badge use v2.
 - `nodescope.health-score.v1` is unchanged (30 / 15 / 20 / 20 / 15). `computeHealthScore` still reproduces it, so older reports verify and recompute.
 - STALLED verdict: the RPC answered and the best head and/or the finalized head has not advanced (best-block timestamp ≥ 90s, finalized timestamp ≥ 180s, or two samples ≥ 30s apart at the same height). DOWN stays "nothing answered". Watch and the CLI send stall and resume webhooks.

@@ -84,9 +84,12 @@ export async function liveBadgeStatus(evm, wss, deps = {}) {
   let block = null;
   let head = null;
   let answered = false;
+  let latencyMs = null;
   try {
     chainId = await rpc(evm, 'eth_chainId', [], fetchImpl);
+    const started = Date.now();
     head = await rpc(evm, 'eth_blockNumber', [], fetchImpl);
+    latencyMs = Date.now() - started;
     block = await rpc(evm, 'eth_getBlockByNumber', ['latest', false], fetchImpl);
     answered = true;
   } catch {
@@ -145,7 +148,25 @@ export async function liveBadgeStatus(evm, wss, deps = {}) {
   else if (answered || wsProbe?.status === 'ok') verdict = score.band === 'critical' || score.band === 'degraded' || !wsProbe ? 'degraded' : 'healthy';
   else verdict = 'down';
   const detail = `${FORMULA_V2}. ${stall.explanation}`;
-  return { verdict, score: score.score, detail, stall: stall.state, coverage: score.coverage };
+  const peers = typeof health?.peers === 'number' ? health.peers : null;
+  return {
+    verdict,
+    score: score.score,
+    band: score.band,
+    detail,
+    stall: stall.state,
+    coverage: score.coverage,
+    formula: FORMULA_V2,
+    checkedAt: new Date(nowMs).toISOString(),
+    bestHeight: bestDec ?? headerDec,
+    finalizedHeight: finDec,
+    finalityLag: stall.finalityLagBlocks,
+    peers,
+    isSyncing: typeof health?.isSyncing === 'boolean' ? health.isSyncing : null,
+    latencyMs,
+    chain: typeof ws?.[1] === 'string' ? ws[1] : null,
+    explanation: stall.explanation,
+  };
 }
 
 export async function badgeResponse(searchParams, deps = {}) {

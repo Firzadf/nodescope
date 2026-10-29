@@ -9,6 +9,7 @@ const PAPER_NAV = [
   { href: '/app', label: 'Launch App' },
   { href: '/judges', label: 'Judges' },
   { href: '/verify', label: 'Verify' },
+  { href: '/status', label: 'Status' },
   { href: '/docs', label: 'Docs' },
   { href: '/mainnet', label: 'Mainnet' },
 ];

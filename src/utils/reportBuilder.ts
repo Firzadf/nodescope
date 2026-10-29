@@ -15,6 +15,7 @@ import type { ChainMotion, StallAssessment } from './stall';
 import type { ReliabilityReport } from '../services/reliabilityProbe';
 import type { UnitsSanity } from './unitsSanity';
 import { operatorFindings } from './operatorFindings';
+import { buildScoreHistory, type ScoreHistoryPoint } from './scoreHistory';
 
 export const REPORT_SCHEMA_VERSION = 'nodescope.diagnostic-report.v1';
 
@@ -89,6 +90,12 @@ export interface DiagnosticReportExport {
    * probe, reliability, units). Additive. Omitted when none were run.
    */
   operatorSignals?: OperatorSignalsExport;
+  /**
+   * Optional session score chart. Omitted when fewer than two checks
+   * exist. Older reports, including the anchored evidence files, do not
+   * have this field and still verify.
+   */
+  scoreHistory?: { schema: 'nodescope.score-history.v1'; points: ScoreHistoryPoint[] };
   integrity?: ReportIntegrity;
 }
 
@@ -296,4 +303,16 @@ export function attachOperatorSignals(
       findings,
     },
   };
+}
+
+/** Attach the session chart when at least two checks exist. Additive. */
+export function attachScoreHistory(
+  report: DiagnosticReportExport,
+  snapshots: HealthCheckSnapshot[],
+  wsProbe: SubstrateWsProbeResult | null,
+  motion: ChainMotion | null = null,
+): DiagnosticReportExport {
+  const points = buildScoreHistory(snapshots, wsProbe, motion);
+  if (points.length < 2) return report;
+  return { ...report, scoreHistory: { schema: 'nodescope.score-history.v1', points } };
 }

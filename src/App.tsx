@@ -45,6 +45,7 @@ import type { UnitsSanity } from './utils/unitsSanity';
 import { ReliabilityPanel } from './components/dashboard/ReliabilityPanel';
 import { UnitsAddressPanel } from './components/dashboard/UnitsAddressPanel';
 import { StatusBadgePanel } from './components/dashboard/StatusBadgePanel';
+import { FleetPanel } from './components/dashboard/FleetPanel';
 // Fee Lab is lazy: its panel code stays out of the first load (the
 // @polkadot/api chunk was already lazy via dynamic import).
 const FeeLabPanel = lazy(() => import('./components/feeLab/FeeLabPanel').then((m) => ({ default: m.FeeLabPanel })));
@@ -348,6 +349,7 @@ function App() {
     { id: 'nav-diagnostics', label: 'Go to RPC Diagnostics', group: 'Navigate', hint: '02', keywords: 'console rpc run method', run: () => handleSectionChange('diagnostics') },
     { id: 'nav-history', label: 'Go to History', group: 'Navigate', hint: '03', keywords: 'report export ledger records', run: () => handleSectionChange('history') },
     { id: 'nav-fee-lab', label: 'Go to Fee Lab', group: 'Navigate', hint: '04', keywords: 'fee lab evm native revive estimate cost gas storage deposit', run: () => handleSectionChange('fee-lab') },
+    { id: 'nav-nodes', label: 'Go to Nodes', group: 'Navigate', hint: '05', keywords: 'multi node fleet endpoints watch', run: () => handleSectionChange('nodes') },
     {
       id: 'nav-combined',
       label: 'Go to Combined Verdict',
@@ -568,6 +570,11 @@ function App() {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+            {activeSection === 'nodes' && (
+              <div className="space-y-6 stagger">
+                <FleetPanel />
               </div>
             )}
             {activeSection === 'fee-lab' && (
