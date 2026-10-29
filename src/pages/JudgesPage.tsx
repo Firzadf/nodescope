@@ -41,6 +41,7 @@ const NAV = [
   { href: '/app', label: 'Launch App' },
   { href: '/judges', label: 'Judges' },
   { href: '/verify', label: 'Verify' },
+  { href: '/status', label: 'Status' },
   { href: '/docs', label: 'Docs' },
 ];
 
@@ -192,7 +193,7 @@ export function JudgesPage() {
             </h2>
           </div>
           <ol className="mt-2 divide-y divide-line text-[15px] leading-relaxed text-slate-400">
-            <li className="flex gap-5 py-4"><span className="font-data text-slate-500">01</span><span>Open <a href="/app" className={linkCls}>/app</a>. The testnet endpoint is already filled in.</span></li>
+            <li className="flex gap-5 py-4"><span className="font-data text-slate-500">01</span><span>Open <a href="/status" className={linkCls}>/status</a> for the live testnet verdict, or <a href="/app" className={linkCls}>/app</a> where the testnet endpoint is already filled in.</span></li>
             <li className="flex gap-5 py-4"><span className="font-data text-slate-500">02</span><span>Press <strong className="font-semibold text-white">Run full diagnostic</strong> in Overview. It runs connect, health check, capability discovery, the Substrate WSS probe, a snapshot, and the combined verdict, in that order.</span></li>
             <li className="flex gap-5 py-4"><span className="font-data text-slate-500">03</span><span>Read the sticky verdict bar and the Health Score above it. New checks use {HEALTH_SCORE_FORMULA_V2} (finality lag, peers and sync, reliability). {HEALTH_SCORE_FORMULA} still reproduces older reports. The formula is on <a href="/docs#health-score" className={linkCls}>/docs</a>. A paused chain with a live RPC reads STALLED, not HEALTHY (<a href="/docs#stalled" className={linkCls}>rule</a>).</span></li>
             <li className="flex gap-5 py-4"><span className="font-data text-slate-500">04</span><span>Try the degraded endpoint preset, run a health check on it, and compare the two snapshots in panel 04.</span></li>

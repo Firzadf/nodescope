@@ -8,6 +8,7 @@ import { SubstrateWsProbePanel } from './SubstrateWsProbePanel';
 import { CombinedVerdictPanel } from './CombinedVerdictPanel';
 import { VerdictBar } from './VerdictBar';
 import { HealthScoreHero } from './HealthScoreHero';
+import { ScoreHistoryChart } from './ScoreHistoryChart';
 import { useMemo, type ReactNode } from 'react';
 import { computeHealthScoreV2 } from '../../utils/healthScore';
 import { stallFromSession, type ChainMotion, type StallAssessment } from '../../utils/stall';
@@ -147,6 +148,7 @@ export function Overview({
         stall={stall.state}
         stallExplanation={stall.state === 'stalled' ? stall.explanation : null}
       />
+      <ScoreHistoryChart snapshots={healthSnapshots} wsProbe={wsProbeResult ?? null} motion={motion} />
       <HealthScoreHero
         snapshots={healthSnapshots}
         wsProbe={wsProbeResult ?? null}

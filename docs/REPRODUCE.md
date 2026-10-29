@@ -79,8 +79,8 @@ npm run lint
 npm run build
 ```
 
-At the last full verification, 28 Oct 2026, the suite passed 545 tests across
-80 files, lint reported 0 errors (one pre-existing React warning in the
+At the last full verification, 29 Oct 2026, the suite passed 552 tests across
+84 files, lint reported 0 errors (one pre-existing React warning in the
 verdict bar's clock), and the production build succeeded. If a
 future change breaks that, the suite, not this document, is the authority.
 

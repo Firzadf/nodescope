@@ -25,3 +25,6 @@ export const FeesPage = lazy(() => import('./pages/FeesPage.tsx').then((m) => ({
 export const NotFoundPage = lazy(() =>
   import('./pages/NotFoundPage.tsx').then((m) => ({ default: m.NotFoundPage })),
 );
+export const StatusPage = lazy(() =>
+  import('./pages/StatusPage.tsx').then((m) => ({ default: m.StatusPage })),
+);

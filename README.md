@@ -25,7 +25,7 @@ instead of the headline multiple.
 - Fees finding, measured 27 Oct 2026: a contract deploy costs 124.098 tPOT
   on EVM vs 122.191 tPOT native all-in — 1.016x all-in, not the 804x
   fee-only headline. Most of the gap is a refundable storage deposit.
-- 545 passing tests across 80 test files. CI green on Ubuntu and Windows
+- 552 passing tests across 84 test files. CI green on Ubuntu and Windows
   (Foundry on Ubuntu), plus a `verify:evidence` job that rechecks every
   anchor on chain.
 
@@ -179,6 +179,9 @@ npm run preview
 - **Reliability and exposed methods** — a user-triggered probe repeats `eth_blockNumber`, checks one old block for historical state, and lists unsafe operator methods from `rpc_methods` on the EVM endpoint and on the Substrate WebSocket. Those methods are never called. On the published Portaldot testnet hosts the names are withheld pending disclosure to the Portaldot team. Any other endpoint shows the full list.
 - **Units and addresses** — `system_properties` decimals versus the EVM default of 18 (the 10,000× trap when native decimals are 14), and an H160 ↔ AccountId32 helper using pallet-revive's AccountId32Mapper (H160 followed by twelve `0xEE` bytes; otherwise `keccak256` of the account). A `ReviveApi` state_call confirms it, read-only.
 - **Status badge** — `/api/badge?target=portaldot-v3-testnet` returns an SVG of the live verdict and score. Cached, no secrets, published testnet hosts only.
+- **Public status page** — `/status` runs that same check when the page opens, and again when you press Refresh. It shows the verdict, score, best and finalized heads, finality lag, peers, and latency, and the badge markdown.
+- **Score history** — Overview plots Health Score, finality lag, and best head from the health checks in the session. Stalls and degrade/recover marks sit on the line. A new export can include `scoreHistory`. Reports without that field still verify.
+- **Multi-node** — `/app/nodes` checks the published EVM RPC, the WebSocket, and endpoints you add. The table sorts, and the lowest head is marked behind. Check all, or Watch at the same 30 second floor.
 - **Watch & Alerts** — user-started interval checks (30s, 1m, 5m). Each cycle logs verdict, block, score, and a stall explanation. Watch keeps running while you move between app sections.
 - **Discord / Slack webhooks** — messages go out on degrade/recover and on stall/resume, and on "Send test". The URL stays in this browser.
 - **Last-checked timestamp** — relative time in the verdict bar (`just now`, `12 min ago`), absolute time on hover, and an amber "stale" marker after one hour.
@@ -424,7 +427,7 @@ src/
 
 **Test Framework:** Vitest 5 with @testing-library/react  
 **Coverage Target:** 80%+  
-**Current Status:** 545 passing tests across 80 test files, verified 28 Oct 2026
+**Current Status:** 552 passing tests across 84 test files, verified 29 Oct 2026
 
 ### Test Files
 
@@ -453,7 +456,7 @@ src/
 | `artifactInput.test.ts` | Custom artifact parsing, coded failures |
 | `feeLabShare.test.ts` | Fee Lab share-link round-trip and forgiving parse |
 | 53 files not listed above | Component and utility tests added in later phases, including Landing and Command Palette |
-| **Total** | **545 passing tests, 80 test files** (suite verified 28 Oct 2026; the landing page, /judges, and this README are checked against one constants file by `src/utils/siteConsistency.test.tsx` and `npm run check:consistency`) |
+| **Total** | **552 passing tests, 84 test files** (suite verified 29 Oct 2026; the landing page, /judges, and this README are checked against one constants file by `src/utils/siteConsistency.test.tsx` and `npm run check:consistency`) |
 
 ### Running Tests
 
@@ -567,7 +570,7 @@ MIT (as per Portaldot Hacker House requirements).
 
 **Project Status:** Check-in submitted Oct 22, 2026. Repository public with 42 commits as of 25 Oct 2026, development records retained. Final sprint to the 6 Nov 2026 code freeze is in progress.
 
-- ✅ Phase 1 & Phase 2 complete, plus Trends & Verdict, Multi-Endpoint Comparison, V3 era marker, Substrate WebSocket probe, Health Score v2 (v1 still reproduces), STALLED, finality and peer health, RPC reliability, units and address mapping, Prometheus export, status badge, Watch & Alerts, 545 tests across 80 files
+- ✅ Phase 1 & Phase 2 complete, plus Trends & Verdict, Multi-Endpoint Comparison, V3 era marker, Substrate WebSocket probe, Health Score v2 (v1 still reproduces), STALLED, finality and peer health, RPC reliability, units and address mapping, Prometheus export, status badge, Watch & Alerts, 552 tests across 84 files
 - ✅ **FASE 2 — Ecosystem & Business (roadmap juara):** CLI (`check` + `fees`), GitHub Action pre-deploy gate, Fee Lab custom artifacts + share link, findings doc for Portaldot, business model, adoption outreach
 - ✅ Portaldot V3.0 EVM integration verified, chain ID 420420777 validated, methods documented
 - ✅ Demo video, live deployment, and screenshots published

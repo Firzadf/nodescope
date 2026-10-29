@@ -291,6 +291,7 @@ const en: LandingCopy = {
     { href: '#roadmap', label: 'Roadmap' },
     { href: '/mainnet', label: 'Mainnet' },
     { href: '/verify', label: 'Verify' },
+    { href: '/status', label: 'Status' },
   ],
   heroPill: 'HUD · Portaldot V3 EVM · Read-only by default',
   heroLine1: 'Consoles interact.',
@@ -730,6 +731,7 @@ const en: LandingCopy = {
         { label: 'Fees', href: '/fees' },
         { label: 'Docs', href: '/docs' },
         { label: 'For Judges', href: '/judges' },
+        { label: 'Status', href: '/status' },
       ],
     },
     {
@@ -788,6 +790,7 @@ const id: LandingCopy = {
     { href: '#roadmap', label: 'Roadmap' },
     { href: '/mainnet', label: 'Mainnet' },
     { href: '/verify', label: 'Verifikasi' },
+    { href: '/status', label: 'Status' },
   ],
   heroPill: 'HUD · Portaldot V3 EVM · Read-only secara bawaan',
   heroLine1: 'Konsol berinteraksi.',
@@ -1226,6 +1229,7 @@ const id: LandingCopy = {
         { label: 'Fees', href: '/fees' },
         { label: 'Docs', href: '/docs' },
         { label: 'Untuk Juri', href: '/judges' },
+        { label: 'Status', href: '/status' },
       ],
     },
     {

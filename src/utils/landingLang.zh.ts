@@ -17,6 +17,7 @@ export const zh: LandingCopy = {
     { href: '#roadmap', label: '路线图' },
     { href: '/mainnet', label: '主网' },
     { href: '/verify', label: '验证' },
+    { href: '/status', label: '状态' },
   ],
   heroPill: 'HUD · Portaldot V3 EVM · 默认只读',
   heroLine1: '控制台负责交互。',
@@ -456,6 +457,7 @@ export const zh: LandingCopy = {
         { label: '费用', href: '/fees' },
         { label: '文档', href: '/docs' },
         { label: '评委专区', href: '/judges' },
+        { label: '状态', href: '/status' },
       ],
     },
     {

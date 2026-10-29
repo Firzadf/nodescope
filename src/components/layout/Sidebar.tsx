@@ -1,4 +1,4 @@
-import { Activity, Terminal, Clock, Scale, Search, ShieldCheck, Globe, Home, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Activity, Terminal, Clock, Scale, Search, ShieldCheck, Globe, Home, Network, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 type NavItem = {
   id: string;
@@ -18,6 +18,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
       { id: 'overview', label: 'Overview', icon: Activity, num: '01' },
       { id: 'diagnostics', label: 'RPC Diagnostics', icon: Terminal, num: '02' },
       { id: 'history', label: 'History', icon: Clock, num: '03' },
+      { id: 'nodes', label: 'Nodes', icon: Network, num: '05' },
     ],
   },
   {

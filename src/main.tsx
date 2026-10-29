@@ -2,7 +2,7 @@ import { StrictMode, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import { resolveRoute, ROUTE_TITLES, type RouteId } from './utils/routes.ts'
-import { App, DocsPage, FeesPage, JudgesPage, Landing, MainnetProfile, NotFoundPage, VerifyPage } from './lazyRoutes.ts'
+import { App, DocsPage, FeesPage, JudgesPage, Landing, MainnetProfile, NotFoundPage, StatusPage, VerifyPage } from './lazyRoutes.ts'
 
 // Route split: the marketing landing lives at /, the toolkit itself at /app,
 // public report verification at /verify, the honest mainnet info page
@@ -28,6 +28,7 @@ const page =
   : route === 'docs' ? <DocsPage />
   : route === 'judges' ? <JudgesPage />
   : route === 'fees' ? <FeesPage />
+  : route === 'status' ? <StatusPage />
   : route === 'landing' ? <Landing />
   : <NotFoundPage />
 

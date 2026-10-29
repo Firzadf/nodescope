@@ -42,6 +42,7 @@ const PAPER_NAV = [
   { href: '/app', label: 'Launch App' },
   { href: '/judges', label: 'Judges' },
   { href: '/verify', label: 'Verify' },
+  { href: '/status', label: 'Status' },
   { href: '/docs', label: 'Docs' },
   { href: '/mainnet', label: 'Mainnet' },
 ];
@@ -169,6 +170,15 @@ export function DocsPage() {
             With <code className="font-data text-slate-300">--watch 60 --metrics-file ./nodescope.prom</code> the file is replaced each cycle.
             Point the node_exporter textfile collector, or Grafana Alloy, at that file. Gauges: <code className="font-data text-slate-300">nodescope_up</code>, <code className="font-data text-slate-300">nodescope_health_score</code>, <code className="font-data text-slate-300">nodescope_verdict</code>, <code className="font-data text-slate-300">nodescope_stalled</code>, <code className="font-data text-slate-300">nodescope_best_block</code>, <code className="font-data text-slate-300">nodescope_finalized_block</code>, <code className="font-data text-slate-300">nodescope_finality_lag_blocks</code>, <code className="font-data text-slate-300">nodescope_peers</code>, <code className="font-data text-slate-300">nodescope_syncing</code>, <code className="font-data text-slate-300">nodescope_best_head_age_seconds</code>, and, with <code className="font-data text-slate-300">--reliability</code>, the RPC error ratio and latency quantiles. Missing signals are omitted, not reported as zero.
           </p>
+        </section>
+
+        <section id="status" className="mt-10 scroll-mt-20">
+          <h2 className="border-b border-white pb-2 font-display text-[32px] leading-tight text-white">Status, history, and several nodes</h2>
+          <ul className="mt-3 space-y-1.5 text-sm leading-relaxed text-slate-400">
+            <li><a href="/status" className="text-signal-ink underline decoration-signal/40 underline-offset-4 hover:text-white">/status</a> checks the published testnet once when the page opens, and again only when you press Refresh. It shows the verdict, Health Score v2, best and finalized heads, finality lag, peers, and latency, plus the embeddable badge. It does not accept an arbitrary RPC.</li>
+            <li>Score history, on Overview, plots the Health Score, finality lag, and best head from the health checks in this session. An orange dot is a stalled head. A ring is a degrade, recover, stall, or resume. Two checks are required. New exports include a <code className="font-data text-slate-300">scoreHistory</code> block when those checks exist. Reports that do not have the block, including the anchored evidence, still verify.</li>
+            <li>Nodes, at <a href="/app/nodes" className="text-signal-ink underline decoration-signal/40 underline-offset-4 hover:text-white">/app/nodes</a>, checks the published EVM RPC, the WebSocket, and any endpoint you add, side by side. The lowest head is marked behind. Check all is manual. Watch uses the same 30 second floor as the single-node watch.</li>
+          </ul>
         </section>
 
         <section id="badge" className="mt-10 scroll-mt-20">
