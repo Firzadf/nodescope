@@ -30,7 +30,12 @@ function Series({
 }) {
   const series = points.map((p) => ({ at: p.at, value: read(p), point: p })).filter((p) => p.value !== null) as Array<{ at: number; value: number; point: ScoreHistoryPoint }>;
   if (series.length < 2) {
-    return <p className="text-xs text-slate-500">{title}: needs two checks in this session.</p>;
+    const only = series[0];
+    return (
+      <p className="text-xs text-slate-500">
+        {title}: {only ? `latest ${format(only.value)}. One more check draws the line.` : 'needs two checks in this session.'}
+      </p>
+    );
   }
   const width = 640;
   const height = 160;
