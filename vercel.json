@@ -1,1 +1,19 @@
-{"rewrites":[{"destination":"/index.html","source":"/(.*)"}]}
+{
+  "rewrites": [
+    { "source": "/badge.svg", "destination": "/api/badge" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=15, s-maxage=30, stale-while-revalidate=60" }]
+    },
+    {
+      "source": "/badge.svg",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=15, s-maxage=30, stale-while-revalidate=60" }]
+    }
+  ],
+  "functions": {
+    "api/badge.js": { "maxDuration": 15 }
+  }
+}

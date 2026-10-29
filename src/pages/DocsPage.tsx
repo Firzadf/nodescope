@@ -6,14 +6,18 @@
  */
 import { PaperHeader } from '../components/layout/PaperHeader';
 import {
+  BEST_STALL_AGE_SECONDS,
+  FINALITY_FULL_LAG_BLOCKS,
+  FINALITY_ZERO_LAG_BLOCKS,
+  FINALIZED_STALL_AGE_SECONDS,
   HEALTH_SCORE_FORMULA,
-  HEALTH_SCORE_LABELS,
-  HEALTH_SCORE_WEIGHTS,
-  HEAD_STALL_MIN_GAP_SECONDS,
+  HEALTH_SCORE_FORMULA_V2,
+  HEALTH_SCORE_V2_LABELS,
+  HEALTH_SCORE_V2_WEIGHTS,
+  HEAD_SAMPLE_STALL_SECONDS,
   LATENCY_FULL_MARKS_MS,
   LATENCY_ZERO_MS,
   MIN_COVERAGE_TO_SCORE,
-  type HealthScoreComponentId,
 } from '../utils/healthScore';
 import {
   ANCHOR_BLOCK,
@@ -22,12 +26,15 @@ import {
   REGISTRY_CONTRACT,
 } from '../utils/siteConstants';
 
-const SCORE_RULES: Record<HealthScoreComponentId, string> = {
-  availability: `${HEALTH_SCORE_WEIGHTS.availability} × checks answered ÷ checks eligible, from the latest health snapshot. An answer of -32601 (method not found) is not a failure and is left out of "eligible".`,
-  chain_identity: `${HEALTH_SCORE_WEIGHTS.chain_identity} when eth_chainId in the latest snapshot equals 420420777, otherwise 0 (a failed eth_chainId also scores 0).`,
-  head_progression: `Two newest snapshots of the same endpoint and profile that carry a block height: advanced → ${HEALTH_SCORE_WEIGHTS.head_progression}; same height less than ${HEAD_STALL_MIN_GAP_SECONDS} s apart → ${HEALTH_SCORE_WEIGHTS.head_progression / 2} (inconclusive); same height ${HEAD_STALL_MIN_GAP_SECONDS} s or more apart, or a lower height → 0.`,
-  latency: `Median latency of the successful checks in the latest snapshot: ${HEALTH_SCORE_WEIGHTS.latency} at ≤ ${LATENCY_FULL_MARKS_MS} ms, 0 at ≥ ${LATENCY_ZERO_MS} ms, linear in between (rounded to 0.1).`,
-  transport_parity: `Latest Substrate WSS probe: answered → 10, plus 5 when the node is not syncing and has peers > 0 (or expects none). A failed probe scores 0.`,
+const V2_RULES: Record<keyof typeof HEALTH_SCORE_V2_WEIGHTS, string> = {
+  availability: `${HEALTH_SCORE_V2_WEIGHTS.availability} × checks answered ÷ checks eligible, from the latest health snapshot. An answer of -32601 (method not found) is not a failure and is left out of "eligible".`,
+  chain_identity: `${HEALTH_SCORE_V2_WEIGHTS.chain_identity} when eth_chainId equals 420420777, otherwise 0.`,
+  head_progression: `A best-block timestamp ${BEST_STALL_AGE_SECONDS}s or older scores 0 (chain paused). Otherwise two snapshots: advanced → ${HEALTH_SCORE_V2_WEIGHTS.head_progression}; same height under ${HEAD_SAMPLE_STALL_SECONDS}s → half; stalled ≥ ${HEAD_SAMPLE_STALL_SECONDS}s or regressed → 0. One fresh timestamp, under ${BEST_STALL_AGE_SECONDS}s, scores full marks.`,
+  finality: `Best head minus finalized head on the Substrate WebSocket. Full marks at lag ≤ ${FINALITY_FULL_LAG_BLOCKS} blocks, zero at lag ≥ ${FINALITY_ZERO_LAG_BLOCKS}, linear between. Unmeasured when the finalized head was not read. A failed WSS probe does not zero this component.`,
+  latency: `Median latency of successful checks: ${HEALTH_SCORE_V2_WEIGHTS.latency} at ≤ ${LATENCY_FULL_MARKS_MS} ms, 0 at ≥ ${LATENCY_ZERO_MS} ms, linear in between.`,
+  transport_parity: `Latest Substrate WSS probe answered → ${HEALTH_SCORE_V2_WEIGHTS.transport_parity}, failed → 0. Peer and sync credit moved to Peers & sync.`,
+  peer_sync: `When the probe answered: 4 if peers > 0 (or the node expects none), 3 if not syncing, 3 if the sync gap is unknown or ≤ 8 blocks. 0 peers with shouldHavePeers scores 0 of the 4.`,
+  rpc_reliability: `${HEALTH_SCORE_V2_WEIGHTS.rpc_reliability} × (1 − error ratio) × a p95 factor (full ≤ ${LATENCY_FULL_MARKS_MS} ms, zero ≥ ${LATENCY_ZERO_MS} ms). Unmeasured until the reliability probe runs. HTTP 5xx counts as an error.`,
 };
 
 const PAPER_NAV = [
@@ -94,17 +101,18 @@ export function DocsPage() {
             transport. It is expected when a Substrate method is asked of the EVM endpoint (or the
             reverse) — it proves the transport answered, it does not prove the node is broken. The
             RPC console ships presets that demonstrate this on purpose.
+            The reliability probe and the Substrate probe also read <code className="font-data text-slate-300">rpc_methods</code> and can list unsafe operator methods. Those methods are never called. On the published Portaldot testnet hosts the names are withheld pending disclosure to the Portaldot team. Any other endpoint shows the full list.
           </p>
         </section>
 
 
         <section id="health-score" className="mt-10 scroll-mt-20">
-          <h2 className="border-b border-white pb-2 font-display text-[32px] leading-tight text-white">Health Score methodology ({HEALTH_SCORE_FORMULA})</h2>
+          <h2 className="border-b border-white pb-2 font-display text-[32px] leading-tight text-white">Health Score methodology ({HEALTH_SCORE_FORMULA_V2})</h2>
           <p className="mt-3 text-sm leading-relaxed text-slate-400">
-            The Health Score is one number from 0 to 100 that summarizes the measurements NodeScope
-            already makes. It adds no probe and no polling. It sits next to the deterministic,
-            rule-based verdict (Trends &amp; Verdict), never in place of it: the verdict explains, the
-            score summarizes. Every component prints its points and the input it came from in the app.
+            The Health Score is one number from 0 to 100. New exports, the diagnostic UI, Watch, the CLI,
+            and the status badge use <code className="font-data text-slate-300">{HEALTH_SCORE_FORMULA_V2}</code>.
+            It sits next to the verdict, never in place of it: the verdict explains, the score summarizes.
+            Every component prints its points and the input it came from.
           </p>
           <div className="mt-4 overflow-x-auto border-t border-line">
             <table className="w-full min-w-[560px] text-left text-sm">
@@ -116,11 +124,11 @@ export function DocsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-line text-slate-300">
-                {(Object.keys(HEALTH_SCORE_WEIGHTS) as HealthScoreComponentId[]).map((id) => (
+                {(Object.keys(HEALTH_SCORE_V2_WEIGHTS) as Array<keyof typeof HEALTH_SCORE_V2_WEIGHTS>).map((id) => (
                   <tr key={id} className="align-top">
-                    <td className="py-3 pr-4 text-white">{HEALTH_SCORE_LABELS[id]}</td>
-                    <td className="py-3 pr-4 text-right font-data text-white">{HEALTH_SCORE_WEIGHTS[id]}</td>
-                    <td className="py-3 leading-relaxed text-slate-400">{SCORE_RULES[id]}</td>
+                    <td className="py-3 pr-4 text-white">{HEALTH_SCORE_V2_LABELS[id]}</td>
+                    <td className="py-3 pr-4 text-right font-data text-white">{HEALTH_SCORE_V2_WEIGHTS[id]}</td>
+                    <td className="py-3 leading-relaxed text-slate-400">{V2_RULES[id]}</td>
                   </tr>
                 ))}
               </tbody>
@@ -133,9 +141,42 @@ export function DocsPage() {
             <li>Missing data is never scored: a component with no input is “not measured” and drops out of both the numerator and the denominator. Coverage is always printed next to the score.</li>
             <li>Below {MIN_COVERAGE_TO_SCORE}% coverage there is no number at all (“not scored”), because a score built from less than half the formula would overstate what was measured.</li>
             <li>Bands: 90–100 healthy · 70–89 degraded · 0–69 critical.</li>
-            <li>The computation is pure and deterministic: the same snapshots and probe give the same score, in any order (<code className="font-data text-slate-300">src/utils/healthScore.ts</code>, covered by <code className="font-data text-slate-300">healthScore.test.ts</code>).</li>
-            <li>New exports carry a <code className="font-data text-slate-300">healthScore</code> block (score, band, coverage, every component) inside the SHA-256 stamp. Reports exported before the score existed — including the three anchored evidence files — are unchanged and still verify.</li>
+            <li>The computation is pure and deterministic: the same inputs give the same score, in any order (<code className="font-data text-slate-300">shared/liveStatus.mjs</code>, covered by <code className="font-data text-slate-300">healthScore.v2.test.ts</code>).</li>
+            <li>New exports carry a <code className="font-data text-slate-300">healthScore</code> block with formula <code className="font-data text-slate-300">{HEALTH_SCORE_FORMULA_V2}</code> inside the SHA-256 stamp.</li>
+            <li><code className="font-data text-slate-300">{HEALTH_SCORE_FORMULA}</code> is frozen: availability 30, chain identity 15, head progression 20, latency 20, transport parity 15 (10 for an answer, +5 when not syncing and peers &gt; 0). <code className="font-data text-slate-300">computeHealthScore</code> still reproduces it, so an old report&apos;s inputs recompute to the same number. Reports exported before v2, including the three anchored evidence files, are byte-for-byte verifiable and are not rewritten.</li>
           </ul>
+        </section>
+
+        <section id="stalled" className="mt-10 scroll-mt-20">
+          <h2 className="border-b border-white pb-2 font-display text-[32px] leading-tight text-white">STALLED: chain paused but RPC answers</h2>
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
+            STALLED is a verdict, not a score band. It fires when a transport answered and either the best head or the finalized head has not advanced past a threshold. DOWN stays reserved for “nothing answered”.
+          </p>
+          <ul className="mt-3 space-y-1.5 text-sm leading-relaxed text-slate-400">
+            <li>Best head: block timestamp {BEST_STALL_AGE_SECONDS}s or older, or two samples {HEAD_SAMPLE_STALL_SECONDS}s apart at the same height.</li>
+            <li>Finalized head: timestamp {FINALIZED_STALL_AGE_SECONDS}s or older, or the same two-sample rule, or a lag of {FINALITY_ZERO_LAG_BLOCKS} blocks that is itself not moving.</li>
+            <li>Verdict order: not checked, then DOWN, then STALLED, then HEALTHY, then DEGRADED. A low score can pull HEALTHY to DEGRADED. It cannot pull a stall back to HEALTHY, and it cannot invent DOWN.</li>
+            <li>Watch and the CLI send <strong className="text-white">stall</strong> and <strong className="text-white">resume</strong> webhooks for that transition. They replace degrade/recover for the same cycle. stalled → down is a degrade, not a resume, because the RPC stopped answering.</li>
+            <li>The first observation is the baseline. A chain that is already paused when you press Start does not alert until it changes.</li>
+            <li>Observed on the V3 testnet on 28 Oct 2026: best head stayed at block 232115 while <code className="font-data text-slate-300">eth_blockNumber</code> kept answering. That is the condition this rule is for.</li>
+          </ul>
+        </section>
+
+        <section id="metrics" className="mt-10 scroll-mt-20">
+          <h2 className="border-b border-white pb-2 font-display text-[32px] leading-tight text-white">Prometheus and Grafana</h2>
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
+            <code className="font-data text-slate-300">nodescope check &lt;rpc&gt; --format prometheus</code> prints the text exposition.
+            With <code className="font-data text-slate-300">--watch 60 --metrics-file ./nodescope.prom</code> the file is replaced each cycle.
+            Point the node_exporter textfile collector, or Grafana Alloy, at that file. Gauges: <code className="font-data text-slate-300">nodescope_up</code>, <code className="font-data text-slate-300">nodescope_health_score</code>, <code className="font-data text-slate-300">nodescope_verdict</code>, <code className="font-data text-slate-300">nodescope_stalled</code>, <code className="font-data text-slate-300">nodescope_best_block</code>, <code className="font-data text-slate-300">nodescope_finalized_block</code>, <code className="font-data text-slate-300">nodescope_finality_lag_blocks</code>, <code className="font-data text-slate-300">nodescope_peers</code>, <code className="font-data text-slate-300">nodescope_syncing</code>, <code className="font-data text-slate-300">nodescope_best_head_age_seconds</code>, and, with <code className="font-data text-slate-300">--reliability</code>, the RPC error ratio and latency quantiles. Missing signals are omitted, not reported as zero.
+          </p>
+        </section>
+
+        <section id="badge" className="mt-10 scroll-mt-20">
+          <h2 className="border-b border-white pb-2 font-display text-[32px] leading-tight text-white">Status badge</h2>
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
+            <code className="font-data text-slate-300">/api/badge?target=portaldot-v3-testnet</code> (also <code className="font-data text-slate-300">/badge.svg</code>) computes the v2 score and the verdict on request, read-only, with no secrets. The host allowlist is the published testnet EVM RPC and WSS only, so the URL is not an open proxy. Responses send <code className="font-data text-slate-300">Cache-Control: public, max-age=15, s-maxage=30</code>.
+          </p>
+          <pre className="mt-3 overflow-x-auto border border-line bg-panel p-4 font-data text-[12px] leading-relaxed text-slate-200">{`[![NodeScope](https://nodescope.vercel.app/api/badge?target=portaldot-v3-testnet)](https://nodescope.vercel.app)`}</pre>
         </section>
 
         <section id="alerts" className="mt-10 scroll-mt-20">
@@ -143,9 +184,9 @@ export function DocsPage() {
           <ul className="mt-3 space-y-1.5 text-sm leading-relaxed text-slate-400">
             <li>Opt-in and tab-scoped. In Overview, press <strong className="text-white">Start watch</strong>: each cycle runs the EVM health check and the Substrate probe once, every 30 s, 1 min, or 5 min (30 s is the floor). Stop, or closing the tab, ends it.</li>
             <li>Paste a Discord (<code className="font-data text-slate-300">discord.com/api/webhooks/…</code>) or Slack (<code className="font-data text-slate-300">hooks.slack.com/…</code>) incoming-webhook URL. It is stored only in this browser&apos;s localStorage and shown masked; it never goes into a report or a link.</li>
-            <li>A message is sent only on a verdict transition — degrade (healthy → degraded/down, degraded → down) or recover — and when you press <strong className="text-white">Send test</strong>. The first cycle is the baseline. Steady state sends nothing.</li>
+            <li>A message is sent only on a verdict transition — degrade or recover — or on stall/resume, and when you press <strong className="text-white">Send test</strong>. The first cycle is the baseline. Steady state sends nothing. See <a href="#stalled" className="text-signal-ink underline decoration-signal/40 underline-offset-4 hover:text-white">STALLED</a>.</li>
             <li>Slack webhooks do not answer browser CORS, so the browser falls back to a form post it cannot read the reply of; the app then says “delivery unconfirmed” instead of claiming success.</li>
-            <li>CLI: <code className="font-data text-slate-300">nodescope check &lt;rpc&gt; --webhook &lt;url&gt; [--watch 60]</code> applies the same transition rule from a terminal or a cron job.</li>
+            <li>CLI: <code className="font-data text-slate-300">nodescope check &lt;rpc&gt; --wss &lt;wss&gt; --webhook &lt;url&gt; [--watch 60] [--format prometheus]</code> applies the same transition rule, including stall and resume.</li>
           </ul>
         </section>
 
@@ -175,7 +216,8 @@ export function DocsPage() {
             <li><code className="font-data text-slate-300">recordCount, records[]</code> — every diagnostic result in the session: request method, timestamp, endpoint origin, outcome, latency, metric status and result, evidence label, data origin (<code className="font-data text-slate-300">real_request</code> for live results), and error.</li>
             <li><code className="font-data text-slate-300">findings[]</code> — rule-based findings from the session.</li>
             <li><code className="font-data text-slate-300">sessionTrends</code> — verdict, pass rate, block progression, and snapshot count, when snapshots exist.</li>
-            <li><code className="font-data text-slate-300">healthScore</code> — new exports only: score, band, coverage, and every component with its points (<a href="#health-score" className="text-signal-ink underline decoration-signal/40 underline-offset-4 hover:text-white">methodology</a>).</li>
+            <li><code className="font-data text-slate-300">healthScore</code> — new exports use <code className="font-data text-slate-300">{HEALTH_SCORE_FORMULA_V2}</code> (<a href="#health-score" className="text-signal-ink underline decoration-signal/40 underline-offset-4 hover:text-white">methodology</a>). Older files may carry <code className="font-data text-slate-300">{HEALTH_SCORE_FORMULA}</code> and still verify.</li>
+            <li><code className="font-data text-slate-300">operatorSignals</code> — stall assessment, reliability probe, and units, when those were run.</li>
             <li><code className="font-data text-slate-300">integrity</code> — <code className="font-data text-slate-300">algorithm: SHA-256</code>, the hash, and its scope.</li>
           </ul>
           <p className="mt-3 text-sm leading-relaxed text-slate-400">

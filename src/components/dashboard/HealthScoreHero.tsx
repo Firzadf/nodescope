@@ -1,12 +1,15 @@
 import { useMemo } from 'react';
-import { computeHealthScore, HEALTH_SCORE_FORMULA, type HealthScoreBand } from '../../utils/healthScore';
+import { computeHealthScoreV2, HEALTH_SCORE_FORMULA_V2, type HealthScoreBand } from '../../utils/healthScore';
 import type { HealthCheckSnapshot } from '../../types/healthCheck';
 import type { SubstrateWsProbeResult } from '../../services/substrateWsProbe';
+import type { ChainMotion } from '../../utils/stall';
 import { parseBlockHeight } from '../../utils/snapshotComparer';
 
 interface HealthScoreHeroProps {
   snapshots: HealthCheckSnapshot[];
   wsProbe: SubstrateWsProbeResult | null;
+  motion?: ChainMotion | null;
+  reliability?: { samples: number; errors: number; http5xx?: number; p50Ms: number | null; p95Ms: number | null } | null;
   onRunHealthCheck?: () => void;
   running?: boolean;
 }
@@ -66,8 +69,11 @@ function Trace({ values, label, unit }: { values: number[]; label: string; unit:
   );
 }
 
-export function HealthScoreHero({ snapshots, wsProbe, onRunHealthCheck, running = false }: HealthScoreHeroProps) {
-  const score = useMemo(() => computeHealthScore({ snapshots, wsProbe }), [snapshots, wsProbe]);
+export function HealthScoreHero({ snapshots, wsProbe, motion = null, reliability = null, onRunHealthCheck, running = false }: HealthScoreHeroProps) {
+  const score = useMemo(
+    () => computeHealthScoreV2({ snapshots, wsProbe, motion, reliability }),
+    [snapshots, wsProbe, motion, reliability],
+  );
 
   const series = useMemo(() => {
     const sorted = [...snapshots].sort((a, b) => a.timestamp - b.timestamp);
@@ -119,7 +125,7 @@ export function HealthScoreHero({ snapshots, wsProbe, onRunHealthCheck, running 
             <span className="text-slate-600"> · </span>
             coverage <span className="text-slate-200">{score.coverage}%</span>
             <span className="text-slate-600"> · </span>
-            <span className="text-slate-500">{HEALTH_SCORE_FORMULA}</span>
+            <span className="text-slate-500">{HEALTH_SCORE_FORMULA_V2}</span>
           </p>
           {score.score === null && (
             <div className="mt-4 border-t border-line pt-4">

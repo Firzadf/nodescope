@@ -26,16 +26,20 @@ import {
   readArtifactFile,
   isH160,
   detectWebhookKind,
-  detectTransition,
+  alertKindForCycle,
   checkAlertText,
   postWebhook,
   benchEndpoints,
+  prometheusReading,
+  writeMetricsFile,
 } from './lib.mjs';
 
 const USAGE = `nodescope — check the node + price the deploy before you deploy.
 
 Usage:
-  nodescope check <rpc-url> [--json] [--timeout-ms N]
+  nodescope check <rpc-url> [--json] [--format text|json|prometheus]
+    [--timeout-ms N] [--wss <wss-url>] [--reliability N]
+    [--metrics-file <path>]
     [--webhook <discord|slack webhook URL>] [--watch SECONDS]
   nodescope fees --artifact <file.json> [--evm-rpc URL] [--wss URL]
     [--from 0x…] [--max-tpot N] [--evm-only] [--json]
@@ -47,15 +51,24 @@ Defaults: --evm-rpc ${DEFAULT_EVM_RPC}, --wss ${DEFAULT_WSS},
 
 Alerts: --webhook posts to Discord/Slack. One-shot: only when the
 verdict is not healthy. With --watch N (N >= 30) the check repeats every
-N seconds until Ctrl-C and posts only on degrade/recover transitions;
-the first check is the baseline. The URL is never printed.
+N seconds until Ctrl-C and posts only on degrade/recover and on
+stall/resume transitions; the first check is the baseline. The URL is
+never printed.
+
+--format prometheus writes the text exposition (also once per --watch
+cycle, and to --metrics-file when that path is set) for Grafana or the
+node_exporter textfile collector. --json is the same as --format json.
+--wss adds finality lag, peers, and sync. --reliability N repeats
+eth_blockNumber N times (1–20) and reports the error ratio. A head whose
+timestamp is 90s or older is STALLED: chain paused but RPC answers.
+Exit 1 covers degraded, stalled, and down.
 
 bench: latency (p50/p95/max of eth_blockNumber) and consistency (chain
 ids agree, head spread) across endpoints, read-only. Exit 0 when every
 endpoint answered and the chain ids agree, 1 otherwise.
 
 Exit codes:
-  check: 0 healthy, 1 degraded/down, 2 usage error (one-shot mode).
+  check: 0 healthy, 1 degraded/stalled/down, 2 usage error (one-shot mode).
   fees:  0 priced and within budget, 1 EVM leg unavailable or budget
          exceeded, 2 usage/artifact error. A native leg that is
          unavailable is a warning, not a failure: the EVM leg alone still
@@ -85,15 +98,25 @@ function parseFlags(argv) {
   return { flags, positional };
 }
 
-function printCheck(result, json) {
-  if (json) {
+function printCheck(result, format) {
+  if (format === 'json') {
     console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  if (format === 'prometheus') {
+    console.log(prometheusReading(result));
     return;
   }
   console.log(`verdict: ${result.verdict}`);
   console.log(`rpc: ${result.rpc}`);
   if (result.chainId !== null) console.log(`chainId: ${result.chainId}${result.chainMismatch ? ' (MISMATCH: expected 420420777)' : ''}`);
   if (result.blockNumber !== null) console.log(`blockNumber: ${result.blockNumber}`);
+  if (result.bestAgeSeconds !== null) console.log(`bestHeadAgeSeconds: ${result.bestAgeSeconds}`);
+  if (result.stallExplanation) console.log(`stall: ${result.stallExplanation}`);
+  if (result.finalizedBlock !== null) console.log(`finalizedBlock: ${result.finalizedBlock}`);
+  if (result.finalityLag !== null) console.log(`finalityLagBlocks: ${result.finalityLag}`);
+  if (result.peers !== null) console.log(`peers: ${result.peers}`);
+  if (result.score !== null) console.log(`score: ${result.score}/100 (${result.formula}, coverage ${result.coverage})`);
   for (const c of result.checks) {
     console.log(`  ${c.method}: ${c.ok ? `ok (${c.value})` : `FAILED (${c.error})`}`);
   }
@@ -116,6 +139,14 @@ async function runCheck(argv) {
   if (timeoutMs !== undefined && (!Number.isFinite(timeoutMs) || timeoutMs <= 0)) {
     failUsage('--timeout-ms must be a positive number.');
   }
+  const format = flags.json ? 'json' : (flags.format || 'text');
+  if (!['text', 'json', 'prometheus'].includes(format)) failUsage('--format must be text, json, or prometheus.');
+  const wss = flags.wss;
+  const reliability = flags.reliability !== undefined ? Number(flags.reliability) : undefined;
+  if (reliability !== undefined && (!Number.isInteger(reliability) || reliability < 1 || reliability > 20)) {
+    failUsage('--reliability must be an integer from 1 to 20.');
+  }
+  const metricsFile = flags['metrics-file'];
   const webhook = flags.webhook;
   if (webhook !== undefined && !detectWebhookKind(webhook)) {
     failUsage('--webhook must be an https Discord (discord.com/api/webhooks/…) or Slack (hooks.slack.com/…) webhook URL.');
@@ -124,15 +155,21 @@ async function runCheck(argv) {
   if (watch !== undefined && (!Number.isFinite(watch) || watch < 30)) {
     failUsage('--watch must be a number of seconds, at least 30 (keeps load on a public RPC polite).');
   }
-  const opts = timeoutMs ? { timeoutMs } : {};
+  const opts = { ...(timeoutMs ? { timeoutMs } : {}), ...(wss ? { wss } : {}), ...(reliability ? { reliability } : {}) };
+  const emit = (result) => {
+    if (metricsFile) writeMetricsFile(metricsFile, prometheusReading(result));
+    if (format === 'text' && watch !== undefined) return;
+    printCheck(result, format);
+  };
   if (watch === undefined) {
     const result = await checkNode(rpc, opts);
-    printCheck(result, flags.json);
+    emit(result);
     if (webhook && result.verdict !== 'healthy') await alert(webhook, checkAlertText(null, null, result));
     process.exit(result.verdict === 'healthy' ? 0 : 1);
   }
   // Watch mode: loop until interrupted; alert only on transitions.
   let prev = null;
+  let prevStall = null;
   let stop = false;
   process.on('SIGINT', () => {
     stop = true;
@@ -140,12 +177,16 @@ async function runCheck(argv) {
     process.exit(0);
   });
   const maxCycles = flags['max-cycles'] ? Number(flags['max-cycles']) : Infinity;
+  const log = format === 'text' ? console.log : console.error;
   for (let cycle = 1; !stop && cycle <= maxCycles; cycle++) {
     const result = await checkNode(rpc, opts);
-    const transition = detectTransition(prev, result.verdict);
-    console.log(`${new Date().toISOString()} cycle ${cycle}: ${result.verdict} block ${result.blockNumber ?? '—'}${transition ? ` ${transition.toUpperCase()}` : ''}`);
+    const transition = alertKindForCycle(prev, result.verdict, prevStall, result.stall);
+    log(`${new Date().toISOString()} cycle ${cycle}: ${result.verdict} block ${result.blockNumber ?? '—'}${transition ? ` ${transition.toUpperCase()}` : ''}`);
+    if (format !== 'text') printCheck(result, format);
+    if (metricsFile) writeMetricsFile(metricsFile, prometheusReading(result));
     if (transition && webhook) await alert(webhook, checkAlertText(transition, prev, result));
     prev = result.verdict;
+    prevStall = result.stall;
     if (cycle < maxCycles) await new Promise((r) => setTimeout(r, watch * 1000));
   }
   process.exit(0);

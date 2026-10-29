@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   WATCH_INTERVALS,
-  detectTransition,
+  alertKindForCycle,
   detectWebhookKind,
   loadWebhookUrl,
   maskWebhookUrl,
@@ -12,6 +12,7 @@ import {
   type WatchInterval,
 } from '../../utils/alertWebhook';
 import type { OverallVerdict } from '../../utils/overallVerdict';
+import type { StallState } from '../../utils/stall';
 
 export interface WatchCycleResult {
   verdict: OverallVerdict;
@@ -21,6 +22,8 @@ export interface WatchCycleResult {
   coverage: number | null;
   /** Where the missing points went, from the same score object as the gauge. */
   scoreNote?: string;
+  stall?: StallState;
+  stallExplanation?: string | null;
 }
 
 interface WatchAlertsPanelProps {
@@ -49,8 +52,9 @@ function outcomeLine(o: SendOutcome): { text: string; tone: LogLine['tone'] } {
  * Watch & alerts. Opt-in, tab-scoped monitoring: nothing runs until the
  * user presses Start, it stops on Stop or when the tab closes, and the
  * interval floor is 30 s. A Discord/Slack message goes out only on a
- * verdict transition (degrade / recover) or on "Send test". The webhook
- * URL stays in this browser's localStorage and is shown masked.
+ * degrade/recover transition, on stall/resume, or on "Send test".
+ * Stall/resume replaces the generic verdict message for that cycle.
+ * The webhook URL stays in this browser's localStorage and is shown masked.
  */
 export function WatchAlertsPanel({ runCycle, current, onToast, tickMsOverride }: WatchAlertsPanelProps) {
   const [url, setUrl] = useState(() => loadWebhookUrl());
@@ -62,6 +66,7 @@ export function WatchAlertsPanel({ runCycle, current, onToast, tickMsOverride }:
   const [log, setLog] = useState<LogLine[]>([]);
   const [sendingTest, setSendingTest] = useState(false);
   const prevVerdict = useRef<OverallVerdict | null>(null);
+  const prevStall = useRef<StallState | null>(null);
   const timer = useRef<number | null>(null);
   const alive = useRef(true);
   const urlRef = useRef(url);
@@ -99,15 +104,27 @@ export function WatchAlertsPanel({ runCycle, current, onToast, tickMsOverride }:
       }
       if (cancelled || !alive.current) return;
       setCycles((c) => c + 1);
-      const transition = detectTransition(prevVerdict.current, r.verdict);
+      const stall = r.stall ?? 'unknown';
+      const transition = alertKindForCycle(prevVerdict.current, r.verdict, prevStall.current, stall);
       const from = prevVerdict.current;
       prevVerdict.current = r.verdict;
+      prevStall.current = stall;
       pushLog(
-        `${r.verdict.replace('_', ' ')} · block ${r.blockHeight ?? '—'} · score ${r.score ?? '—'}${r.scoreNote ? ` (${r.scoreNote})` : ''}${transition ? ` · ${transition.toUpperCase()}` : ''}`,
+        `${r.verdict.replace('_', ' ')} · block ${r.blockHeight ?? '—'} · score ${r.score ?? '—'}${r.scoreNote ? ` (${r.scoreNote})` : ''}${r.stallExplanation ? ` · ${r.stallExplanation}` : ''}${transition ? ` · ${transition.toUpperCase()}` : ''}`,
         r.verdict === 'healthy' ? 'ok' : r.verdict === 'down' ? 'bad' : 'warn',
       );
       if (transition && urlRef.current) {
-        const event: AlertEvent = { kind: transition, from, to: r.verdict, endpointOrigin: r.endpointOrigin, blockHeight: r.blockHeight, score: r.score, coverage: r.coverage, at: new Date() };
+        const event: AlertEvent = {
+          kind: transition,
+          from,
+          to: r.verdict,
+          endpointOrigin: r.endpointOrigin,
+          blockHeight: r.blockHeight,
+          score: r.score,
+          coverage: r.coverage,
+          detail: transition === 'stall' || transition === 'resume' ? r.stallExplanation ?? null : null,
+          at: new Date(),
+        };
         const outcome = await sendWebhook(urlRef.current, event);
         if (!cancelled) {
           const line = outcomeLine(outcome);
@@ -161,6 +178,7 @@ export function WatchAlertsPanel({ runCycle, current, onToast, tickMsOverride }:
       pushLog('watch stopped', 'muted');
     } else {
       prevVerdict.current = null;
+      prevStall.current = null;
       setCycles(0);
       setWatching(true);
       pushLog(`watch started · every ${interval} s · first cycle sets the baseline`, 'muted');
@@ -231,7 +249,7 @@ export function WatchAlertsPanel({ runCycle, current, onToast, tickMsOverride }:
             </p>
           )}
           <p className="mt-3 text-xs leading-relaxed text-slate-500">
-            Stored only in this browser (localStorage), never in a report or link. Messages go out on degrade/recover transitions while you watch, and on Send test. Read-only toward the chain: nothing signs.
+            Stored only in this browser (localStorage), never in a report or link. Messages go out on degrade/recover and on stall/resume while you watch, and on Send test. Read-only toward the chain: nothing signs.
           </p>
         </div>
         <div className="bg-panel p-5">
@@ -256,7 +274,7 @@ export function WatchAlertsPanel({ runCycle, current, onToast, tickMsOverride }:
             </button>
           </div>
           <p className="mt-2 text-xs text-slate-500">
-            Each cycle runs the EVM health check and the Substrate probe once. Works with or without a webhook.
+            Each cycle runs the EVM health check, the block timestamp, and the Substrate probe once. A paused head is logged as STALLED. Works with or without a webhook.
           </p>
           <ol aria-live="polite" className="mt-3 space-y-1 font-data text-[11px]">
             {log.length === 0 ? (

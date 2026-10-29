@@ -3,7 +3,8 @@ import { Play, Loader2, CheckCircle2, XCircle, Circle } from 'lucide-react';
 import { Card } from '../common/Card';
 import { runFullDiagnosticSteps, type FullDiagnosticStepStatus } from '../../utils/fullDiagnostic';
 import { overallVerdictFrom } from '../../utils/overallVerdict';
-import { computeHealthScore } from '../../utils/healthScore';
+import { computeHealthScoreV2 } from '../../utils/healthScore';
+import { stallFromSession, type ChainMotion } from '../../utils/stall';
 import { getHealthSnapshots } from '../../services/healthSnapshotStorage';
 import { hexToDecimal } from '../../utils/combinedVerdict';
 import { probeSubstrateWs, DEFAULT_SUBSTRATE_WS_URL, type SubstrateWsProbeResult } from '../../services/substrateWsProbe';
@@ -26,6 +27,8 @@ interface FullDiagnosticRunnerProps {
   onCapabilitySnapshot: (snapshot: CapabilitySnapshot) => void;
   onGoHistory: () => void;
   onToast?: (message: string) => void;
+  /** Optional. Reads the best-block timestamp and records it for the stall rule. */
+  onMotion?: (probe: SubstrateWsProbeResult) => Promise<ChainMotion | null>;
 }
 
 interface StepState {
@@ -48,9 +51,11 @@ const STEP_LABELS: Array<{ id: string; label: string }> = [
  * Same rule as the verdict bar and Watch: the Health Score band can pull an
  * all-green transport result down to DEGRADED (e.g. a stalled head).
  */
-function verdictLabel(snapshot: HealthCheckSnapshot | null, probe: SubstrateWsProbeResult | null): string {
-  const score = computeHealthScore({ snapshots: getHealthSnapshots(), wsProbe: probe });
-  const verdict = overallVerdictFrom(snapshot, probe, score.band);
+function verdictLabel(snapshot: HealthCheckSnapshot | null, probe: SubstrateWsProbeResult | null, motion: ChainMotion | null): string {
+  const snapshots = getHealthSnapshots();
+  const score = computeHealthScoreV2({ snapshots, wsProbe: probe, motion });
+  const stall = stallFromSession(snapshots, probe, motion);
+  const verdict = overallVerdictFrom(snapshot, probe, score.band, stall.state);
   const suffix = score.score === null ? '' : ` · Health Score ${score.score}/100`;
   return verdictWord(verdict) + suffix;
 }
@@ -61,6 +66,8 @@ function verdictWord(verdict: ReturnType<typeof overallVerdictFrom>): string {
       return 'HEALTHY';
     case 'degraded':
       return 'DEGRADED';
+    case 'stalled':
+      return 'STALLED';
     case 'down':
       return 'DOWN';
     case 'not_checked':
@@ -85,6 +92,7 @@ export function FullDiagnosticRunner({
   onCapabilitySnapshot,
   onGoHistory,
   onToast,
+  onMotion,
 }: FullDiagnosticRunnerProps) {
   const [running, setRunning] = useState(false);
   const [finished, setFinished] = useState(false);
@@ -100,6 +108,7 @@ export function FullDiagnosticRunner({
     setSteps(STEP_LABELS.map((s) => ({ ...s, status: 'pending' as FullDiagnosticStepStatus, detail: '' })));
     let snapshotFromRun: HealthCheckSnapshot | null = null;
     let probeFromRun: SubstrateWsProbeResult | null = null;
+    let motionFromRun: ChainMotion | null = null;
     let doneCount = 0;
 
     const update = (id: string, status: FullDiagnosticStepStatus, detail = '') => {
@@ -156,8 +165,10 @@ export function FullDiagnosticRunner({
             const res = await probeSubstrateWs(DEFAULT_SUBSTRATE_WS_URL);
             probeFromRun = res;
             onProbeResult(res);
+            if (onMotion) motionFromRun = await onMotion(res);
             if (res.status !== 'ok') throw new Error(res.error ?? 'Probe failed');
-            return `Answered · header ${res.headerNumberDecimal ?? '—'} · ${res.peers ?? '—'} peers`;
+            const lag = res.finalityLagBlocks == null ? '' : ` · finality lag ${res.finalityLagBlocks}`;
+            return `Answered · best ${res.headerNumberDecimal ?? '—'} · finalized ${res.finalizedNumberDecimal ?? '—'} · ${res.peers ?? '—'} peers${lag}`;
           },
         },
         {
@@ -172,7 +183,7 @@ export function FullDiagnosticRunner({
           id: 'verdict',
           label: 'Combined verdict',
           run: async () =>
-            `Overall verdict: ${verdictLabel(snapshotFromRun, probeFromRun)}`,
+            `Overall verdict: ${verdictLabel(snapshotFromRun, probeFromRun, motionFromRun)}`,
         },
       ],
       update,

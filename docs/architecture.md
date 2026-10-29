@@ -311,6 +311,17 @@ NodeScope distinguishes between:
 
 This granularity allows users to distinguish a misconfiguration (unsupported method on wrong profile) from a transient network issue.
 
+## Operator signals (2026-10-28)
+
+Health Score v2, stall detection, finality, the reliability probe, the
+address mapper, Prometheus text, and the status badge share one
+implementation in `shared/liveStatus.mjs`. The app, the CLI, and
+`api/badge.js` import it. v1 stays in `src/utils/healthScore.ts`.
+
+The badge function only calls the published Portaldot V3 testnet hosts.
+The reliability probe's callable methods are disjoint from the unsafe
+operator denylist; `rpc_methods` is how those names are seen.
+
 ## Future Extensibility
 
 ### Planned Additions (Not Yet Implemented)

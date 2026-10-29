@@ -17,6 +17,8 @@ import {
   compareDeployCosts,
   budgetCheck,
   checkNode,
+  prometheusReading,
+  alertKindForCycle,
 } from './lib.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -143,6 +145,34 @@ describe('checkNode verdicts (mocked fetch)', () => {
     const r = await checkNode('http://127.0.0.1:9');
     expect(r.verdict).toBe('degraded');
     expect(r.chainMismatch).toBe(true);
+  });
+
+  it('is STALLED when the RPC answers and the best block timestamp is old', async () => {
+    const old = Math.floor(Date.now() / 1000) - 3600;
+    vi.stubGlobal('fetch', async (_url, init) => {
+      const body = JSON.parse(init.body);
+      const table = {
+        eth_chainId: '0x190f1ca9',
+        eth_blockNumber: '0x38ab3',
+        web3_clientVersion: 'test-client/1.0',
+        net_version: '420420777',
+      };
+      const result = body.method === 'eth_getBlockByNumber'
+        ? { number: '0x38ab3', timestamp: '0x' + old.toString(16) }
+        : table[body.method];
+      return { ok: true, json: async () => ({ jsonrpc: '2.0', id: 1, result }) };
+    });
+    const r = await checkNode('http://127.0.0.1:9');
+    expect(r.verdict).toBe('stalled');
+    expect(r.blockNumber).toBe(232115);
+    expect(r.stallExplanation).toMatch(/chain paused but RPC answers/);
+    expect(r.score).not.toBeNull();
+    const text = prometheusReading(r);
+    expect(text).toContain('nodescope_stalled 1');
+    expect(text).toContain('nodescope_best_block 232115');
+    expect(text).toContain('nodescope.health-score.v2');
+    expect(alertKindForCycle('healthy', 'stalled', 'live', 'stalled')).toBe('stall');
+    expect(alertKindForCycle('stalled', 'healthy', 'stalled', 'live')).toBe('resume');
   });
 
   it('is down when nothing answers', async () => {

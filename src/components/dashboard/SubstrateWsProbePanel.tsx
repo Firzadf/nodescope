@@ -39,9 +39,9 @@ export function SubstrateWsProbePanel({ onResult, initialResult = null, restored
         </h3>
         <p className="text-xs text-slate-400 leading-relaxed">
           The HTTP endpoint covers the EVM side. This probe covers the other transport: the Portaldot
-          testnet node over WebSocket, with system_health, system_chain, system_version, and
-          chain_getHeader. An eth_* call here correctly returns Method not found, that is the
-          Substrate transport answering, not a broken node.
+          testnet node over WebSocket, with system_health, system_syncState, system_chain, system_version,
+          chain_getHeader, and chain_getFinalizedHead. Finality lag is best head minus finalized head
+          on this same WebSocket. It is never an EVM height minus a Substrate height.
         </p>
         <div className="flex flex-col sm:flex-row gap-2">
           <input
@@ -82,14 +82,26 @@ export function SubstrateWsProbePanel({ onResult, initialResult = null, restored
               <div><dt className="text-slate-500">Version</dt><dd className="text-slate-200 mt-0.5 break-all">{result.version ?? '—'}</dd></div>
               <div><dt className="text-slate-500">Peers</dt><dd className="text-slate-200 mt-0.5">{result.peers ?? '—'}</dd></div>
               <div><dt className="text-slate-500">Syncing</dt><dd className="text-slate-200 mt-0.5">{result.isSyncing === null ? '—' : result.isSyncing ? 'Yes' : 'No'}</dd></div>
-              <div><dt className="text-slate-500">Header</dt><dd className="text-slate-200 mt-0.5">{result.headerNumberDecimal ?? '—'}</dd></div>
-              <div><dt className="text-slate-500">Header (hex)</dt><dd className="text-slate-200 mt-0.5">{result.headerNumberHex ?? '—'}</dd></div>
+              <div><dt className="text-slate-500">Best head</dt><dd className="text-slate-200 mt-0.5">{result.headerNumberDecimal ?? '—'}</dd></div>
+              <div><dt className="text-slate-500">Finalized</dt><dd className="text-slate-200 mt-0.5">{result.finalizedNumberDecimal ?? '—'}</dd></div>
+              <div><dt className="text-slate-500">Finality lag</dt><dd className="text-slate-200 mt-0.5">{result.finalityLagBlocks == null ? '—' : `${result.finalityLagBlocks} blocks`}</dd></div>
+              <div><dt className="text-slate-500">Sync</dt><dd className="text-slate-200 mt-0.5">{result.syncCurrentBlock == null ? '—' : `${result.syncCurrentBlock} / ${result.syncHighestBlock ?? '—'}`}</dd></div>
               <div><dt className="text-slate-500">Handshake</dt><dd className="text-slate-200 mt-0.5">{result.handshakeMs === null ? '—' : `${result.handshakeMs} ms`}</dd></div>
               <div><dt className="text-slate-500">Total</dt><dd className="text-slate-200 mt-0.5">{result.totalMs === null ? '—' : `${result.totalMs} ms`}</dd></div>
             </dl>
+            {result.peers === 0 && result.shouldHavePeers !== false && (
+              <p className="text-xs text-amber-300">No peers, and the node says it should have them.</p>
+            )}
+            {result.exposedMethodsWithheld ? (
+              <p className="text-xs leading-relaxed text-slate-300">{result.exposedMethodsNote}</p>
+            ) : result.advertisedUnsafeMethods && result.advertisedUnsafeMethods.length > 0 ? (
+              <p className="text-xs text-red-300">
+                Unsafe operator methods advertised, not called: {result.advertisedUnsafeMethods.join(', ')}
+              </p>
+            ) : null}
             <p className="text-[11px] text-slate-500">
-              One connection, closed after the answers arrive. Header numbers here are Substrate
-              headers, not EVM block numbers, so they are never subtracted from an EVM height.
+              One connection, closed after the answers arrive. Finality lag subtracts two Substrate
+              heads. An EVM block number is a different counter and is never subtracted from these.
             </p>
           </div>
         )}
