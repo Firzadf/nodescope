@@ -110,7 +110,7 @@ export const feesZh: FeesCopy = {
     empty: '尚无估算。请在上方选择一个合约，然后点击“{measure}”。',
     depositTitle: '什么是存储押金',
     depositBody:
-      '部署会把整份合约代码存储在链上，而 pallet-revive 会对调用留在状态中的每个字节和条目收取押金。这笔押金是冻结金额，既不是手续费，也不会被烧掉：合约终止时，累计的存储押金会退还给发起方；移除已存储的代码时，其代码押金会退还给所有者。EVM gas 数值把同一笔押金计算在内，因此那里从不单独列出这一项——这正是仅比较手续费会产生误导的原因。',
+      '部署会存入合约代码以及构造函数写入的条目。原生数字来自 ReviveApi 干跑加上 paymentInfo：partialFee 是权重费用，storageDeposit 是冻结而非销毁的押金。代码押金：当代码不再被任何合约引用且满足移除条件时，原始上传者可以移除代码并取回该押金。条目存储押金：合约终止后执行存储清理，押金随之退还。EVM gas 数值已包含同一笔冻结。此页面从不签名或提交交易。',
     depositBarFee: '权重费用（partialFee）',
     depositBarDeposit: '存储押金',
     depositNote:
@@ -173,7 +173,7 @@ export const feesZh: FeesCopy = {
     reasonTie: 'All-in 成本相差在 {pct}% 以内——按钱包/用户体验选择即可。',
     reasonEvmCheaper: 'EVM 的 all-in 成本便宜 {pct}%。',
     reasonNativeCheaper: '原生的 all-in 成本便宜 {pct}%。',
-    reasonDepositSuffix: '原生存储押金为冻结金额（存储释放时可退还）；EVM gas 数值已将其计算在内。',
+    reasonDepositSuffix: '原生存储押金是冻结而非销毁。代码押金：当代码不再被任何合约引用且满足移除条件时，原始上传者可以移除代码并取回该押金。条目存储押金：合约终止后执行存储清理，押金随之退还。EVM gas 数值已包含同一笔冻结。',
     breakTitle: '费用明细',
     breakEvm: 'EVM · gas × gasPrice',
     breakNativeFee: '原生 · 仅 partialFee（标题倍数的分母）',
@@ -183,7 +183,9 @@ export const feesZh: FeesCopy = {
     breakDepositPart: '存储押金',
     breakDepositPct: '此处存储押金占原生 all-in 成本的 {pct}%。',
     breakNoDeposit: '此操作不新增存储，因此原生一侧没有押金，比较的是手续费对手续费。',
-    breakExplain: 'pallet-revive 会对调用留在状态中的每个字节和条目收取押金。部署会存储整份合约代码，因此押金远远超过权重费用。EVM gas 估算已经把这笔押金计算在内；原生路径则将其作为冻结金额单独报告。',
+    breakExplain: '原生 all-in 成本是 partialFee 加上 ReviveApi 干跑与 paymentInfo 给出的存储押金。这笔押金是冻结而非销毁。代码押金：当代码不再被任何合约引用且满足移除条件时，原始上传者可以移除代码并取回该押金。条目存储押金：合约终止后执行存储清理，押金随之退还。EVM gas 数值已包含同一笔冻结。此页面从不签名或提交交易。',
+    depositCodeLine: '代码押金（估算）：{amount} tPOT。当代码不再被任何合约引用且原始上传者将其移除时退还。',
+    depositItemLine: '条目存储押金：{amount} tPOT。合约终止并完成存储清理后退还。',
     exportReport: '导出费用报告',
     exporting: '正在导出…',
     exportNote: '下载一份带 SHA-256 签章的报告（nodescope.diagnostic-report.v1），可在 /verify 上验证，并可锚定到与健康报告相同的注册合约。',

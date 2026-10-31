@@ -433,6 +433,12 @@ export function FeeLabPanel() {
               )}
               {p.breakExplain}
             </p>
+            {c.native.codeDeposit != null && c.native.itemStorageDeposit != null && (
+              <div className="text-sm leading-relaxed text-slate-300">
+                <p>{p.depositCodeLine.replace('{amount}', tpot(c.native.codeDeposit, d, 6))}</p>
+                <p className="mt-1">{p.depositItemLine.replace('{amount}', tpot(c.native.itemStorageDeposit, d, 6))}</p>
+              </div>
+            )}
           </div>
         )}
       </div>

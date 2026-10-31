@@ -90,5 +90,5 @@ export const SUPPLEMENT_REPORT_HASH =
 export const SUPPLEMENT_REPORT_EXPORTED_AT = '2026-10-24T20:12:08Z';
 export const SUPPLEMENT_REPORT_RECORDS = 14;
 
-export const SITE_TESTS = '552';
-export const SITE_TEST_FILES = '84';
+export const SITE_TESTS = '574';
+export const SITE_TEST_FILES = '89';

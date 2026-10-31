@@ -98,6 +98,8 @@ export interface FeesPanelCopy {
   breakDepositPct: string;
   breakNoDeposit: string;
   breakExplain: string;
+  depositCodeLine: string;
+  depositItemLine: string;
   exportReport: string;
   exporting: string;
   exportNote: string;
@@ -276,7 +278,7 @@ export const feesCopy: Record<Lang, FeesCopy> = {
       empty: 'No estimate yet. Choose a contract above and press "{measure}".',
       depositTitle: 'What the storage deposit is',
       depositBody:
-        'Deploying stores the whole contract code on-chain, and pallet-revive charges a deposit for every byte and item a call leaves in state. That deposit is a hold, not a fee and not burned: when the contract is terminated, the accumulated storage deposit is refunded to the origin, and removing stored code refunds its code deposit to the owner. The EVM gas figure folds the same deposit in, so it never appears as a separate line there, which is exactly why a fee-only comparison misleads.',
+        'A deploy stores contract code and the items the constructor writes. The native figure comes from a ReviveApi dry-run plus paymentInfo: partialFee is the weight fee, and storageDeposit is a reserved hold, not a burned fee. Code deposit: when the code is no longer referenced by any contract and the removal conditions are met, the original uploader can remove the code and receive that refund. Item storage deposit: after contract termination, storage cleanup is performed and the deposit is refunded to the origin. The EVM gas figure already includes the same hold. This page never signs or submits a transaction.',
       depositBarFee: 'weight fee (partialFee)',
       depositBarDeposit: 'storage deposit',
       depositNote:
@@ -339,7 +341,7 @@ export const feesCopy: Record<Lang, FeesCopy> = {
     reasonTie: 'All-in costs are within {pct}% — pick by wallet/UX.',
     reasonEvmCheaper: 'EVM is cheaper all-in by {pct}%.',
     reasonNativeCheaper: 'Native is cheaper all-in by {pct}%.',
-    reasonDepositSuffix: 'Native storage deposit is reserved (refundable when storage is freed); the EVM gas figure already folds it in.',
+    reasonDepositSuffix: 'Native storage deposit is a refundable reserved hold, not burned. Code deposit is refunded when the code is no longer referenced by any contract and the original uploader removes it. Item storage deposit is refunded after contract termination, once storage cleanup runs. The EVM gas figure already includes that hold.',
     breakTitle: 'Fee breakdown',
     breakEvm: 'EVM · gas × gasPrice',
     breakNativeFee: 'Native · partialFee only (the headline denominator)',
@@ -349,7 +351,9 @@ export const feesCopy: Record<Lang, FeesCopy> = {
     breakDepositPart: 'storage deposit',
     breakDepositPct: 'The storage deposit is {pct}% of the native all-in cost here.',
     breakNoDeposit: 'This op adds no new storage, so the native side has no deposit and the comparison is fee vs fee.',
-    breakExplain: 'pallet-revive charges a deposit for every byte and item a call leaves in state. A deploy stores the whole contract code, so the deposit dwarfs the weight fee. The EVM gas estimate already folds that deposit in; the native path reports it separately as a hold.',
+    breakExplain: 'The native all-in cost is partialFee plus the storage deposit from a ReviveApi dry-run and paymentInfo. That deposit is reserved, not burned. Code deposit: when the code is no longer referenced by any contract and the removal conditions are met, the original uploader can remove the code and receive the refund. Item storage deposit: after contract termination, storage cleanup is performed and the deposit is refunded. The EVM gas figure already includes the same hold. Nothing here is signed or submitted.',
+    depositCodeLine: 'Code deposit (estimate): {amount} tPOT. Refunded when the code is no longer referenced by any contract and the original uploader removes it.',
+    depositItemLine: 'Item storage deposit: {amount} tPOT. Refunded after contract termination, once storage cleanup runs.',
     exportReport: 'Export fee report',
     exporting: 'Exporting…',
     exportNote: 'Downloads a SHA-256 stamped report (nodescope.diagnostic-report.v1) you can verify on /verify and anchor to the same registry as Health reports.',
@@ -463,7 +467,7 @@ export const feesCopy: Record<Lang, FeesCopy> = {
       empty: 'Belum ada estimasi. Pilih kontrak di atas dan tekan "{measure}".',
       depositTitle: 'Apa itu storage deposit',
       depositBody:
-        'Deploy menyimpan seluruh kode kontrak on-chain, dan pallet-revive membebankan deposit untuk setiap byte dan item yang ditinggalkan sebuah call di state. Deposit itu adalah hold, bukan fee dan bukan uang hangus: saat kontrak di-terminate, akumulasi storage deposit dikembalikan ke origin, dan menghapus stored code mengembalikan code deposit ke pemiliknya. Angka gas EVM sudah melipat deposit yang sama ke dalam, sehingga ia tidak pernah muncul sebagai baris terpisah di sana, dan justru itulah yang membuat perbandingan fee-only menyesatkan.',
+        'Deploy menyimpan kode kontrak dan item yang ditulis constructor. Angka native berasal dari dry-run ReviveApi plus paymentInfo: partialFee adalah weight fee, dan storageDeposit adalah hold yang ditahan, bukan fee yang dibakar. Code deposit: ketika kode tidak lagi direferensikan kontrak mana pun dan syarat penghapusan terpenuhi, pengunggah asli dapat menghapus kode itu dan menerima refund. Item storage deposit: setelah kontrak dihentikan, pembersihan storage dijalankan dan deposit dikembalikan ke origin. Angka gas EVM sudah mencakup hold yang sama. Halaman ini tidak pernah menandatangani atau mengirim transaksi.',
       depositBarFee: 'weight fee (partialFee)',
       depositBarDeposit: 'storage deposit',
       depositNote:
@@ -526,7 +530,7 @@ export const feesCopy: Record<Lang, FeesCopy> = {
     reasonTie: 'Biaya all-in berada dalam {pct}% — pilih berdasarkan wallet/UX.',
     reasonEvmCheaper: 'EVM lebih murah all-in sebesar {pct}%.',
     reasonNativeCheaper: 'Native lebih murah all-in sebesar {pct}%.',
-    reasonDepositSuffix: 'Storage deposit native dicadangkan (bisa dikembalikan saat storage dibebaskan); angka gas EVM sudah melipatnya ke dalam.',
+    reasonDepositSuffix: 'Storage deposit native ditahan, bukan dibakar. Code deposit dikembalikan ketika kode tidak lagi direferensikan kontrak mana pun dan pengunggah asli menghapusnya. Item storage deposit dikembalikan setelah kontrak dihentikan, begitu pembersihan storage berjalan. Angka gas EVM sudah mencakup hold yang sama.',
     breakTitle: 'Rincian fee',
     breakEvm: 'EVM · gas × gasPrice',
     breakNativeFee: 'Native · partialFee saja (penyebut headline)',
@@ -536,7 +540,9 @@ export const feesCopy: Record<Lang, FeesCopy> = {
     breakDepositPart: 'storage deposit',
     breakDepositPct: 'Storage deposit adalah {pct}% dari biaya all-in native di sini.',
     breakNoDeposit: 'Operasi ini tidak menambah storage baru, jadi sisi native tidak punya deposit dan perbandingannya adalah fee vs fee.',
-    breakExplain: 'pallet-revive membebankan deposit untuk setiap byte dan item yang ditinggalkan sebuah call di state. Deploy menyimpan seluruh kode kontrak, sehingga deposit jauh melampaui weight fee. Estimasi gas EVM sudah melipat deposit itu ke dalam; jalur native melaporkannya terpisah sebagai hold.',
+    breakExplain: 'Biaya all-in native adalah partialFee ditambah storage deposit dari dry-run ReviveApi dan paymentInfo. Deposit itu ditahan, bukan dibakar. Code deposit: ketika kode tidak lagi direferensikan kontrak mana pun dan syarat penghapusan terpenuhi, pengunggah asli dapat menghapus kode itu dan menerima refund. Item storage deposit: setelah kontrak dihentikan, pembersihan storage dijalankan dan deposit dikembalikan. Angka gas EVM sudah mencakup hold yang sama. Tidak ada yang ditandatangani atau dikirim dari halaman ini.',
+    depositCodeLine: 'Code deposit (perkiraan): {amount} tPOT. Dikembalikan ketika kode tidak lagi direferensikan kontrak mana pun dan pengunggah asli menghapusnya.',
+    depositItemLine: 'Item storage deposit: {amount} tPOT. Dikembalikan setelah kontrak dihentikan, begitu pembersihan storage berjalan.',
     exportReport: 'Ekspor laporan fee',
     exporting: 'Mengekspor…',
     exportNote: 'Mengunduh laporan berstempel SHA-256 (nodescope.diagnostic-report.v1) yang bisa diverifikasi di /verify dan di-anchor ke registry yang sama dengan laporan Health.',
@@ -776,8 +782,8 @@ export function translateReason(reason: string, lang: Lang): string {
     'Native lebih murah all-in sebesar $1%.',
   );
   out = out.replace(
-    ' Native storage deposit is reserved (refundable when storage is freed); the EVM gas figure already folds it in.',
-    ' Deposit storage native ditahan (bisa dikembalikan saat storage dibebaskan); angka gas EVM sudah memasukkannya.',
+    ' Native storage deposit is a refundable reserved hold, not burned. Code deposit is refunded when the code is no longer referenced by any contract and the original uploader removes it. Item storage deposit is refunded after contract termination, once storage cleanup runs. The EVM gas figure already includes that hold.',
+    ' Storage deposit native adalah hold yang ditahan dan bisa dikembalikan, bukan dibakar. Code deposit dikembalikan ketika kode tidak lagi direferensikan kontrak mana pun dan pengunggah asli menghapusnya. Item storage deposit dikembalikan setelah kontrak dihentikan, begitu pembersihan storage berjalan. Angka gas EVM sudah mencakup hold yang sama.',
   );
   return out;
 }
@@ -794,8 +800,8 @@ function translateReasonZh(reason: string): string {
   out = out.replace(/^EVM is cheaper all-in by ([\d.]+)%\.$/, 'EVM 的 all-in 成本便宜 $1%。');
   out = out.replace(/^Native is cheaper all-in by ([\d.]+)%\.$/, '原生的 all-in 成本便宜 $1%。');
   out = out.replace(
-    ' Native storage deposit is reserved (refundable when storage is freed); the EVM gas figure already folds it in.',
-    ' 原生存储押金为冻结金额（存储释放时可退还）；EVM gas 数值已将其计算在内。',
+    ' Native storage deposit is a refundable reserved hold, not burned. Code deposit is refunded when the code is no longer referenced by any contract and the original uploader removes it. Item storage deposit is refunded after contract termination, once storage cleanup runs. The EVM gas figure already includes that hold.',
+    ' 原生存储押金是可退还的冻结而非销毁。代码押金：当代码不再被任何合约引用且满足移除条件时，原始上传者可以移除代码并取回该押金。条目存储押金：合约终止后执行存储清理，押金随之退还。EVM gas 数值已包含同一笔冻结。',
   );
   return out;
 }

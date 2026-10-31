@@ -101,7 +101,7 @@ export function SubstrateWsProbePanel({ onResult, initialResult = null, restored
             ) : null}
             <p className="text-[11px] text-slate-500">
               One connection, closed after the answers arrive. Finality lag subtracts two Substrate
-              heads. An EVM block number is a different counter and is never subtracted from these.
+              heads. Against the EVM height, a gap of 2 blocks or less is acceptable. A larger gap is flagged only when it persists.
             </p>
           </div>
         )}

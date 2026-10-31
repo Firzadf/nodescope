@@ -297,7 +297,7 @@ const en: LandingCopy = {
   heroLine1: 'Consoles interact.',
   heroAccent: 'proves.',
   heroParagraph:
-    "A read-only diagnostics toolkit for Portaldot nodes. It records health checks as snapshots, diffs them deterministically, and exports the report — so a node's health is something you can ",
+    'A read-only self-check for Portaldot node operators and validators. It scores your node, names the next step, and keeps a receipt — so a node’s health is something you can ',
   heroParagraphEmphasis: 'show',
   heroParagraphTail: ', not something you assert.',
   launchApp: 'Launch App',
@@ -465,7 +465,7 @@ const en: LandingCopy = {
     {
       cap: 'Combined verdict',
       tone: 'emerald',
-      what: 'The latest EVM health snapshot and the Substrate WebSocket probe, read together in one panel — with each number shown with its own timestamp, and the two counters never subtracted from each other.',
+      what: 'The latest EVM health snapshot and the Substrate WebSocket probe, read together in one panel. A gap of 2 blocks or less is acceptable. A larger gap is a recommendation only when it persists, and it does not change the canonical score.',
       proof: 'Panel 07 in Overview · both transports, no score',
     },
     {
@@ -508,11 +508,11 @@ const en: LandingCopy = {
   onchainVerifyNote:
     'There is no public EVM explorer for this chain: the two official Portaldot explorers are Substrate explorers and do not show EVM receipts. Verification here is done through the RPC itself, which is the same source the panel reads.',
   whoTitle: 'Who uses NodeScope',
-  whoRight: 'Built for operators, useful to everyone checking a node',
+  whoRight: 'Node operators and validators, self-check first',
   whoItems: [
     {
       title: 'Portaldot node operators & validators',
-      body: 'Prove an endpoint stayed healthy across a session, with snapshots to show for it — not just a green light at one moment.',
+      body: 'This is who NodeScope is built for. Run a self-check on your own endpoint: the score, each component, the EVM-versus-Substrate headline, a next step (restart, switch endpoints, check peers, or wait for the team), and a local baseline against yesterday. Nothing is signed.',
     },
     {
       title: 'RPC providers proving an SLA',
@@ -602,12 +602,12 @@ const en: LandingCopy = {
     { label: 'Head progression', weight: 15, rule: 'Timestamp 90s or older scores 0. Else two snapshots: advanced 15 · same height under 30s scores half · stalled or regressed 0.' },
     { label: 'Finality lag', weight: 15, rule: 'Best minus finalized on WSS. Full marks at lag ≤ 4 blocks, zero at ≥ 64, linear between.' },
     { label: 'Latency', weight: 10, rule: 'Median of successful checks: 10 at ≤ 300 ms, 0 at ≥ 2000 ms, linear in between.' },
-    { label: 'Transport parity (WSS)', weight: 10, rule: 'Substrate probe answered 10. A failed probe scores 0. Peers are scored separately.' },
+    { label: 'Transport parity (WSS)', weight: 10, rule: 'Substrate probe answered 10. A failed probe scores 0. Peers are scored separately. The headline compares EVM and Substrate heads: a gap of 2 or less is acceptable, and a larger gap is an action only when it persists. That headline is not part of this weight.' },
     { label: 'Peers & sync', weight: 10, rule: '4 if peers > 0 (or none expected), 3 if not syncing, 3 if the sync gap is ≤ 8 blocks or unreported.' },
     { label: 'RPC reliability', weight: 10, rule: '10 × (1 − error ratio) × p95 factor over repeated eth_blockNumber. Unmeasured until that probe runs.' },
   ],
   scoreFormula: 'score = round(100 × Σ points ÷ Σ measured weight) · shown only when measured weight ≥ 50',
-  scoreFootnote: 'Bands: 90–100 healthy · 70–89 degraded · 0–69 critical. v2 is the score new reports use. v1 still reproduces older ones. STALLED is a verdict, not a band: chain paused but RPC answers.',
+  scoreFootnote: 'Bands: 90–100 healthy · 70–89 degraded · 0–69 critical. v2 is the score new reports use. v1 still reproduces older ones. STALLED is a verdict, not a band: chain paused but RPC answers. One Portaldot epoch is 1 hour; the block curve was not retuned to that hour. A view-only custom weighting stays in your browser and does not replace v2.',
   scoreCta: 'Read the full methodology',
   marqueeLive: 'Live block',
   marqueeItems: [
@@ -659,23 +659,23 @@ const en: LandingCopy = {
   judgeSteps: [
     {
       title: 'Launch the app',
-      body: 'Open /app. The Portaldot V3 EVM endpoint is already filled in. Nothing to configure, nothing to sign.',
+      body: 'Do: open /app → see the Portaldot V3 EVM endpoint already filled in. Nothing to sign.',
     },
     {
       title: 'Connect and check',
-      body: 'Press Connect & Test, then Run Health Check. Four methods run and the result is saved as a timestamped snapshot.',
+      body: 'Do: press Connect & Test, then Run Health Check → see a timestamped snapshot, each score component, and a next step: restart your node, switch endpoints, check peers, or wait for the team.',
     },
     {
       title: 'Probe the second transport',
-      body: 'In Overview, panel 06, press Probe WSS Node. Panel 07 then reads the EVM snapshot and the Substrate probe together, with each number carrying its own timestamp.',
+      body: 'Do: press Probe WSS Node → see the EVM height beside the Substrate header. A gap of 2 blocks or less is acceptable. A larger gap is an action only when it persists.',
     },
     {
       title: 'Export and verify',
-      body: 'In History, export the diagnostic report, then drop the same file at /verify. The SHA-256 stamp covers everything except the stamp itself, so changing any value in the file breaks it.',
+      body: 'Do: export the diagnostic report from History, then drop the same file at /verify → see the SHA-256 stamp fail if any value changes. The canonical score stays nodescope.health-score.v2. Do: open /status → see the community status line for Discord. There is no official Portaldot status page.',
     },
     {
       title: 'Anchor, optionally',
-      body: 'The registry contract is deployed on the Portaldot V3 testnet. Anchor the report hash on chain with your own wallet tool, then verify the transaction in History, panel 04, or open the shareable verification link from the same panel.',
+      body: 'Do: anchor the report hash with your own wallet tool → see the transaction verify in History, panel 04. NodeScope never signs.',
     },
   ],
   judgeFootnote:
@@ -706,7 +706,7 @@ const en: LandingCopy = {
     measuredLabel: 'Measured at',
   },
   feeBlockTitle: 'The number that started the Fees pillar',
-  feeBlockBody: 'One measured deploy of the sample token: EVM 124.098219 tPOT against native 122.191411 tPOT all-in. Compared fee-only, the gap reads 804x; compared all-in, it is 1.016x. The difference is the storage deposit, refundable when storage is freed.',
+  feeBlockBody: 'One measured deploy of the sample token: EVM 124.098219 tPOT against native 122.191411 tPOT all-in. Compared fee-only, the gap reads 804x; compared all-in, it is 1.016x. The difference is the storage deposit. Code deposit is refunded when the code is no longer referenced and the original uploader removes it. Item storage deposit is refunded after contract termination, once storage cleanup runs.',
   feeBlockEvm: 'EVM total: 124.098219 tPOT',
   feeBlockNative: 'Native all-in: 122.191411 tPOT (fee 0.154411 + deposit 122.037)',
   feeBlockFootnote: 'Measured 26 Oct 2026, the same run as the /fees findings table. Re-measure it live in Fee Lab.',
@@ -796,7 +796,7 @@ const id: LandingCopy = {
   heroLine1: 'Konsol berinteraksi.',
   heroAccent: 'membuktikan.',
   heroParagraph:
-    'Perangkat diagnostik read-only untuk node Portaldot. Ia merekam health check sebagai snapshot, membandingkannya secara deterministik, dan mengekspor laporannya, sehingga kesehatan sebuah node adalah sesuatu yang bisa kamu ',
+    'Pemeriksaan mandiri read-only untuk operator dan validator node Portaldot. Ia menilai nodemu, menyebut langkah berikutnya, dan menyimpan bukti, sehingga kesehatan sebuah node adalah sesuatu yang bisa kamu ',
   heroParagraphEmphasis: 'tunjukkan',
   heroParagraphTail: ', bukan sekadar klaim.',
   launchApp: 'Buka App',
@@ -963,7 +963,7 @@ const id: LandingCopy = {
     {
       cap: 'Verdict gabungan',
       tone: 'emerald',
-      what: 'Snapshot kesehatan EVM terbaru dan probe WebSocket Substrate, dibaca bersama dalam satu panel, masing-masing angka ditampilkan dengan timestamp-nya sendiri, dan kedua counter tidak pernah dikurangkan satu sama lain.',
+      what: 'Snapshot kesehatan EVM terbaru dan probe WebSocket Substrate, dibaca bersama dalam satu panel. Selisih 2 blok atau kurang masih diterima. Selisih yang lebih besar menjadi rekomendasi hanya jika bertahan, dan tidak mengubah skor kanonik.',
       proof: 'Panel 07 di Overview · kedua transport, tanpa skor',
     },
     {
@@ -1006,11 +1006,11 @@ const id: LandingCopy = {
   onchainVerifyNote:
     'Tidak ada explorer EVM publik untuk chain ini: kedua explorer resmi Portaldot adalah explorer Substrate dan tidak menampilkan receipt EVM. Verifikasi di sini dilakukan lewat RPC itu sendiri, sumber yang sama dengan yang dibaca panel.',
   whoTitle: 'Siapa yang memakai NodeScope',
-  whoRight: 'Dibuat untuk operator, berguna bagi siapa pun yang memeriksa node',
+  whoRight: 'Operator dan validator node, pemeriksaan mandiri dulu',
   whoItems: [
     {
       title: 'Operator & validator node Portaldot',
-      body: 'Buktikan sebuah endpoint tetap sehat sepanjang sesi, dengan snapshot sebagai buktinya, bukan sekadar lampu hijau sesaat.',
+      body: 'Inilah audiens NodeScope. Jalankan pemeriksaan mandiri pada endpoint-mu sendiri: skor, tiap komponen, headline EVM lawan Substrate, langkah berikutnya (restart, ganti endpoint, periksa peer, atau tunggu tim), dan baseline lokal terhadap kemarin. Tidak ada yang ditandatangani.',
     },
     {
       title: 'Penyedia RPC yang membuktikan SLA',
@@ -1100,12 +1100,12 @@ const id: LandingCopy = {
     { label: 'Progres head', weight: 15, rule: 'Timestamp 90 dtk atau lebih tua bernilai 0. Selain itu dua snapshot: naik 15 · tinggi sama di bawah 30 dtk separuh · macet atau mundur 0.' },
     { label: 'Lag finality', weight: 15, rule: 'Best dikurangi finalized di WSS. Nilai penuh jika lag ≤ 4 blok, nol jika ≥ 64, linier di antaranya.' },
     { label: 'Latensi', weight: 10, rule: 'Median cek yang sukses: 10 pada ≤ 300 ms, 0 pada ≥ 2000 ms, linier di antaranya.' },
-    { label: 'Paritas transport (WSS)', weight: 10, rule: 'Probe Substrate menjawab 10. Probe gagal bernilai 0. Peer dinilai terpisah.' },
+    { label: 'Paritas transport (WSS)', weight: 10, rule: 'Probe Substrate menjawab 10. Probe gagal bernilai 0. Peer dinilai terpisah. Headline membandingkan head EVM dan Substrate: selisih 2 atau kurang diterima, selisih lebih besar menjadi tindakan hanya jika bertahan. Headline itu bukan bagian dari bobot ini.' },
     { label: 'Peer & sync', weight: 10, rule: '4 jika peers > 0 (atau memang tidak diharapkan), 3 jika tidak syncing, 3 jika jarak sync ≤ 8 blok atau tidak dilaporkan.' },
     { label: 'Keandalan RPC', weight: 10, rule: '10 × (1 − rasio error) × faktor p95 dari eth_blockNumber berulang. Tidak diukur sebelum probe itu dijalankan.' },
   ],
   scoreFormula: 'skor = round(100 × Σ poin ÷ Σ bobot terukur) · hanya tampil jika bobot terukur ≥ 50',
-  scoreFootnote: 'Rentang: 90–100 sehat · 70–89 menurun · 0–69 kritis. v2 adalah skor laporan baru. v1 tetap mereproduksi laporan lama. STALLED adalah verdict, bukan rentang: chain macet tetapi RPC menjawab.',
+  scoreFootnote: 'Rentang: 90–100 sehat · 70–89 menurun · 0–69 kritis. v2 adalah skor laporan baru. v1 tetap mereproduksi laporan lama. STALLED adalah verdict, bukan rentang: chain macet tetapi RPC menjawab. Satu epoch Portaldot adalah 1 jam; kurva blok tidak diubah ke jam itu. Bobot kustom hanya tampilan di browser dan tidak menggantikan v2.',
   scoreCta: 'Baca metodologi lengkap',
   marqueeLive: 'Blok live',
   marqueeItems: [
@@ -1157,23 +1157,23 @@ const id: LandingCopy = {
   judgeSteps: [
     {
       title: 'Buka app',
-      body: 'Buka /app. Endpoint Portaldot V3 EVM sudah terisi. Tidak ada yang perlu dikonfigurasi, tidak ada yang perlu ditandatangani.',
+      body: 'Lakukan: buka /app → lihat endpoint Portaldot V3 EVM sudah terisi. Tidak ada yang ditandatangani.',
     },
     {
       title: 'Hubungkan dan periksa',
-      body: 'Tekan Connect & Test, lalu Run Health Check. Empat metode berjalan dan hasilnya disimpan sebagai snapshot bertimestamp.',
+      body: 'Lakukan: tekan Connect & Test, lalu Run Health Check → lihat snapshot bertimestamp, tiap komponen skor, dan langkah berikutnya: restart node, ganti endpoint, periksa peer, atau tunggu tim.',
     },
     {
       title: 'Probe transport kedua',
-      body: 'Di Overview, panel 06, tekan Probe WSS Node. Panel 07 lalu membaca snapshot EVM dan probe Substrate bersama-sama, masing-masing angka membawa timestamp-nya sendiri.',
+      body: 'Lakukan: tekan Probe WSS Node → lihat tinggi EVM di samping header Substrate. Selisih 2 blok atau kurang diterima. Selisih lebih besar menjadi tindakan hanya jika bertahan.',
     },
     {
       title: 'Ekspor dan verifikasi',
-      body: 'Di History, ekspor laporan diagnostik, lalu jatuhkan file yang sama di /verify. Stempel SHA-256 mencakup semuanya kecuali stempel itu sendiri, sehingga mengubah nilai apa pun di file akan merusaknya.',
+      body: 'Lakukan: ekspor laporan dari History dan jatuhkan di /verify → lihat stempel SHA-256 gagal jika ada nilai yang berubah. Skor kanonik tetap nodescope.health-score.v2. Lakukan: buka /status → lihat baris status komunitas untuk Discord. Tidak ada halaman status resmi Portaldot.',
     },
     {
       title: 'Anchor, opsional',
-      body: 'Kontrak registry sudah di-deploy di testnet Portaldot V3. Anchor hash laporan on-chain dengan wallet tool-mu sendiri, lalu verifikasi transaksinya di History, panel 04, atau buka tautan verifikasi yang bisa dibagikan dari panel yang sama.',
+      body: 'Lakukan: anchor hash laporan dengan wallet tool-mu sendiri → lihat transaksi terverifikasi di History, panel 04. NodeScope tidak pernah menandatangani.',
     },
   ],
   judgeFootnote:
@@ -1204,7 +1204,7 @@ const id: LandingCopy = {
     measuredLabel: 'Diukur pada',
   },
   feeBlockTitle: 'Angka yang melahirkan pilar Fees',
-  feeBlockBody: 'Satu deploy terukur dari token sampel: EVM 124,098219 tPOT berbanding native 122,191411 tPOT all-in. Dibandingkan fee-only, selisihnya terbaca 804x; dibandingkan all-in, selisihnya 1,016x. Selisih itu adalah storage deposit, yang bisa dikembalikan saat storage dibebaskan.',
+  feeBlockBody: 'Satu deploy terukur dari token sampel: EVM 124,098219 tPOT berbanding native 122,191411 tPOT all-in. Dibandingkan fee-only, selisihnya terbaca 804x; dibandingkan all-in, selisihnya 1,016x. Selisih itu adalah storage deposit. Code deposit dikembalikan ketika kode tidak lagi direferensikan dan pengunggah asli menghapusnya. Item storage deposit dikembalikan setelah kontrak dihentikan, begitu pembersihan storage berjalan.',
   feeBlockEvm: 'Total EVM: 124,098219 tPOT',
   feeBlockNative: 'Native all-in: 122,191411 tPOT (fee 0,154411 + deposit 122,037)',
   feeBlockFootnote: 'Diukur 26 Okt 2026, run yang sama dengan tabel temuan /fees. Ukur ulang secara live di Fee Lab.',

@@ -1,14 +1,25 @@
 import type { ApiPromise } from '@polkadot/api';
 import type { WsProvider } from '@polkadot/api';
 import { DRY_RUN_DEPOSIT_LIMIT } from './constants';
+import { byteLengthOfHex, callDepositParts, splitReviveDeposit } from './deposits';
 
 export type NativeFeeQuote = {
   /** Extrinsic that was weighed, e.g. "balances.transferKeepAlive". */
   method: string;
   /** TransactionPaymentApi partialFee (planck, 14 decimals). Burned/paid fee. */
   partialFee: bigint;
-  /** Storage deposit charged by the dry-run (planck). Reserved, not burned; refundable when storage is freed. */
+  /** Storage deposit charged by the dry-run (planck). Reserved, not burned. */
   storageDeposit: bigint;
+  /**
+   * Code-deposit portion when it could be estimated. Refunded when the
+   * code is no longer referenced and the original uploader removes it.
+   */
+  codeDeposit?: bigint | null;
+  /**
+   * Item-storage portion. Refunded after contract termination, once
+   * storage cleanup runs. Null when the dry-run total could not be split.
+   */
+  itemStorageDeposit?: bigint | null;
   weight: { refTime: bigint; proofSize: bigint };
   blockNumber: number;
 };
@@ -108,6 +119,18 @@ export async function nativeDecimalsFromChain(api: ApiPromise): Promise<number> 
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+function reviveDepositPerByte(api: ApiPromise): bigint | null {
+  try {
+    const revive = (api.consts as { revive?: Record<string, { toBigInt?: () => bigint; toString?: () => string }> }).revive;
+    const raw = revive?.depositPerByte;
+    if (!raw) return null;
+    const value = typeof raw.toBigInt === 'function' ? raw.toBigInt() : BigInt(raw.toString?.() ?? '');
+    return value > 0n ? value : null;
+  } catch {
+    return null;
+  }
+}
+
 function depositOf(sd: any): bigint {
   if (!sd) return 0n;
   if (sd.isCharge) return sd.asCharge.toBigInt();
@@ -166,12 +189,15 @@ export async function quoteReviveCall(api: ApiPromise, origin: string, dest: str
   const err = dryRunError(api, dry.result);
   if (err) throw new Error(`revive dry-run failed: ${err}`);
   const sd = depositOf(dry.storageDeposit);
+  const parts = callDepositParts(sd);
   const tx = api.tx.revive.call(dest, valuePlanck, dry.weightRequired, sd > 0n ? sd : 1n, data);
   const [info, blockNumber] = await Promise.all([tx.paymentInfo(origin), head(api)]);
   return {
     method: 'revive.call',
     partialFee: info.partialFee.toBigInt(),
     storageDeposit: sd,
+    codeDeposit: parts.codeDeposit,
+    itemStorageDeposit: parts.itemStorageDeposit,
     weight: { refTime: dry.weightRequired.refTime.toBigInt(), proofSize: dry.weightRequired.proofSize.toBigInt() },
     blockNumber,
   };
@@ -183,12 +209,15 @@ export async function quoteReviveInstantiate(api: ApiPromise, origin: string, co
   const err = dryRunError(api, dry.result);
   if (err) throw new Error(`revive dry-run failed: ${err}`);
   const sd = depositOf(dry.storageDeposit);
+  const parts = splitReviveDeposit(sd, byteLengthOfHex(code), reviveDepositPerByte(api));
   const tx = api.tx.revive.instantiateWithCode(valuePlanck, dry.weightRequired, sd > 0n ? sd : 1n, code, data, null);
   const [info, blockNumber] = await Promise.all([tx.paymentInfo(origin), head(api)]);
   return {
     method: 'revive.instantiateWithCode',
     partialFee: info.partialFee.toBigInt(),
     storageDeposit: sd,
+    codeDeposit: parts.codeDeposit,
+    itemStorageDeposit: parts.itemStorageDeposit,
     weight: { refTime: dry.weightRequired.refTime.toBigInt(), proofSize: dry.weightRequired.proofSize.toBigInt() },
     blockNumber,
   };

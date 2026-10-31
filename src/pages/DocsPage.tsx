@@ -93,7 +93,7 @@ export function DocsPage() {
                 <tr><td className="px-4 py-3 font-data">net_peerCount</td><td className="px-4 py-3">EVM HTTP</td><td className="px-4 py-3">Connected peers. The live testnet RPC answers 0x1.</td></tr>
                 <tr><td className="px-4 py-3 font-data">Capability discovery</td><td className="px-4 py-3">EVM HTTP</td><td className="px-4 py-3">Calls rpc_methods, then keeps only an allowlist of safe read-only methods. Write methods (eth_send, eth_sign, personal_, author_, state_) are never advertised.</td></tr>
                 <tr><td className="px-4 py-3 font-data">system_health</td><td className="px-4 py-3">Substrate WSS</td><td className="px-4 py-3">Syncing state and peer count from the Substrate side of the node.</td></tr>
-                <tr><td className="px-4 py-3 font-data">system_chain, system_version, chain_getHeader</td><td className="px-4 py-3">Substrate WSS</td><td className="px-4 py-3">Chain name, node version, and latest Substrate header. The header number is a Substrate counter, not an EVM block height — the two are never subtracted from each other.</td></tr>
+                <tr><td className="px-4 py-3 font-data">system_chain, system_version, chain_getHeader</td><td className="px-4 py-3">Substrate WSS</td><td className="px-4 py-3">Chain name, node version, and latest Substrate header. Compared with the EVM height, a gap of 2 blocks or less is acceptable. A larger gap is a recommendation only when it persists across checks. It does not change the canonical score.</td></tr>
               </tbody>
             </table>
           </div>
@@ -145,6 +145,10 @@ export function DocsPage() {
             <li>The computation is pure and deterministic: the same inputs give the same score, in any order (<code className="font-data text-slate-300">shared/liveStatus.mjs</code>, covered by <code className="font-data text-slate-300">healthScore.v2.test.ts</code>).</li>
             <li>New exports carry a <code className="font-data text-slate-300">healthScore</code> block with formula <code className="font-data text-slate-300">{HEALTH_SCORE_FORMULA_V2}</code> inside the SHA-256 stamp.</li>
             <li><code className="font-data text-slate-300">{HEALTH_SCORE_FORMULA}</code> is frozen: availability 30, chain identity 15, head progression 20, latency 20, transport parity 15 (10 for an answer, +5 when not syncing and peers &gt; 0). <code className="font-data text-slate-300">computeHealthScore</code> still reproduces it, so an old report&apos;s inputs recompute to the same number. Reports exported before v2, including the three anchored evidence files, are byte-for-byte verifiable and are not rewritten.</li>
+            <li>One Portaldot epoch is 1 hour. That is the reference for finality lag in the next-step text. The published curve still gives full marks at a lag of {FINALITY_FULL_LAG_BLOCKS} blocks and zero at {FINALITY_ZERO_LAG_BLOCKS}. Those block counts were not retuned to the hour, because that would change <code className="font-data text-slate-300">{HEALTH_SCORE_FORMULA_V2}</code> and existing reports would stop verifying.</li>
+            <li>Each component is shown next to the total. Transport parity remains “did the WebSocket answer?”. Beside it, the headline compares the EVM height with the Substrate header: a gap of 2 blocks or less is acceptable, and a larger gap is an action only when an earlier check in this browser already saw a gap above 2. That headline is not a ninth score component.</li>
+            <li>Custom weighting is a view in this browser. It is labelled as not <code className="font-data text-slate-300">{HEALTH_SCORE_FORMULA_V2}</code>, it can be reset, and it is not written into the export. The canonical score in the file is the one evidence anchors verify.</li>
+            <li>After a score, the panel names a next step for your node: restart it, switch or compare endpoints, check peers, or wait for the Portaldot team. A stall adds a degradation line: stop treating the endpoint as a source of inclusion. The same block is on the exported report as <code className="font-data text-slate-300">operatorActions</code>. Older reports do not have the field and still verify.</li>
           </ul>
         </section>
 
@@ -175,7 +179,9 @@ export function DocsPage() {
         <section id="status" className="mt-10 scroll-mt-20">
           <h2 className="border-b border-white pb-2 font-display text-[32px] leading-tight text-white">Status, history, and several nodes</h2>
           <ul className="mt-3 space-y-1.5 text-sm leading-relaxed text-slate-400">
-            <li><a href="/status" className="text-signal-ink underline decoration-signal/40 underline-offset-4 hover:text-white">/status</a> checks the published testnet once when the page opens, and again only when you press Refresh. It shows the verdict, Health Score v2, best and finalized heads, finality lag, peers, and latency, plus the embeddable badge. It does not accept an arbitrary RPC.</li>
+            <li><a href="/status" className="text-signal-ink underline decoration-signal/40 underline-offset-4 hover:text-white">/status</a> is the community status page. There is no official Portaldot status page, so this is the page an operator pastes into Discord. It checks the published testnet once when the page opens, and again only when you press Refresh. It shows the verdict, Health Score v2, a short next step, and a degradation line when the public testnet is stalled. It does not accept an arbitrary RPC.</li>
+            <li>Local baselines stay in this browser, per endpoint origin, for up to seven days. Overview can say the latency is slower than your 24 hour baseline or than yesterday. Nothing about your endpoint is uploaded.</li>
+            <li>Official RPCs are rate-limited. NodeScope keeps each endpoint under 5 requests per second: request starts on one origin are at least 250 ms apart (4 per second). Health checks, Watch, and Check all on <a href="/app/nodes" className="text-signal-ink underline decoration-signal/40 underline-offset-4 hover:text-white">/app/nodes</a> share that lane. Watch still has a 30 second floor. Different endpoints are not held for each other.</li>
             <li>Score history, on Overview, plots the Health Score, finality lag, and best head from the health checks in this session. An orange dot is a stalled head. A ring is a degrade, recover, stall, or resume. Two checks are required. New exports include a <code className="font-data text-slate-300">scoreHistory</code> block when those checks exist. Reports that do not have the block, including the anchored evidence, still verify.</li>
             <li>Nodes, at <a href="/app/nodes" className="text-signal-ink underline decoration-signal/40 underline-offset-4 hover:text-white">/app/nodes</a>, checks the published EVM RPC, the WebSocket, and any endpoint you add, side by side. The lowest head is marked behind. Check all is manual. Watch uses the same 30 second floor as the single-node watch.</li>
           </ul>
@@ -228,6 +234,7 @@ export function DocsPage() {
             <li><code className="font-data text-slate-300">sessionTrends</code> — verdict, pass rate, block progression, and snapshot count, when snapshots exist.</li>
             <li><code className="font-data text-slate-300">healthScore</code> — new exports use <code className="font-data text-slate-300">{HEALTH_SCORE_FORMULA_V2}</code> (<a href="#health-score" className="text-signal-ink underline decoration-signal/40 underline-offset-4 hover:text-white">methodology</a>). Older files may carry <code className="font-data text-slate-300">{HEALTH_SCORE_FORMULA}</code> and still verify.</li>
             <li><code className="font-data text-slate-300">operatorSignals</code> — stall assessment, reliability probe, and units, when those were run.</li>
+            <li><code className="font-data text-slate-300">operatorActions</code> — the next step for the operator, including a degradation line when the head is stalled. Additive. Reports without it, including the anchored evidence, still verify. Custom weights and local baselines are not in the file.</li>
             <li><code className="font-data text-slate-300">integrity</code> — <code className="font-data text-slate-300">algorithm: SHA-256</code>, the hash, and its scope.</li>
           </ul>
           <p className="mt-3 text-sm leading-relaxed text-slate-400">
@@ -260,8 +267,11 @@ export function DocsPage() {
             Substrate WebSocket (a <code className="font-data text-slate-300">ReviveApi</code> dry-run plus{' '}
             <code className="font-data text-slate-300">TransactionPaymentApi.query_info</code>). The EVM gas
             figure already includes the storage deposit; the native figure reports it separately as
-            a refundable hold. That is why a fee-only comparison can read ~800× while the all-in
-            comparison lands near 1×. The From address is only a dry-run origin: nothing signs.
+            a reserved hold from a ReviveApi dry-run plus paymentInfo. The hold is refundable in two parts.
+            Code deposit: when the code is no longer referenced by any contract and the removal conditions are met, the original uploader can remove the code and receive the refund.
+            Item storage deposit: after contract termination, storage cleanup is performed and the deposit is refunded.
+            That is why a fee-only comparison can read ~800× while the all-in
+            comparison lands near 1×. The From address is only a dry-run origin: nothing is signed or submitted.
             The section opens no connection until you measure, polls nothing, and closes the
             Substrate connection when you leave it.
           </p>

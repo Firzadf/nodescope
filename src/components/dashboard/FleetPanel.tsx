@@ -113,7 +113,7 @@ export function FleetPanel() {
         <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">Several nodes, one table</p>
         <h2 className="mt-2 text-2xl font-semibold text-white">Multi-node</h2>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-          The published EVM RPC and WebSocket are listed already. Add your own endpoints, then press Check all. The node with the lowest head is marked behind. Nothing runs until you ask.
+          The published EVM RPC and WebSocket are listed already. Add your own endpoints, then press Check all. Checks on one endpoint stay under 5 requests per second. The node with the lowest head is marked behind. Nothing runs until you ask.
         </p>
       </div>
       <div className="flex flex-col gap-2 sm:flex-row">

@@ -23,7 +23,7 @@ export const zh: LandingCopy = {
   heroLine1: '控制台负责交互。',
   heroAccent: '负责证明。',
   heroParagraph:
-    '面向 Portaldot 节点的只读诊断工具包。它将健康检查记录为快照，以确定性的方式进行比对，并导出报告——让节点的健康状况成为可以',
+    '面向 Portaldot 节点运营者与验证人的只读自检。它为你的节点打分，给出下一步，并留下收据——让节点的健康状况成为可以',
   heroParagraphEmphasis: '展示',
   heroParagraphTail: '的事实，而不只是一句断言。',
   launchApp: '启动应用',
@@ -191,7 +191,7 @@ export const zh: LandingCopy = {
     {
       cap: '综合结论',
       tone: 'emerald',
-      what: '最新的 EVM 健康快照与 Substrate WebSocket 探测结果在同一面板中一并呈现——每个数字都显示各自的时间戳，两个计数器绝不相互相减。',
+      what: '最新的 EVM 健康快照与 Substrate WebSocket 探测结果在同一面板中一并呈现。相差 2 个区块或更少是可以接受的。更大的差距只有在持续出现时才成为建议，且不改变规范分数。',
       proof: 'Overview 中的面板 07 · 两种传输通道，不打分',
     },
     {
@@ -234,11 +234,11 @@ export const zh: LandingCopy = {
   onchainVerifyNote:
     '这条链没有公开的 EVM 浏览器：Portaldot 的两个官方浏览器都是 Substrate 浏览器，不显示 EVM 回执。因此这里直接通过 RPC 本身进行验证，这也正是面板读取数据的同一来源。',
   whoTitle: '谁在使用 NodeScope',
-  whoRight: '为节点运营者打造，对所有检查节点的人都有用',
+  whoRight: '节点运营者与验证人，先做自检',
   whoItems: [
     {
       title: 'Portaldot 节点运营者与验证人',
-      body: '用快照证明一个端点在整个会话中保持健康——而不只是某一刻亮起的绿灯。',
+      body: '这是 NodeScope 的服务对象。在你自己的端点上做自检：分数、每个组成部分、EVM 与 Substrate 的头条对照、下一步（重启、切换端点、检查对等节点，或等待团队），以及相对昨天的本地基线。不会签名。',
     },
     {
       title: '需要证明 SLA 的 RPC 服务商',
@@ -328,12 +328,12 @@ export const zh: LandingCopy = {
     { label: '链头推进', weight: 15, rule: '时间戳达到或超过 90 秒得 0。否则同一端点两个快照：推进得 15 · 相隔不足 30 秒且高度相同得一半 · 停滞或回退得 0。' },
     { label: '最终性滞后', weight: 15, rule: 'WSS 上的 best 减去 finalized。滞后 ≤ 4 个区块得满分，≥ 64 得 0，中间线性计算。' },
     { label: '延迟', weight: 10, rule: '成功检查的中位数：≤ 300 ms 得 10，≥ 2000 ms 得 0，中间线性计算。' },
-    { label: '传输一致性（WSS）', weight: 10, rule: 'Substrate 探测有响应得 10。探测失败得 0。对等节点另行计分。' },
+    { label: '传输一致性（WSS）', weight: 10, rule: 'Substrate 探测有响应得 10。探测失败得 0。对等节点另行计分。头条对照比较 EVM 与 Substrate 链头：相差 2 或更少可以接受，更大的差距只有持续出现才需要行动。该头条不属于这一权重。' },
     { label: '对等节点与同步', weight: 10, rule: 'peers > 0（或不期望有对等节点）得 4，未在同步得 3，同步差距 ≤ 8 个区块或未报告得 3。' },
     { label: 'RPC 可靠性', weight: 10, rule: '重复 eth_blockNumber 的 10 × (1 − 错误率) × p95 系数。未运行该探测时不计分。' },
   ],
   scoreFormula: 'score = round(100 × Σ points ÷ Σ measured weight) · 仅在 measured weight ≥ 50 时显示',
-  scoreFootnote: '分档：90–100 健康 · 70–89 降级 · 0–69 严重。新报告使用 v2。v1 仍可复现旧报告。STALLED 是结论而不是分档：链已暂停但 RPC 仍在应答。',
+  scoreFootnote: '分档：90–100 健康 · 70–89 降级 · 0–69 严重。新报告使用 v2。v1 仍可复现旧报告。STALLED 是结论而不是分档：链已暂停但 RPC 仍在应答。Portaldot 的一个 epoch 是 1 小时；区块曲线没有按这一小时重调。自定义权重只在本机浏览器中查看，不取代 v2。',
   scoreCta: '阅读完整方法说明',
   marqueeLive: '实时区块',
   marqueeItems: [
@@ -385,23 +385,23 @@ export const zh: LandingCopy = {
   judgeSteps: [
     {
       title: '启动应用',
-      body: '打开 /app。Portaldot V3 EVM 端点已预先填好。无需配置，无需签名。',
+      body: '做：打开 /app → 看到 Portaldot V3 EVM 端点已填好。无需签名。',
     },
     {
       title: '连接并检查',
-      body: '点击 Connect & Test，然后点击 Run Health Check。四个方法会运行，结果保存为带时间戳的快照。',
+      body: '做：点击 Connect & Test，然后点击 Run Health Check → 看到带时间戳的快照、每个分数组成部分，以及下一步：重启节点、切换端点、检查对等节点，或等待团队。',
     },
     {
       title: '探测第二种传输通道',
-      body: '在 Overview 的面板 06 中点击 Probe WSS Node。随后面板 07 会同时读取 EVM 快照和 Substrate 探测结果，每个数字都带有各自的时间戳。',
+      body: '做：点击 Probe WSS Node → 看到 EVM 高度与 Substrate 头并排。相差 2 个区块或更少可以接受。更大的差距只有持续出现才需要行动。',
     },
     {
       title: '导出并验证',
-      body: '在 History 中导出诊断报告，然后将同一文件拖到 /verify。SHA-256 签章覆盖除签章本身之外的全部内容，因此修改文件中的任何值都会使其失效。',
+      body: '做：从 History 导出报告并拖到 /verify → 看到任何值被改动后 SHA-256 签章失败。规范分数仍是 nodescope.health-score.v2。做：打开 /status → 看到可粘贴到 Discord 的社区状态行。Portaldot 没有官方状态页。',
     },
     {
       title: '锚定（可选）',
-      body: '注册合约已部署在 Portaldot V3 测试网上。使用你自己的钱包工具将报告哈希锚定上链，然后在 History 的面板 04 中验证该交易，或从同一面板打开可分享的验证链接。',
+      body: '做：用你自己的钱包工具锚定报告哈希 → 在 History 面板 04 看到交易验证通过。NodeScope 从不签名。',
     },
   ],
   judgeFootnote:
@@ -432,7 +432,7 @@ export const zh: LandingCopy = {
     measuredLabel: '测量时间',
   },
   feeBlockTitle: '促成“费用”支柱的那个数字',
-  feeBlockBody: '对示例代币进行的一次实测部署：EVM 124.098219 tPOT，原生 all-in 122.191411 tPOT。仅比较手续费，差距为 804x；比较 all-in 总成本，则为 1.016x。差别在于存储押金，存储释放时可退还。',
+  feeBlockBody: '对示例代币进行的一次实测部署：EVM 124.098219 tPOT，原生 all-in 122.191411 tPOT。仅比较手续费，差距为 804x；比较 all-in 总成本，则为 1.016x。差别在于存储押金。代码押金在代码不再被引用且原始上传者移除时退还。条目存储押金在合约终止并完成存储清理后退还。',
   feeBlockEvm: 'EVM 总计：124.098219 tPOT',
   feeBlockNative: '原生 all-in：122.191411 tPOT（手续费 0.154411 + 押金 122.037）',
   feeBlockFootnote: '测量于 2026 年 10 月 26 日，与 /fees 发现表为同一次运行。可在 Fee Lab 中实时重新测量。',

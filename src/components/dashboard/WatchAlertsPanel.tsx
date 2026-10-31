@@ -13,6 +13,7 @@ import {
 } from '../../utils/alertWebhook';
 import type { OverallVerdict } from '../../utils/overallVerdict';
 import type { StallState } from '../../utils/stall';
+import { planOperatorActions } from '../../../shared/operatorActions.mjs';
 
 export interface WatchCycleResult {
   verdict: OverallVerdict;
@@ -123,6 +124,11 @@ export function WatchAlertsPanel({ runCycle, current, onToast, tickMsOverride }:
           score: r.score,
           coverage: r.coverage,
           detail: transition === 'stall' || transition === 'resume' ? r.stallExplanation ?? null : null,
+          nextStep: planOperatorActions({
+            scope: 'self',
+            score: { score: r.score, components: [] },
+            stall: { state: stall },
+          }).overall.short,
           at: new Date(),
         };
         const outcome = await sendWebhook(urlRef.current, event);
@@ -249,7 +255,7 @@ export function WatchAlertsPanel({ runCycle, current, onToast, tickMsOverride }:
             </p>
           )}
           <p className="mt-3 text-xs leading-relaxed text-slate-500">
-            Stored only in this browser (localStorage), never in a report or link. Messages go out on degrade/recover and on stall/resume while you watch, and on Send test. Read-only toward the chain: nothing signs.
+            Stored only in this browser (localStorage), never in a report or link. Messages go out on degrade/recover and on stall/resume while you watch, and on Send test. Read-only toward the chain: nothing signs. Each endpoint stays under 5 requests per second. The shortest interval is 30 seconds.
           </p>
         </div>
         <div className="bg-panel p-5">

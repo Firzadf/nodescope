@@ -107,6 +107,8 @@ export interface AlertEvent {
   coverage: number | null;
   /** Plain stall/resume sentence, when that is the kind. */
   detail?: string | null;
+  /** Operator next step, when the cycle computed one. */
+  nextStep?: string | null;
   at: Date;
 }
 
@@ -128,6 +130,7 @@ export function alertText(e: AlertEvent): string {
     ...(e.detail ? [e.detail] : []),
     `Block: ${e.blockHeight ?? 'not observed'}`,
     `Health Score: ${e.score === null ? 'not scored' : `${e.score}/100`}${e.coverage !== null ? ` (coverage ${e.coverage}%)` : ''}`,
+    ...(e.nextStep ? [`Next step: ${e.nextStep}`] : []),
     `At: ${e.at.toISOString()}`,
     'Read-only check from NodeScope. Nothing was signed.',
   ];

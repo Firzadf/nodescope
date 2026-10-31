@@ -33,7 +33,9 @@ describe('StatusPage', () => {
     expect(screen.getByText('81/100')).toBeTruthy();
     expect(screen.getByText('232115')).toBeTruthy();
     expect(screen.getByText('232113')).toBeTruthy();
-    expect(screen.getByText(/2 blocks/)).toBeTruthy();
+    expect(screen.getAllByText(/2 blocks/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Wait for the Portaldot team/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/community status/i).length).toBeGreaterThan(0);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
     await screen.findByText('STALLED');

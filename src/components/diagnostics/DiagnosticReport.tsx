@@ -7,6 +7,7 @@ import type { Finding } from '../../types/diagnostic';
 import type { HealthCheckSnapshot } from '../../types/healthCheck';
 import {
   attachHealthScore,
+  attachOperatorActions,
   attachOperatorSignals,
   attachScoreHistory,
   attachSessionTrends,
@@ -20,6 +21,9 @@ import type { ChainMotion, StallAssessment } from '../../utils/stall';
 import type { ReliabilityReport } from '../../services/reliabilityProbe';
 import type { UnitsSanity } from '../../utils/unitsSanity';
 import { computeSessionTrends } from '../../utils/sessionTrends';
+import { computeHealthScoreV2 } from '../../utils/healthScore';
+import { assessEndpointParity } from '../../../shared/endpointParity.mjs';
+import { planOperatorActions } from '../../../shared/operatorActions.mjs';
 import { evaluateHistoryFindings } from '../../services/diagnosticRules';
 
 interface DiagnosticReportProps {
@@ -48,6 +52,7 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
       const exportFindings: Finding[] = evaluateHistoryFindings(history, exportRuleConfig);
       const report = await stampReportIntegrity(
         attachScoreHistory(
+        attachOperatorActions(
         attachOperatorSignals(
           attachHealthScore(
             attachSubstrateWsProbe(
@@ -59,6 +64,8 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
             { motion, reliability },
           ),
           { stall, wsProbe: wsProbeResult, reliability, units },
+        ),
+          { snapshots: healthSnapshots, wsProbe: wsProbeResult, stall },
         ),
           healthSnapshots,
           wsProbeResult,
@@ -102,6 +109,25 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
   // persisted into history by the connection flow, so evaluating them again here would
   // reintroduce a second block-height finding for the same endpoint.
   const findings = evaluateHistoryFindings(history, ruleConfig);
+  const exportPlan = useMemo(() => {
+    if (healthSnapshots.length === 0 && !wsProbeResult && stall?.state !== 'stalled') return null;
+    const scored = computeHealthScoreV2({
+      snapshots: healthSnapshots,
+      wsProbe: wsProbeResult,
+      motion,
+      reliability: reliability
+        ? { samples: reliability.samples, errors: reliability.errors, http5xx: reliability.http5xx, p50Ms: reliability.p50Ms, p95Ms: reliability.p95Ms }
+        : null,
+    });
+    if (scored.coverage === 0 && stall?.state !== 'stalled') return null;
+    return planOperatorActions({
+      scope: 'self',
+      score: scored,
+      stall,
+      wsProbe: wsProbeResult,
+      parity: assessEndpointParity({ snapshots: healthSnapshots, wsProbe: wsProbeResult }),
+    });
+  }, [healthSnapshots, wsProbeResult, motion, reliability, stall]);
   const totalFindings = findings.length;
   const errorFindings = findings.filter((f) => f.severity === 'error').length;
   const warningFindings = findings.filter((f) => f.severity === 'warning').length;
@@ -189,6 +215,12 @@ export function DiagnosticReport({ history, latencyThresholdMs, healthSnapshots 
                   <p className="text-slate-500">
                     Session trends are not in this export yet — they need at least 2 health checks for one
                     endpoint (currently {sessionTrends.snapshotCount}).
+                  </p>
+                )}
+                {exportPlan && (
+                  <p className="mt-3 text-slate-300">
+                    Next step: {exportPlan.overall.nextStep}
+                    {exportPlan.degradation ? ` ${exportPlan.degradation}` : ''} The export includes this under operatorActions. The canonical score stays {exportPlan.schema === 'nodescope.operator-actions.v1' ? 'nodescope.health-score.v2' : ''}.
                   </p>
                 )}
               </div>

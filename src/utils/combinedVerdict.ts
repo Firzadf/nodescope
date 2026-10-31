@@ -5,12 +5,11 @@ import { getV3Era, v3EraLabel } from './v3Era';
 /**
  * Combined EVM + Substrate verdict.
  *
- * The two sides are shown side by side, never subtracted from each other:
- * the EVM block height comes from eth_blockNumber over HTTP, while the
- * Substrate header number comes from chain_getHeader over WebSocket.
- * They are different counters on different transports, so a difference
- * between them is not a lag, a drift, or a finding. It is just two
- * numbers from two transports, each with its own timestamp.
+ * The two sides are shown side by side. A gap of 2 blocks or less between
+ * the EVM height and the Substrate header is acceptable. A larger gap is
+ * a recommendation only when it persists across checks, and that
+ * recommendation lives outside this verdict so the object shape stays
+ * the same.
  */
 
 export interface EvmSide {
@@ -35,8 +34,9 @@ export interface CombinedVerdict {
 }
 
 export const CROSS_TRANSPORT_NOTE =
-  'EVM block height and Substrate header number are different counters on different transports. ' +
-  'They are shown side by side with their own timestamps and are never subtracted from each other.';
+  'EVM block height and the Substrate header are shown side by side with their own timestamps. ' +
+  'A gap of 2 blocks or less is acceptable. A larger gap is a recommendation only when it persists across checks, ' +
+  'and it is not part of this verdict or of nodescope.health-score.v2.';
 
 export function hexToDecimal(raw: string | number | boolean | null): string | null {
   if (typeof raw !== 'string' || !/^0x[0-9a-fA-F]+$/.test(raw)) return null;

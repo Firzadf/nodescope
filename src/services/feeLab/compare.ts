@@ -1,4 +1,5 @@
 import { weiToPlanck, ratio } from './units';
+import { DEPOSIT_REASON_SUFFIX } from './deposits';
 
 export type Surface = 'evm' | 'native';
 
@@ -12,6 +13,9 @@ export type NativeLeg =
       method: string;
       partialFee: bigint;
       storageDeposit: bigint;
+      /** Present when a read-only dry-run could separate the two refundable holds. */
+      codeDeposit?: bigint | null;
+      itemStorageDeposit?: bigint | null;
       totalPlanck: bigint;
       weight: { refTime: bigint; proofSize: bigint };
       blockNumber: number;
@@ -41,8 +45,19 @@ export function evmLegFromQuote(method: string, q: { gas: bigint; gasPrice: bigi
   return { status: 'ok', method, gas: q.gas, gasPrice: q.gasPrice, feeWei: q.feeWei, totalPlanck: weiToPlanck(q.feeWei, evmDecimals, nativeDecimals), blockNumber: q.blockNumber };
 }
 
-export function nativeLegFromQuote(q: { method: string; partialFee: bigint; storageDeposit: bigint; weight: { refTime: bigint; proofSize: bigint }; blockNumber: number }): NativeLeg {
-  return { status: 'ok', method: q.method, partialFee: q.partialFee, storageDeposit: q.storageDeposit, totalPlanck: q.partialFee + q.storageDeposit, weight: q.weight, blockNumber: q.blockNumber };
+export function nativeLegFromQuote(q: { method: string; partialFee: bigint; storageDeposit: bigint; codeDeposit?: bigint | null; itemStorageDeposit?: bigint | null; weight: { refTime: bigint; proofSize: bigint }; blockNumber: number }): NativeLeg {
+  const leg: Extract<NativeLeg, { status: 'ok' }> = {
+    status: 'ok',
+    method: q.method,
+    partialFee: q.partialFee,
+    storageDeposit: q.storageDeposit,
+    totalPlanck: q.partialFee + q.storageDeposit,
+    weight: q.weight,
+    blockNumber: q.blockNumber,
+  };
+  if (q.codeDeposit != null) leg.codeDeposit = q.codeDeposit;
+  if (q.itemStorageDeposit != null) leg.itemStorageDeposit = q.itemStorageDeposit;
+  return leg;
 }
 
 export function compareLegs(evm: EvmLeg, native: NativeLeg, now: Date = new Date()): Comparison {
@@ -76,7 +91,7 @@ export function compareLegs(evm: EvmLeg, native: NativeLeg, now: Date = new Date
     reason = `Native is cheaper all-in by ${(rel * 100).toFixed(1)}%.`;
   }
   if (native.storageDeposit > 0n) {
-    reason += ' Native storage deposit is reserved (refundable when storage is freed); the EVM gas figure already folds it in.';
+    reason += DEPOSIT_REASON_SUFFIX;
   }
   return { evm, native, ratioAllIn: r, ratioVsNativeFeeOnly: rFee, recommended, savingsPlanck: diff, reason, measuredAt };
 }

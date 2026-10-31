@@ -4,6 +4,13 @@
 
 ### Added
 
+- Operator next steps on the Health Score, in exported reports (`operatorActions`), and as a short Discord line on `/status`. A stall adds a degradation recommendation: restart your node, switch endpoints, check peers, or wait for the Portaldot team.
+- Health Score components sit beside the total. The WSS headline compares the EVM height with the Substrate header: a gap of 2 blocks or less is acceptable, and a larger gap is an action only when it persists. Custom weighting is view-only, stored in the browser, and resettable. `nodescope.health-score.v2` and v1 are unchanged.
+- Local baselines (score, latency, head, finality) stay in the browser, per endpoint. Comparisons include “slower than your 24h baseline” and “than yesterday”.
+- `/status` is the community status page. There is no official Portaldot status page.
+- Request starts on one endpoint are spaced by 250 ms so health checks, Watch, Check all, the CLI, and `/status` stay under 5 requests per second.
+- Fee Lab states the two refundable deposit parts (code deposit and item storage deposit) and, when the runtime constant is readable, splits a deploy’s dry-run hold.
+
 - `/status` shows the live Portaldot V3 testnet verdict, Health Score v2, heads, finality lag, peers, and latency. One check on open, plus Refresh. The badge embed is on the same page.
 - Score history chart on Overview, from the session's health checks. Stalls and degrade/recover/stall/resume marks are drawn on the line. New exports can include `scoreHistory`. Older reports still verify.
 - Multi-node view at `/app/nodes`: the published EVM RPC and WebSocket plus endpoints you add, sortable, with the lowest head marked behind. Check all, or Watch at the same 30 second floor.
