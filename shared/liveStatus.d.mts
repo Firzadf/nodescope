@@ -22,6 +22,8 @@ export const FINALITY_ZERO_LAG_BLOCKS: number;
 export const FINALITY_STALL_LAG_BLOCKS: number;
 export const FINALITY_STALL_MIN_AGE_SECONDS: number;
 export const SYNC_GAP_FULL_BLOCKS: number;
+/** One Portaldot epoch, in seconds (1 hour). Not an input to the v2 score. */
+export const PORTALDOT_EPOCH_SECONDS: number;
 export const BADGE_EVM_HOST: string;
 export const BADGE_WSS_HOST: string;
 export const BADGE_CACHE_CONTROL: string;

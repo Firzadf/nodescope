@@ -5,6 +5,8 @@ import type { StallAssessment } from './stall';
 import type { UnitsSanity } from './unitsSanity';
 import { SYNC_GAP_FULL_BLOCKS } from '../../shared/liveStatus.mjs';
 import { parseHeight } from '../../shared/liveStatus.mjs';
+import { planOperatorActions } from '../../shared/operatorActions.mjs';
+import { PORTALDOT_EPOCH_SECONDS } from '../../shared/liveStatus.mjs';
 import { EXPOSED_METHODS_WITHHELD_NOTE } from './rpcSecurity';
 
 function withheldExposedMethodsFinding(): Finding {
@@ -28,13 +30,14 @@ export function operatorFindings(input: {
   const out: Finding[] = [];
   const stall = input.stall;
   if (stall?.state === 'stalled') {
+    const plan = planOperatorActions({ scope: 'self', stall, wsProbe: input.wsProbe ?? null, score: null });
     out.push({
       ruleId: 'chain.stalled',
       severity: 'error',
       title: 'Chain paused but RPC answers',
       evidence: stall.explanation,
       explanation: 'The endpoint is answering, and the best head and/or the finalized head has not advanced past the published threshold. Transfers broadcast in this window do not get included.',
-      recommendation: 'Treat the node as STALLED, not healthy. Watch for a resume alert before retrying broadcasts.',
+      recommendation: plan.degradation ?? plan.overall.nextStep,
     });
   }
   const ws = input.wsProbe;
@@ -93,8 +96,8 @@ export function operatorFindings(input: {
       severity: ws.finalityLagBlocks >= 64 ? 'error' : 'warning',
       title: 'Finality lag',
       evidence: `Best #${ws.headerNumberDecimal ?? '—'} − finalized #${ws.finalizedNumberDecimal ?? '—'} = ${ws.finalityLagBlocks} blocks.`,
-      explanation: 'Blocks past the finalized head can still be re-orged. Full marks on the v2 score stop at 4 blocks of lag; 64 or more scores zero.',
-      recommendation: 'Wait for finality before treating a recent block as settled.',
+      explanation: `Blocks past the finalized head can still be re-orged. Full marks on the v2 score stop at 4 blocks of lag; 64 or more scores zero. Those block counts are not an epoch. One Portaldot epoch is ${PORTALDOT_EPOCH_SECONDS / 3600} hour, and the canonical curve was not retuned.`,
+      recommendation: 'Wait for finality before treating a recent block as settled. If the finalized head has not moved for a full epoch and /status is stalled, wait for the Portaldot team. If only this node is stuck, restart it.',
     });
   }
   const rel = input.reliability;

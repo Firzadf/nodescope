@@ -16,6 +16,8 @@ import type { ReliabilityReport } from '../services/reliabilityProbe';
 import type { UnitsSanity } from './unitsSanity';
 import { operatorFindings } from './operatorFindings';
 import { buildScoreHistory, type ScoreHistoryPoint } from './scoreHistory';
+import { assessEndpointParity } from '../../shared/endpointParity.mjs';
+import { planOperatorActions, type OperatorActionPlan } from '../../shared/operatorActions.mjs';
 
 export const REPORT_SCHEMA_VERSION = 'nodescope.diagnostic-report.v1';
 
@@ -96,6 +98,12 @@ export interface DiagnosticReportExport {
    * have this field and still verify.
    */
   scoreHistory?: { schema: 'nodescope.score-history.v1'; points: ScoreHistoryPoint[] };
+  /**
+   * Optional next step for the operator who exported the file. Additive.
+   * The canonical healthScore block is unchanged. Older reports, including
+   * the anchored evidence, do not have this field and still verify.
+   */
+  operatorActions?: OperatorActionPlan;
   integrity?: ReportIntegrity;
 }
 
@@ -303,6 +311,33 @@ export function attachOperatorSignals(
       findings,
     },
   };
+}
+
+/**
+ * Attach the operator next step. Additive. Skipped when there is no
+ * score and no stall, so an empty export does not invent an action.
+ * Custom weights and local baselines stay in the browser and are not
+ * written here.
+ */
+export function attachOperatorActions(
+  report: DiagnosticReportExport,
+  input: {
+    snapshots: HealthCheckSnapshot[];
+    wsProbe: SubstrateWsProbeResult | null;
+    stall: StallAssessment | null;
+  },
+): DiagnosticReportExport {
+  const stalled = input.stall?.state === 'stalled';
+  if (!report.healthScore && !stalled) return report;
+  const parity = assessEndpointParity({ snapshots: input.snapshots, wsProbe: input.wsProbe });
+  const plan = planOperatorActions({
+    scope: 'self',
+    score: report.healthScore ?? null,
+    stall: input.stall,
+    wsProbe: input.wsProbe,
+    parity,
+  });
+  return { ...report, operatorActions: plan };
 }
 
 /** Attach the session chart when at least two checks exist. Additive. */

@@ -41,7 +41,8 @@ describe('computeCombinedVerdict', () => {
     const v = computeCombinedVerdict(evm, null);
     expect(v.status).toBe('partial');
     expect(v.warnings.length).toBeGreaterThan(0);
-    expect(CROSS_TRANSPORT_NOTE).toContain('never subtracted');
+    expect(CROSS_TRANSPORT_NOTE).toContain('2 blocks');
+    expect(CROSS_TRANSPORT_NOTE).toContain('persists');
     expect('crossTransportDelta' in v).toBe(false);
   });
 

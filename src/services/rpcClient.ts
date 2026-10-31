@@ -1,5 +1,6 @@
 import type { JsonRpcRequest, JsonRpcResponse, RpcDiagnosticResult } from '../types/rpc';
 import { validateRpcUrl } from '../utils/urlValidator';
+import { paceRequest } from '../../shared/requestPace.mjs';
 
 let requestIdCounter = 1;
 
@@ -35,6 +36,9 @@ export async function sendJsonRpcRequest(
     params,
     id: requestIdCounter++,
   };
+
+  // Space starts on this origin before the timer, so the gap is not latency.
+  await paceRequest(url);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);

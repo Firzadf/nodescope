@@ -37,9 +37,10 @@ forward over time, never backward in a single session.
    count, and syncing state. A `Method not found` answer to an `eth_*` method on
    this transport is expected: it is a Substrate transport, not an EVM one.
 4. Panel 07, Combined Verdict, reads the EVM snapshot and the Substrate probe
-   together. Each number keeps its own timestamp. The two counters are never
-   subtracted from each other, because they count different things on different
-   transports.
+   together. Each number keeps its own timestamp. A gap of 2 blocks or less
+   between the EVM height and the Substrate header is acceptable. A larger
+   gap is a recommendation only when it persists across checks, and it does
+   not change the canonical Health Score.
 
 ## 3. The report, verified by anyone
 
@@ -79,8 +80,8 @@ npm run lint
 npm run build
 ```
 
-At the last full verification, 29 Oct 2026, the suite passed 552 tests across
-84 files, lint reported 0 errors (one pre-existing React warning in the
+At the last full verification, 31 Oct 2026, the suite passed 574 tests across
+89 files, lint reported 0 errors (one pre-existing React warning in the
 verdict bar's clock), and the production build succeeded. If a
 future change breaks that, the suite, not this document, is the authority.
 

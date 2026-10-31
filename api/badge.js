@@ -13,11 +13,15 @@ import {
   computeHealthScoreV2,
   renderBadgeSvg,
 } from '../shared/liveStatus.mjs';
+import { planOperatorActions } from '../shared/operatorActions.mjs';
+import { assessTransportHeads } from '../shared/endpointParity.mjs';
+import { paceRequest } from '../shared/requestPace.mjs';
 
 const CACHE_MS = 20_000;
 const cache = new Map();
 
 async function rpc(url, method, params, fetchImpl, timeoutMs = 8000) {
+  await paceRequest(url);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -56,11 +60,20 @@ function wsCall(url, calls, timeoutMs, wsFactory) {
     };
     const timer = setTimeout(() => done(null), timeoutMs);
     ws.onopen = () => {
-      calls.forEach((call, i) => {
-        const method = Array.isArray(call) ? call[0] : call;
-        const params = Array.isArray(call) ? call[1] : [];
-        ws.send(JSON.stringify({ jsonrpc: '2.0', id: i + 1, method, params }));
-      });
+      void (async () => {
+        for (let i = 0; i < calls.length; i++) {
+          const call = calls[i];
+          const method = Array.isArray(call) ? call[0] : call;
+          const params = Array.isArray(call) ? call[1] : [];
+          await paceRequest(url);
+          try {
+            ws.send(JSON.stringify({ jsonrpc: '2.0', id: i + 1, method, params }));
+          } catch {
+            done(null);
+            return;
+          }
+        }
+      })();
     };
     ws.onmessage = (event) => {
       try {
@@ -149,6 +162,14 @@ export async function liveBadgeStatus(evm, wss, deps = {}) {
   else verdict = 'down';
   const detail = `${FORMULA_V2}. ${stall.explanation}`;
   const peers = typeof health?.peers === 'number' ? health.peers : null;
+  const parity = assessTransportHeads({ evmHeight: bestDec, wssHeight: headerDec });
+  const actions = planOperatorActions({
+    scope: 'public_testnet',
+    score,
+    stall,
+    wsProbe,
+    parity,
+  });
   return {
     verdict,
     score: score.score,
@@ -166,6 +187,10 @@ export async function liveBadgeStatus(evm, wss, deps = {}) {
     latencyMs,
     chain: typeof ws?.[1] === 'string' ? ws[1] : null,
     explanation: stall.explanation,
+    action: actions.overall,
+    degradation: actions.degradation,
+    parity: actions.parity,
+    substrateHeight: headerDec,
   };
 }
 

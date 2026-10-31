@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { PaperHeader } from '../components/layout/PaperHeader';
+import { CopyButton } from '../components/common/CopyButton';
 import { BADGE_EVM_HOST, BADGE_WSS_HOST, FORMULA_V2 } from '../../shared/liveStatus.mjs';
+import { assessTransportHeads } from '../../shared/endpointParity.mjs';
+import { planOperatorActions } from '../../shared/operatorActions.mjs';
 
 interface PublicStatus {
   verdict: string;
@@ -18,6 +21,9 @@ interface PublicStatus {
   chain?: string | null;
   explanation?: string;
   error?: string;
+  substrateHeight?: string | null;
+  action?: { kind: string; title: string; nextStep: string; short: string };
+  degradation?: string | null;
 }
 
 const NAV = [
@@ -99,16 +105,74 @@ export function StatusPage() {
     void apply(true);
   };
 
+  const priorGaps = useMemo(() => {
+    if (typeof window === 'undefined' || !status?.checkedAt) return [] as number[];
+    try {
+      const raw = window.sessionStorage.getItem('nodescope.status-gaps');
+      const parsed = raw ? JSON.parse(raw) as unknown : [];
+      return Array.isArray(parsed) ? parsed.filter((n): n is number => typeof n === 'number') : [];
+    } catch {
+      return [] as number[];
+    }
+  }, [status?.checkedAt]);
+  const heads = useMemo(
+    () => assessTransportHeads({
+      evmHeight: status?.bestHeight ?? null,
+      wssHeight: status?.substrateHeight ?? null,
+      priorAbsGaps: priorGaps,
+    }),
+    [status, priorGaps],
+  );
+  const plan = useMemo(() => {
+    if (status?.action && status.verdict !== 'stalled' && heads.status !== 'persistent_gap') {
+      return { short: status.action.short, nextStep: status.action.nextStep, degradation: status.degradation ?? null };
+    }
+    if (!status) return null;
+    const stalled = status.verdict === 'stalled';
+    const computed = planOperatorActions({
+      scope: 'public_testnet',
+      score: { score: status.score ?? null, components: [] },
+      stall: {
+        state: stalled ? 'stalled' : status.verdict === 'down' ? 'unknown' : 'live',
+        finalityLagBlocks: status.finalityLag ?? null,
+      },
+      wsProbe: status.verdict === 'down'
+        ? { status: 'error', peers: status.peers ?? null }
+        : { status: 'ok', peers: status.peers ?? null },
+      parity: heads.status === 'persistent_gap' ? { status: 'persistent_gap', summary: heads.summary } : null,
+    });
+    if (stalled || heads.status === 'persistent_gap' || !status.action) {
+      return { short: computed.overall.short, nextStep: computed.overall.nextStep, degradation: computed.degradation };
+    }
+    return { short: status.action.short, nextStep: status.action.nextStep, degradation: status.degradation ?? null };
+  }, [status, heads]);
+
+  useEffect(() => {
+    if (heads.gap === null || !status?.checkedAt) return;
+    try {
+      const raw = window.sessionStorage.getItem('nodescope.status-gaps');
+      const prev = raw ? JSON.parse(raw) as unknown : [];
+      const list = Array.isArray(prev) ? prev.filter((n): n is number => typeof n === 'number') : [];
+      const next = [...list, heads.gap].slice(-8);
+      window.sessionStorage.setItem('nodescope.status-gaps', JSON.stringify(next));
+    } catch {
+      // Session storage is optional. A single reading still says the gap is not persistent.
+    }
+  }, [heads.gap, status?.checkedAt]);
+
   const word = (status?.verdict ?? 'not_checked').replace(/_/g, ' ').toUpperCase();
+  const discord = plan
+    ? `NodeScope community status · ${word}${status?.score != null ? ` · ${status.score}/100` : ''}\n${plan.short}${plan.degradation ? `\n${plan.degradation}` : ''}\n${origin}/status`
+    : '';
 
   return (
     <div className="paper min-h-screen bg-ink text-slate-200">
       <PaperHeader links={NAV} current="/status" />
       <main className="mx-auto max-w-3xl px-4 py-10">
-        <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">Portaldot V3 testnet</p>
+        <p className="font-data text-[11px] uppercase tracking-[0.22em] text-slate-500">Community status · Portaldot V3 testnet</p>
         <h1 className="mt-2 font-display text-5xl text-white">Status</h1>
         <p className="mt-3 text-sm leading-relaxed text-slate-400">
-          One read-only check of the published EVM RPC and WebSocket, run when this page opens. Press Refresh to check again. Nothing polls, and nothing is signed.
+          This is the community status page for node operators. There is no official Portaldot status page to link to. Paste the short line below into Discord. One read-only check of the published EVM RPC and WebSocket runs when this page opens. Press Refresh to check again. Nothing polls, and nothing is signed. Requests stay under 5 per second per endpoint.
         </p>
         <div className="mt-8 rounded-xl border border-line bg-panel p-6">
           {loading && !status ? (
@@ -128,6 +192,17 @@ export function StatusPage() {
                 <div><dt className="text-slate-500">Chain</dt><dd className="text-white">{status?.chain ?? '—'}</dd></div>
                 <div><dt className="text-slate-500">Checked</dt><dd className="text-white">{status?.checkedAt ? new Date(status.checkedAt).toLocaleString() : '—'}</dd></div>
               </dl>
+              {plan && (
+                <div className="mt-6 border border-line bg-black/20 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-data text-[11px] uppercase tracking-[0.18em] text-slate-500">Next step · paste into Discord</p>
+                    <CopyButton value={discord} label="community status for Discord" />
+                  </div>
+                  <p className="mt-2 text-sm font-semibold text-white">{plan.short}</p>
+                  {plan.degradation && <p className="mt-2 text-sm leading-relaxed text-orange-200">{plan.degradation}</p>}
+                  <p className="mt-2 text-sm leading-relaxed text-slate-400">{heads.summary}</p>
+                </div>
+              )}
               <p className="mt-4 font-data text-[11px] text-slate-500">{status?.formula ?? FORMULA_V2}</p>
             </>
           )}

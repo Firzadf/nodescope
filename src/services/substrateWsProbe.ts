@@ -17,6 +17,7 @@
  */
 
 import { flagAdvertisedMethod, presentExposedMethodNames } from '../utils/rpcSecurity';
+import { paceRequest } from '../../shared/requestPace.mjs';
 
 export const DEFAULT_SUBSTRATE_WS_URL = 'wss://test-node-v3.portaldot.dev';
 
@@ -212,7 +213,10 @@ export async function probeSubstrateWs(
       const finHash = received.get(5);
       if (typeof finHash === 'string' && /^0x[0-9a-fA-F]{64}$/.test(finHash) && !askedFinalizedHeader) {
         askedFinalizedHeader = true;
-        ws.send(JSON.stringify({ jsonrpc: '2.0', id: 6, method: 'chain_getHeader', params: [finHash] }));
+        void paceRequest(url).then(() => {
+          if (settled) return;
+          ws.send(JSON.stringify({ jsonrpc: '2.0', id: 6, method: 'chain_getHeader', params: [finHash] }));
+        });
         return;
       }
       if (askedFinalizedHeader && !received.has(6) && !failedOptional.has(6)) return;
@@ -221,9 +225,14 @@ export async function probeSubstrateWs(
 
     ws.onopen = () => {
       base.handshakeMs = Date.now() - start;
-      for (const [id, method] of [...required, ...optional]) {
-        ws.send(JSON.stringify({ jsonrpc: '2.0', id, method, params: [] }));
-      }
+      void (async () => {
+        for (const [id, method] of [...required, ...optional]) {
+          if (settled) return;
+          await paceRequest(url);
+          if (settled) return;
+          ws.send(JSON.stringify({ jsonrpc: '2.0', id, method, params: [] }));
+        }
+      })();
     };
     ws.onmessage = (event) => {
       try {

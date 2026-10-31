@@ -43,6 +43,7 @@
 import { readFileSync, writeFileSync, renameSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { assessStall, computeHealthScoreV2, formatPrometheus } from '../shared/liveStatus.mjs';
+import { paceRequest } from '../shared/requestPace.mjs';
 
 export { formatPrometheus };
 
@@ -123,6 +124,7 @@ function ratio(a, b) {
 export async function rpcCall(url, method, params = [], timeoutMs = 10000) {
   let lastNetworkError = null;
   for (let attempt = 0; attempt < 2; attempt++) {
+    await paceRequest(url);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
@@ -355,9 +357,13 @@ function wsRpc(url, calls, timeoutMs) {
       reject(new Error(`WebSocket timed out after ${timeoutMs} ms`));
     }, timeoutMs);
     ws.onopen = () => {
-      calls.forEach(([method, params], i) => {
-        ws.send(JSON.stringify({ jsonrpc: '2.0', id: i + 1, method, params }));
-      });
+      void (async () => {
+        for (let i = 0; i < calls.length; i++) {
+          const [method, params] = calls[i];
+          await paceRequest(url);
+          ws.send(JSON.stringify({ jsonrpc: '2.0', id: i + 1, method, params }));
+        }
+      })();
     };
     ws.onmessage = (event) => {
       const parsed = JSON.parse(event.data);
@@ -643,7 +649,7 @@ export function compareDeployCosts(evm, native) {
     reason = `Native is cheaper all-in by ${(rel * 100).toFixed(1)}%.`;
   }
   if (BigInt(native.storageDeposit) > 0n) {
-    reason += ' Native storage deposit is reserved (refundable when storage is freed); the EVM gas figure already folds it in.';
+    reason += ' Native storage deposit is a refundable reserved hold, not burned. Code deposit is refunded when the code is no longer referenced by any contract and the original uploader removes it. Item storage deposit is refunded after contract termination, once storage cleanup runs. The EVM gas figure already includes that hold.';
   }
   return { evm, native, ratioAllIn: r, ratioVsNativeFeeOnly: rFee, recommended, savingsPlanck: diff.toString(), reason, measuredAt };
 }

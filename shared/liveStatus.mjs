@@ -61,6 +61,19 @@ export const FINALITY_STALL_LAG_BLOCKS = 64;
 export const FINALITY_STALL_MIN_AGE_SECONDS = 120;
 export const SYNC_GAP_FULL_BLOCKS = 8;
 
+/**
+ * One Portaldot epoch is 1 hour. Office-hours guidance (A2): one epoch
+ * is the right reference for finality lag, and on Portaldot that epoch
+ * is 1 hour.
+ *
+ * Operator context only. `finalityPoints` still uses the published block
+ * curve (full marks at lag ≤ 4, zero at ≥ 64). Those counts are not an
+ * epoch. Retuning them would change nodescope.health-score.v2 and stop
+ * existing reports from verifying. Block lag and epoch time are
+ * different units.
+ */
+export const PORTALDOT_EPOCH_SECONDS = 60 * 60;
+
 const REAL_FAILURES = new Set(['rpc_error', 'network_error', 'http_error', 'invalid_response']);
 
 function round1(n) {
