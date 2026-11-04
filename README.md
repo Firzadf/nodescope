@@ -12,6 +12,22 @@ one operation on the EVM surface and the native surface side by side,
 including refundable storage deposits, so the real cost is visible
 instead of the headline multiple.
 
+## Features at a glance
+
+- **Score v2** — `nodescope.health-score.v2` (v1 still reproduces older reports)
+- **Component view** — each weighted component shown beside the total
+- **Finality and peers** — lag, peer count, and sync from the Substrate probe
+- **Operator next-step actions** — restart, switch endpoints, check peers, or wait for the team
+- **Custom weights** — a view-only weighting in this browser; exports stay on the published v2 formula
+- **7-day baselines** — local score, latency, head, and finality samples, kept in this browser
+- **Score history** — session chart of score, finality lag, and best head
+- **Fee Lab** — one operation priced on EVM and native, fee-only and all-in, including storage deposits
+- **/status** — community status page for operators. There is no official Portaldot status page
+- **Multi-node** — published EVM RPC, WebSocket, and endpoints you add, at `/app/nodes`
+- **Prometheus** — CLI `--format prometheus` and `--metrics-file`
+- **Badge** — `/api/badge` SVG of the live verdict and score
+- **i18n** — English, Indonesian, and 中文
+
 ## Evidence, in short
 
 - Registry (ownerless, Portaldot V3 testnet, chain 420420777):
@@ -45,13 +61,17 @@ Judges and operators do not need to trust any number in this README. `docs/REPRO
 
 ## Demo Materials
 
-- **Demo video:** [Watch on YouTube](https://youtu.be/14aZxVTCrz0)
+- **Demo video (v2):** [Watch on YouTube](https://youtu.be/8dKrHL5f5gs)
+- **Short operator update (v2.1, 18 seconds):** [Watch on YouTube](https://youtu.be/WAsvVshamvs)
 - **Live app:** [nodescope.vercel.app](https://nodescope.vercel.app/)
 - **DoraHacks BUIDL:** [NodeScope project](https://dorahacks.io/build/50146/)
-- **Screenshots:** [Representative screenshots](docs/screenshots/README.md)
+- **Screenshots:** [Current UI, captured 4 Nov 2026](docs/screenshots/README.md)
 
-![Health check results](docs/screenshots/02-health-check-results.png)
-![Snapshot comparison](docs/screenshots/03-snapshot-comparison.png)
+![Landing](docs/screenshots/desktop-home.png)
+![Score v2](docs/screenshots/desktop-score.png)
+![Community status](docs/screenshots/desktop-status.png)
+![Fee Lab](docs/screenshots/desktop-fee-lab.png)
+![Verify a report](docs/screenshots/desktop-verify.png)
 
 ## Project Overview
 
@@ -159,7 +179,7 @@ npm run preview
 - **Timestamped snapshot storage** — sessionStorage-backed, max 20 snapshots per session, includes snapshot ID, timestamp, endpoint origin, profile, checks, and deduplicated findings
 - **Latest snapshot display** — Health Check Panel shows individual check results and derived findings with severity badges
 
-**Test Coverage (Phase 1):** included in the 197-test suite below.
+**Test Coverage (Phase 1):** included in the 574-test suite (89 files) below.
 
 ### Phase 2 — Snapshot Comparison (Complete ✅)
 
@@ -304,6 +324,9 @@ invented.
 
 ## Portaldot Integration & Deployment Evidence
 
+<details>
+<summary>Early connection log (21–22 Oct 2026)</summary>
+
 ### Verified Endpoint
 
 - **URL:** `https://test-evm-rpc-v3.portaldot.dev`
@@ -328,6 +351,8 @@ invented.
 | 2026-10-22 15:49:21 WIB | eth_blockNumber | 143776 | 0x231a0 | ✅ success |
 
 Block height advanced from 133248 (Oct 21, 22:11 WIB) to 143776 (Oct 22, 15:49 WIB) — 10,528 blocks across ~17.6 hours, consistent with continuous testnet production.
+
+</details>
 
 ### Verified RPC Methods (EVM Endpoint)
 
@@ -442,7 +467,7 @@ src/
 
 **Test Framework:** Vitest 5 with @testing-library/react  
 **Coverage Target:** 80%+  
-**Current Status:** 574 passing tests across 89 test files, verified 29 Oct 2026
+**Current Status:** 574 passing tests across 89 test files, verified 31 Oct 2026
 
 ### Test Files
 
@@ -496,7 +521,8 @@ npm test -- snapshotComparer.test.ts
 - ✅ **Phase 1 — Health Check Snapshots**
 - ✅ **Phase 2 — Snapshot Comparison**
 - ✅ **Post-Phase-2 fixes** — snapshot recency, latency-only status, Connect button first-load state, banner logic
-- ✅ **Demo video:** [https://youtu.be/14aZxVTCrz0](https://youtu.be/14aZxVTCrz0)
+- ✅ **Demo video (v2):** [https://youtu.be/8dKrHL5f5gs](https://youtu.be/8dKrHL5f5gs)
+- ✅ **Short operator update (v2.1, 18 seconds):** [https://youtu.be/WAsvVshamvs](https://youtu.be/WAsvVshamvs)
 - ✅ **Live app:** [https://nodescope.vercel.app/](https://nodescope.vercel.app/)
 - ✅ **Screenshots:** [docs/screenshots/](docs/screenshots/README.md)
 - ✅ **DoraHacks BUIDL:** [https://dorahacks.io/build/50146/](https://dorahacks.io/build/50146/)

@@ -37,7 +37,7 @@ export const zh: LandingCopy = {
   banner: 'Portaldot Hacker House 2026 · 签到 2026 年 10 月 22 日 · 终审 / 代码冻结 2026 年 11 月 6 日 11:00 WIB',
   stats: [
     { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · 十六进制 0x190F1CA9 · 由 eth_chainId 返回' },
-    { value: SITE_TESTS, label: '测试通过', sub: `${SITE_TEST_FILES} 个文件 · Vitest · 测试套件于 2026 年 10 月 26 日验证` },
+    { value: SITE_TESTS, label: '测试通过', sub: `${SITE_TEST_FILES} 个文件 · Vitest · 测试套件于 2026 年 10 月 31 日验证` },
     {
       value: '38',
       label: '已探测的 RPC 方法',
@@ -478,7 +478,7 @@ export const zh: LandingCopy = {
         { label: 'X — @dutzozan', href: 'https://x.com/dutzozan' },
         { label: 'Telegram — @inidutaa', href: 'https://t.me/inidutaa' },
         { label: 'Discord · dutzozan', href: null },
-        { label: '演示视频', href: 'https://youtu.be/14aZxVTCrz0' },
+        { label: '演示视频', href: 'https://youtu.be/8dKrHL5f5gs' },
         { label: '由 Firza Duta Fauzan 独立开发', href: 'https://github.com/Firzadf/nodescope' },
       ],
     },

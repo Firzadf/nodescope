@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://nodescope.vercel.app/</loc></url>
+  <url><loc>https://nodescope.vercel.app/status</loc></url>
+  <url><loc>https://nodescope.vercel.app/verify</loc></url>
+  <url><loc>https://nodescope.vercel.app/fees</loc></url>
+  <url><loc>https://nodescope.vercel.app/app</loc></url>
+  <url><loc>https://nodescope.vercel.app/app/fee-lab</loc></url>
+  <url><loc>https://nodescope.vercel.app/app/nodes</loc></url>
+  <url><loc>https://nodescope.vercel.app/app/diagnostics</loc></url>
+  <url><loc>https://nodescope.vercel.app/app/history</loc></url>
+  <url><loc>https://nodescope.vercel.app/docs</loc></url>
+  <url><loc>https://nodescope.vercel.app/judges</loc></url>
+  <url><loc>https://nodescope.vercel.app/mainnet</loc></url>
+</urlset>

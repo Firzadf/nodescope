@@ -1,24 +1,19 @@
-# NodeScope Screenshots
+# NodeScope screenshots
 
-Representative screenshots captured from the live application for the check-in submission.
+Captured 4 Nov 2026 from the live app at https://nodescope.vercel.app.
+Desktop frames are 1280px wide. Mobile frames are 390px wide.
+The Score and Fee Lab shots are from a real read-only run against the published Portaldot V3 testnet that day: a full diagnostic (Health Score 100/100, `nodescope.health-score.v2`) and one Fee Lab contract-deploy measurement.
 
-## Captured Screenshots
+## Current UI
 
-### 1. Endpoint Configuration (`01-endpoint-config.png`)
-Shows the RPC Endpoint Configuration panel with the default `https://test-evm-rpc-v3.portaldot.dev` endpoint, `portaldot_v3_evm` profile selected, and the "Connect & Test" button enabled on initial load without typing.
+| File | What it shows |
+| --- | --- |
+| `desktop-home.png` / `mobile-home.png` | Landing page |
+| `desktop-score.png` / `mobile-score.png` | Score v2 in the app: the total, each component, and the next step |
+| `desktop-status.png` / `mobile-status.png` | `/status`, the community page, including the badge |
+| `desktop-fee-lab.png` / `mobile-fee-lab.png` | Fee Lab (`/app/fee-lab`): EVM cost beside native partialFee and storage deposit |
+| `desktop-verify.png` / `mobile-verify.png` | `/verify`, local SHA-256 check and the optional on-chain anchor |
 
-### 2. Health Check Results (`02-health-check-results.png`)
-Shows the Health Check Panel after a completed run: checks for `eth_chainId`, `eth_blockNumber`, `web3_clientVersion`, and `net_version` with observed values, latencies, and derived diagnostic findings with severity badges.
+## Check-in set (22 Oct 2026)
 
-### 3. Snapshot Comparison (`03-snapshot-comparison.png`)
-Shows the before/after Snapshot Comparison UI with Snapshot A (baseline) and Snapshot B (current) selected, like-for-like compatibility badge, check differences table with latency delta, and the block height delta (+12 blocks) derived from `eth_blockNumber`.
-
-### 4. Findings Categorized (`04-findings-categorized.png`)
-Shows snapshot comparison findings categorized into new, resolved, and unchanged groups, with rule IDs, severity indicators, and evidence strings.
-
-### 5. Report Export (`05-report-export.png`)
-Shows the Diagnostic Report component with the JSON export payload (`nodescope.diagnostic-report.v1` schema) and the "Export to JSON" action.
-
----
-
-**Status:** Complete — all 5 screenshots captured on 2026-10-22 and committed to repository.
+The earlier dark-theme captures from the 22 Oct 2026 check-in are kept in [`check-in-2026-10-22/`](check-in-2026-10-22/). They show endpoint configuration, a health-check run, snapshot comparison, categorized findings, and report export. They predate Score v2, Fee Lab, and `/status`.
