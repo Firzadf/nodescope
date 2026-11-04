@@ -311,7 +311,7 @@ const en: LandingCopy = {
   banner: 'Portaldot Hacker House 2026 · Check-in 22 Oct 2026 · Final / code freeze 6 Nov 2026, 11:00 WIB',
   stats: [
     { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · returned by eth_chainId' },
-    { value: SITE_TESTS, label: 'Tests passing', sub: `${SITE_TEST_FILES} files · Vitest · suite verified 26 Oct 2026` },
+    { value: SITE_TESTS, label: 'Tests passing', sub: `${SITE_TEST_FILES} files · Vitest · suite verified 31 Oct 2026` },
     {
       value: '38',
       label: 'RPC methods probed',
@@ -752,7 +752,7 @@ const en: LandingCopy = {
         { label: 'X — @dutzozan', href: 'https://x.com/dutzozan' },
         { label: 'Telegram — @inidutaa', href: 'https://t.me/inidutaa' },
         { label: 'Discord · dutzozan', href: null },
-        { label: 'Demo video', href: 'https://youtu.be/14aZxVTCrz0' },
+        { label: 'Demo video', href: 'https://youtu.be/8dKrHL5f5gs' },
         { label: 'Built solo by Firza Duta Fauzan', href: 'https://github.com/Firzadf/nodescope' },
       ],
     },
@@ -810,7 +810,7 @@ const id: LandingCopy = {
   banner: 'Portaldot Hacker House 2026 · Check-in 22 Okt 2026 · Final / code freeze 6 Nov 2026, 11:00 WIB',
   stats: [
     { value: '420420777', label: 'Chain ID', sub: 'Portaldot V3 EVM · hex 0x190F1CA9 · dikembalikan oleh eth_chainId' },
-    { value: SITE_TESTS, label: 'Test lolos', sub: `${SITE_TEST_FILES} file · Vitest · suite terverifikasi 26 Okt 2026` },
+    { value: SITE_TESTS, label: 'Test lolos', sub: `${SITE_TEST_FILES} file · Vitest · suite terverifikasi 31 Okt 2026` },
     {
       value: '38',
       label: 'Metode RPC diuji',
@@ -1250,7 +1250,7 @@ const id: LandingCopy = {
         { label: 'X — @dutzozan', href: 'https://x.com/dutzozan' },
         { label: 'Telegram — @inidutaa', href: 'https://t.me/inidutaa' },
         { label: 'Discord · dutzozan', href: null },
-        { label: 'Video demo', href: 'https://youtu.be/14aZxVTCrz0' },
+        { label: 'Video demo', href: 'https://youtu.be/8dKrHL5f5gs' },
         { label: 'Dibangun solo oleh Firza Duta Fauzan', href: 'https://github.com/Firzadf/nodescope' },
       ],
     },
